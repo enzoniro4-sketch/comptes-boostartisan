@@ -5,14 +5,20 @@
 <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#f5f5f7"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Comptes">
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" href="icone-192.png"><link rel="apple-touch-icon" href="icone-180.png">
-<meta name="ba-version" content="v5.27-r1">
+<meta name="ba-version" content="v5.27-r2">
 <style>/* --- version rapide : ce qui s'ajoute à la page (rien d'autre ne change) --- */
 #ba-etat{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;max-width:calc(100vw - 24px);background:#1d1d1f;color:#fff;padding:9px 16px;border-radius:999px;font-size:13px;line-height:1.35;z-index:60;box-shadow:0 4px 18px rgba(0,0,0,.22);text-align:center}
 #ba-etat.ko{background:#8e1b1b}
 .ba-perime #cartes,.ba-perime #panier{opacity:.5;pointer-events:none;filter:grayscale(.6)}
 #ba-tel-btn{display:block;width:100%;margin:18px 0 6px;background:#fff;color:#1d1d1f;border:1px solid #e3e3e8;border-radius:12px;padding:10px 12px;font:inherit;font-size:14px;cursor:pointer;text-align:center}
-#ba-tel-btn:hover{border-color:#0071e3;color:#005bb5}
+#ba-tel-btn:hover,#ba-form-btn:hover,#ba-form-btn-tel:hover{border-color:#0071e3;color:#005bb5}
+#ba-form-btn{display:block;width:100%;margin:18px 0 0;background:#fff;color:#1d1d1f;border:1px solid #e3e3e8;border-radius:12px;padding:10px 12px;font:inherit;font-size:14px;cursor:pointer;text-align:center}
+#ba-form-btn + #ba-tel-btn{margin-top:8px}
+#ba-form-btn-tel{display:block;width:100%;margin:8px 0 0;height:38px;background:#fff;color:#1d1d1f;border:1px solid #e3e3e8;border-radius:10px;padding:0 12px;font:inherit;font-size:14px;cursor:pointer;text-align:center}
 @media (max-width:760px),(display-mode:standalone){#ba-tel-btn{display:none}}
+.ba-carte #ba-form-lien{background:#f5f5f7;font-size:13px;margin:0 0 10px}
+.ba-form-carte.fait{color:#1f7a3a;border-color:#1f7a3a}
+.ba-carte .ba-gris button{font-size:14px;padding:6px 10px;margin-left:4px}
 #ba-voile{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:80;display:flex;align-items:center;justify-content:center;padding:16px}
 .ba-carte{background:#fff;color:#1d1d1f;border-radius:18px;padding:24px 24px 20px;max-width:440px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.25);max-height:calc(100vh - 32px);overflow:auto}
 .ba-carte h1{font-size:21px;margin:0 0 8px;letter-spacing:-.01em}
@@ -239,24 +245,30 @@ var QRBA = (function(){
   }
   return { matrice: matrice, svg: svg };
 })();
-/* Les comptes — VERSION RAPIDE v5.27-r1 (page fixe sur notre domaine, hors du tableau). Fabriquée par plan/comptes-rapide-1011/construire_comptes_rapide.py :
+/* Les comptes — VERSION RAPIDE v5.27-r2 (page fixe sur notre domaine, hors du tableau). Fabriquée par plan/comptes-rapide-1011/construire_comptes_rapide.py :
    la page des comptes n'est PAS réécrite ; ce bloc remplace seulement son fil avec le tableau (google.script.run → envoi direct au tableau, avec le code d'Enzo gardé sur l'appareil)
    et montre tout de suite les derniers chiffres lus, en gris, pendant que le tableau est relu. Tant que les chiffres sont en gris, aucun ordre ne part. */
 (function(){
-  var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', LIER = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec?x=rapide', CLE_CODE = 'ba_comptes_code', NOM_CACHE = 'ba-comptes-donnees', CLE_SECOURS = 'ba_comptes_donnees';
-  var R = window.__RAPIDE__ = { version: 'v5.27-r1', code: '', perime: false, frais: false, echec: '', recu: 0, duree: 0, envois: 0 };
+  var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', LIER = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec?x=rapide', FORM = 'https://script.google.com/macros/s/AKfycbwDgwfesj-aTaYtcUutatJAJhfrb3xmD4hkWKDnZTeQdh7ZHUVOKqjYkiuDy9Qbt8_N/exec?f=1', CLE_CODE = 'ba_comptes_code', NOM_CACHE = 'ba-comptes-donnees', CLE_SECOURS = 'ba_comptes_donnees';
+  var R = window.__RAPIDE__ = { version: 'v5.27-r2', code: '', perime: false, frais: false, echec: '', recu: 0, duree: 0, envois: 0, encadre: false };
+  /* 0. Jamais à l'intérieur de la page de quelqu'un d'autre : dans un cadre posé par une autre adresse, la page ne lit pas le code, ne demande rien au tableau, n'envoie aucun ordre.
+        (Un cadre posé par notre propre adresse reste permis : c'est notre essai en largeur de téléphone.) */
+  var ENCADRE = false; try { ENCADRE = window.top !== window.self && window.top.location.origin !== window.location.origin; } catch (e) { ENCADRE = true; }
+  R.encadre = ENCADRE;
   function lire(k){ try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
   function ecrire(k, v){ try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); return true; } catch (e) { return false; } }
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 
   /* 1. Le code arrive une seule fois : par le nom de la fenêtre (bouton « Ouvrir ma page rapide » du tableau) ou par le lien / le carré à scanner (#k=).
         Il est gardé sur l'appareil ; l'adresse est nettoyée aussitôt (le code ne reste jamais dans l'adresse). */
+  if (!ENCADRE) {
   try { var mn = /^ba_k_([0-9a-f]{8,64})$/.exec(String(window.name || '')); if (mn) { ecrire(CLE_CODE, mn[1]); window.name = ''; } } catch (e) {}
   try { var mh = /[#&]k=([0-9a-f]{8,64})(?:&|$)/.exec(String(location.hash || '')); if (mh) ecrire(CLE_CODE, mh[1]); if (location.hash) history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  }
   try { window.opener = null; } catch (e) {}
   /* la page est déjà ouverte et le lien du téléphone arrive dans le même onglet : seule la fin de l'adresse change, la page ne se recharge pas d'elle-même */
-  window.addEventListener('hashchange', function(){ try { var m2 = /[#&]k=([0-9a-f]{8,64})(?:&|$)/.exec(String(location.hash || '')); if (location.hash) history.replaceState(null, '', location.pathname + location.search); if (m2) { ecrire(CLE_CODE, m2[1]); location.reload(); } } catch (e) {} });
-  R.code = lire(CLE_CODE);
+  window.addEventListener('hashchange', function(){ if (ENCADRE) return; try { var m2 = /[#&]k=([0-9a-f]{8,64})(?:&|$)/.exec(String(location.hash || '')); if (location.hash) history.replaceState(null, '', location.pathname + location.search); if (m2) { ecrire(CLE_CODE, m2[1]); location.reload(); } } catch (e) {} });
+  R.code = ENCADRE ? '' : lire(CLE_CODE);
 
   /* 2. Les derniers chiffres lus, gardés sur l'appareil (jamais envoyés ailleurs) */
   function secours(){ try { return JSON.parse(lire(CLE_SECOURS) || 'null'); } catch (e) { return null; } }
@@ -310,7 +322,64 @@ var QRBA = (function(){
     if (!R.code) return ko(new Error('cet appareil n\'est pas relié au tableau'));
     if (R.perime) return ko(new Error('je relis encore le tableau : réessaie dans quelques secondes'));
     if (!o || typeof o !== 'object' || ('action' in o) || ('code' in o)) return ko(new Error('ordre inattendu : rien n\'a été envoyé'));
-    poster(Object.assign({}, o, { action: 'optimiser_ordre', code: R.code })).then(function(j){ ok(j); if (j && j.ok) setTimeout(garderEtat, 2000); }).catch(function(e){ ko(e); });
+    var envoi = (o.type === 'panier' && Array.isArray(o.items) && o.items.length > PAQUET && !panierDAvant(o.panier_id)) ? envoyerPanierParPaquets(o) : poster(Object.assign({}, o, { action: 'optimiser_ordre', code: R.code }));
+    envoi.then(function(j){ if (o.type === 'panier_verifier') j = corrigerRelecture(j); ok(j); if (j && j.ok) setTimeout(garderEtat, 2000); }).catch(function(e){ ko(e); });
+  }
+  /* la relecture du tableau cherche « oui » dans la case d'une nouvelle campagne ; quand le robot l'a déjà prise, la case dit « en_cours … » ou « fait <aujourd'hui> … » :
+     c'est écrit ET traité, pas « pas retrouvé » (10/11 13 h 36 : 7 lancements d'Enzo annoncés « pas écrits » alors que le robot les avait fabriqués) */
+  function corrigerRelecture(j){
+    try {
+      if (!j || !j.ok || !Array.isArray(j.manquants) || !j.manquants.length) return j;
+      var d = new Date(), jours = [d.getFullYear() + '-' + deux(d.getMonth() + 1) + '-' + deux(d.getDate()), d.toISOString().slice(0, 10)];
+      var reste = j.manquants.filter(function(m){ var x = /nouvelle_structure = (?:fait|en_cours) (\d{4}-\d\d-\d\d)/.exec(String((m && m.vu) || '')); return !(m && (m.type === 'nouvelle' || m.type === 'refaire') && x && jours.indexOf(x[1]) >= 0); });
+      j.verifies = (Number(j.verifies) || 0) + (j.manquants.length - reste.length); j.manquants = reste;
+    } catch (e) {}
+    return j;
+  }
+  /* 5 bis. LE PANIER PART PAR PETITS PAQUETS (10/11, Enzo 13 h 26 : « il y a écrit pas envoyé… rien n'a été écrit » alors que ses 29 gestes étaient écrits).
+        Un seul long appel est coupé par le téléphone au bout de 60 s pendant que le tableau, lui, écrit jusqu'au bout. Donc : des appels courts, l'un après l'autre.
+        Chaque paquet porte son numéro (numéro du panier + rang + empreinte de son contenu) : renvoyé, le tableau le reconnaît et ne réécrit rien.
+        Réponse perdue = on attend que le tableau ait fini (R.attente après le départ de l'appel), puis on renvoie LE MÊME paquet ; 4 reprises au plus. */
+  var PAQUET = 6, CLE_PAQUETS = 'ba_paniers_paquets', pidAvant = '';
+  R.attente = 45000;
+  try { var pS0 = JSON.parse(lire('comptes_panier') || 'null'); pidAvant = String((pS0 && pS0.pid) || ''); } catch (e) {}
+  function paquetsConnus(){ try { return JSON.parse(lire(CLE_PAQUETS) || '{}') || {}; } catch (e) { return {}; } }
+  /* un panier dont le numéro était déjà gardé à l'ouverture de la page a peut-être été reçu EN ENTIER par le tableau (ancienne façon) : on le renvoie tel quel, le tableau répond « déjà reçu » */
+  function panierDAvant(pid){ pid = String(pid || ''); return !!pid && pid === pidAvant && !paquetsConnus()[pid]; }
+  function empreinte(t){ var h = 5381; for (var i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) >>> 0; return h.toString(36); }
+  function attendreMs(ms){ return new Promise(function(r){ setTimeout(r, Math.max(0, ms)); }); }
+  function direPanier(t){ try { var el = document.getElementById('panier-res'); if (el) el.textContent = t; } catch (e) {} }
+  function envoyerPanierParPaquets(o){
+    var items = o.items, pid = String(o.panier_id || ''), paquets = [], k;
+    for (k = 0; k < items.length; k += PAQUET) paquets.push({ debut: k, items: items.slice(k, k + PAQUET) });
+    try { var pc = paquetsConnus(), cles = Object.keys(pc); if (cles.length > 20) { pc = {}; } pc[pid] = 1; ecrire(CLE_PAQUETS, JSON.stringify(pc)); } catch (e) {}
+    var resultats = [], manques = [], ecrits = 0, faits = 0, dernier = null, tousDeja = true;
+    function un(n){
+      if (n >= paquets.length) return Promise.resolve();
+      var p = paquets[n], id = (pid.slice(0, 28) + '-' + (n + 1) + '-' + empreinte(JSON.stringify(p.items))).slice(0, 40);
+      function essai(tour){
+        var depart = Date.now();
+        direPanier('envoi au tableau… ' + faits + ' sur ' + items.length + (tour ? ' · connexion coupée, je reprends (rien n\'est écrit deux fois)' : ''));
+        if (!tour && !faits && navigator.onLine === false) return Promise.reject(new Error('pas de connexion au tableau'));
+        return poster({ action: 'optimiser_ordre', code: R.code, type: 'panier', panier_id: id, items: p.items }).catch(function(e){
+          if (tour >= 4) throw new Error('connexion perdue en route');
+          return attendreMs(R.attente - (Date.now() - depart)).then(function(){ return essai(tour + 1); });
+        });
+      }
+      return essai(0).then(function(j){
+        if (!(j && j.ok)) throw new Error(String((j && j.erreur) || 'tableau muet'));
+        var rs = Array.isArray(j.resultats) ? j.resultats : [];
+        for (var i = 0; i < p.items.length; i++) { var r = rs[i] ? Object.assign({}, rs[i]) : { ok: false, erreur: 'pas de réponse' }; r.i = p.debut + i; resultats[p.debut + i] = r; if (!r.ok) manques.push({ i: r.i, type: String(r.type || ''), compte_id: String(r.compte_id || ''), erreur: String(r.erreur || '') }); }
+        ecrits += rs.filter(function(r){ return r && r.ok; }).length; faits += p.items.length; dernier = j; if (!j.deja) tousDeja = false;
+        return un(n + 1);
+      });
+    }
+    return un(0).then(function(){
+      direPanier('envoi au tableau… ' + items.length + ' sur ' + items.length + ' · relecture');
+      var j = { ok: true, panier_id: pid, quand: (dernier && dernier.quand) || '', n: items.length, ecrits: ecrits, manques: manques, resultats: resultats, prochain: (dernier && dernier.prochain) || '', paquets: paquets.length };
+      if (tousDeja) { j.deja = true; j.note = (dernier && dernier.note) || ''; }
+      return j;
+    });
   }
   function coureur(ok, ko){
     ok = ok || function(){}; ko = ko || function(){};
@@ -323,6 +392,7 @@ var QRBA = (function(){
 
   /* 6. Pas encore relié : l'écran de liaison (rien n'est demandé au tableau) */
   function relierAvec(texte){
+    if (ENCADRE) return false;
     var t = String(texte || '').trim(), m = /(?:[?&#]code=|[#&]k=)([0-9a-f]{8,64})(?:[&#]|$)/i.exec(t) || /^([0-9a-f]{8,64})$/i.exec(t);
     if (!m) return false; ecrire(CLE_CODE, m[1].toLowerCase()); return true;
   }
@@ -330,10 +400,13 @@ var QRBA = (function(){
     function poser(){
       var a = document.querySelector('.app'); if (a) a.style.display = 'none'; var ba = document.getElementById('barre'); if (ba) ba.style.display = 'none'; var tb = document.getElementById('ba-tel-btn'); if (tb) tb.style.display = 'none';
       var d = document.getElementById('ba-liaison'); if (!d) { d = document.createElement('div'); d.id = 'ba-liaison'; document.body.appendChild(d); }
+      if (ENCADRE) { d.innerHTML = '<div class="ba-carte"><h1>Les comptes</h1><p>Cette page ne s\'affiche pas à l\'intérieur d\'une autre page.</p><div class="ba-rang"><a class="ba-bouton ba-bleu" href="' + esc(location.origin + location.pathname) + '" target="_top" rel="noopener">Ouvrir Les comptes</a></div></div>'; return; }
       d.innerHTML = '<div class="ba-carte"><h1>Les comptes</h1><p>' + esc(message || 'Cet appareil n\'est pas encore relié à ton tableau.') + '</p>'
         + '<p><b>Sur ton ordinateur :</b></p><div class="ba-rang"><a class="ba-bouton ba-bleu" href="' + esc(LIER) + '" target="_blank" rel="noopener">Relier cet ordinateur</a></div><p class="ba-gris" style="margin-top:8px">Ton compte Google s\'ouvre, puis clique « Ouvrir ma page rapide ».</p>'
         + '<p><b>Sur ton téléphone :</b> ouvre d\'abord la page sur ton ordinateur, clique « Sur mon téléphone » en bas à gauche, puis vise le carré avec l\'appareil photo.</p>'
-        + '<details><summary>Autre moyen : coller mon ancien lien</summary><p style="margin-top:8px">Colle ici le lien de ta page des comptes (celui qui contient « code= ») :</p><input id="ba-colle" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://script.google.com/…code=…"><button type="button" id="ba-colle-ok" class="ba-bleu">Relier</button><p id="ba-colle-res" class="ba-res"></p></details></div>';
+        + '<details><summary>Autre moyen : coller mon ancien lien</summary><p style="margin-top:8px">Colle ici le lien de ta page des comptes (celui qui contient « code= ») :</p><input id="ba-colle" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://script.google.com/…code=…"><button type="button" id="ba-colle-ok" class="ba-bleu">Relier</button><p id="ba-colle-res" class="ba-res"></p></details>'
+        + '<p class="ba-gris" style="margin-top:14px">Tu cherches le formulaire à envoyer à un client ? <button type="button" id="ba-form-liaison">📋 Formulaire client</button></p></div>';
+      document.getElementById('ba-form-liaison').onclick = function(){ ouvrirFormulaire(); };
       document.getElementById('ba-colle-ok').onclick = function(){ if (relierAvec(document.getElementById('ba-colle').value)) location.reload(); else document.getElementById('ba-colle-res').textContent = 'Je ne trouve pas le code dans ce texte : colle le lien entier.'; };
     }
     if (document.body) poser(); else document.addEventListener('DOMContentLoaded', poser);
@@ -356,16 +429,75 @@ var QRBA = (function(){
     document.getElementById('ba-copier').onclick = function(){ var res = document.getElementById('ba-tel-res'); try { navigator.clipboard.writeText(lienTelephone()).then(function(){ res.textContent = 'Lien copié. Envoie-le seulement à toi.'; }, function(){ res.textContent = 'Copie refusée par le navigateur : utilise le carré.'; }); } catch (e) { res.textContent = 'Copie impossible ici : utilise le carré.'; } };
     document.getElementById('ba-oublier').onclick = function(){ var b = this; if (b.getAttribute('data-sur') !== '1') { b.setAttribute('data-sur', '1'); b.textContent = 'Sûr ? Cliquer encore'; return; } ecrire(CLE_CODE, null); cacheVider().then(function(){ location.reload(); }); };
   }
-  /* le bouton vit en bas du menu de gauche ; la page redessine ce menu à chaque lecture : on le remet à sa place chaque fois */
-  var boutonTel = null;
-  function poserBouton(){
-    var m = document.getElementById('aside'); if (!R.code || !m) return;
-    if (!boutonTel) { boutonTel = document.createElement('button'); boutonTel.type = 'button'; boutonTel.id = 'ba-tel-btn'; boutonTel.textContent = '📱 Sur mon téléphone'; boutonTel.addEventListener('click', function(e){ e.stopPropagation(); ouvrirTelephone(); }); }
-    if (boutonTel.parentNode !== m || m.lastElementChild !== boutonTel) m.appendChild(boutonTel);
+  /* 8. « Formulaire client » : le lien du formulaire du nouveau client (public, le même pour tous), à copier ou à envoyer. Trois endroits :
+        en bas du menu de gauche (ordinateur), sous la recherche (téléphone), et sur la carte d'un client dont le formulaire n'est pas rempli. */
+  function copier(texte, fini){
+    function repli(){ try { var z = document.createElement('textarea'); z.value = texte; z.setAttribute('readonly', ''); z.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0'; document.body.appendChild(z); z.select(); var ok = document.execCommand('copy'); z.remove(); return !!ok; } catch (e) { return false; } }
+    try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(texte).then(function(){ fini(true); }, function(){ fini(repli()); }); return; } } catch (e) {}
+    fini(repli());
   }
-  function suivreMenu(){ var m = document.getElementById('aside'); if (!m) return; poserBouton(); try { new MutationObserver(function(){ poserBouton(); }).observe(m, { childList: true }); } catch (e) {} }
+  function ouvrirFormulaire(){
+    var v = document.getElementById('ba-voile'); if (v) v.remove();
+    v = document.createElement('div'); v.id = 'ba-voile';
+    var tactile = false; try { tactile = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches); } catch (e) {}
+    var partage = tactile && typeof navigator.share === 'function';
+    v.innerHTML = '<div class="ba-carte" role="dialog" aria-label="Formulaire client"><h1>Formulaire client</h1>'
+      + '<p>Le lien à envoyer à un client : il remplit ses 6 infos, et sa fiche arrive dans le tableau.</p>'
+      + '<input id="ba-form-lien" type="text" readonly aria-label="Lien du formulaire" value="' + esc(FORM) + '">'
+      + '<div class="ba-rang"><button type="button" id="ba-form-copier" class="ba-bleu">Copier le lien</button>'
+      + (partage ? '<button type="button" id="ba-form-envoyer">Envoyer…</button>' : '')
+      + '<a class="ba-bouton" id="ba-form-voir" href="' + esc(FORM) + '" target="_blank" rel="noopener">Voir le formulaire</a><button type="button" id="ba-fermer">Fermer</button></div>'
+      + '<p id="ba-form-res" class="ba-res" style="color:#1f7a3a"></p>'
+      + '<p class="ba-gris">Sur certains téléphones Android, ce lien s\'ouvre dans l\'appli Drive et affiche « Impossible d\'ouvrir le fichier » : le client le colle alors dans Chrome.</p></div>';
+    document.body.appendChild(v);
+    var res = document.getElementById('ba-form-res'), champ = document.getElementById('ba-form-lien');
+    function dire(ok, texteOk){ res.style.color = ok ? '#1f7a3a' : '#8e1b1b'; res.textContent = ok ? texteOk : 'Copie refusée par le navigateur : appuie longtemps sur le lien pour le copier.'; if (!ok) { try { champ.focus(); champ.select(); } catch (e) {} } }
+    v.addEventListener('click', function(e){ if (e.target === v) v.remove(); });
+    document.getElementById('ba-fermer').onclick = function(){ v.remove(); };
+    champ.onfocus = function(){ try { champ.select(); } catch (e) {} };
+    document.getElementById('ba-form-copier').onclick = function(){ copier(FORM, function(ok){ dire(ok, 'Lien copié : colle-le dans ton message au client.'); }); };
+    if (partage) document.getElementById('ba-form-envoyer').onclick = function(){ try { navigator.share({ url: FORM }).then(function(){}, function(){}); } catch (e) { dire(false, ''); } };
+  }
+  /* sur la carte : un bouton à côté de « Vendu, mais le formulaire n'est pas rempli » ; la page redessine ses cartes, on le repose chaque fois */
+  var attenteCartes = 0;
+  function poserFormCartes(){
+    attenteCartes = 0; var zone = document.getElementById('cartes'); if (!zone || !R.code) return;
+    var lignes = zone.querySelectorAll('.pb');
+    for (var i = 0; i < lignes.length; i++) {
+      var pb = lignes[i]; if (pb.querySelector('.ba-form-carte')) continue;
+      var t = pb.querySelector('.t'); if (!/formulaire n.est pas rempli/i.test(String((t || pb).textContent || ''))) continue;
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'b ba-form-carte'; b.textContent = 'Copier le lien du formulaire';
+      var bb = pb.querySelector('.bb'); if (bb) bb.appendChild(b); else pb.appendChild(b);
+    }
+  }
+  document.addEventListener('click', function(e){
+    var t = e.target && e.target.closest ? e.target.closest('.ba-form-carte') : null; if (!t) return;
+    copier(FORM, function(ok){ if (!ok) { ouvrirFormulaire(); return; } t.textContent = 'Lien copié ✓'; t.classList.add('fait'); setTimeout(function(){ if (t.isConnected) { t.textContent = 'Copier le lien du formulaire'; t.classList.remove('fait'); } }, 2500); });
+  });
+
+  /* les boutons vivent en bas du menu de gauche (ordinateur) et sous la recherche (téléphone) ; la page redessine ces deux blocs à chaque lecture : on les remet à leur place chaque fois */
+  var boutonTel = null, boutonForm = null, boutonFormTel = null;
+  function bouton(id, texte, quoi){ var b = document.createElement('button'); b.type = 'button'; b.id = id; b.textContent = texte; b.addEventListener('click', function(e){ e.stopPropagation(); quoi(); }); return b; }
+  function poserBouton(){
+    if (!R.code) return;
+    var m = document.getElementById('aside'), ba = document.getElementById('barre');
+    if (m) {
+      if (!boutonForm) boutonForm = bouton('ba-form-btn', '📋 Formulaire client', ouvrirFormulaire);
+      if (!boutonTel) boutonTel = bouton('ba-tel-btn', '📱 Sur mon téléphone', ouvrirTelephone);
+      if (boutonTel.parentNode !== m || m.lastElementChild !== boutonTel || boutonForm.parentNode !== m || boutonTel.previousElementSibling !== boutonForm) { m.appendChild(boutonForm); m.appendChild(boutonTel); }
+    }
+    if (ba && ba.firstElementChild) {
+      if (!boutonFormTel) boutonFormTel = bouton('ba-form-btn-tel', '📋 Formulaire client', ouvrirFormulaire);
+      if (boutonFormTel.parentNode !== ba || ba.lastElementChild !== boutonFormTel) ba.appendChild(boutonFormTel);
+    }
+  }
+  function suivreMenu(){
+    poserBouton(); poserFormCartes();
+    ['aside', 'barre'].forEach(function(id){ var m = document.getElementById(id); if (!m) return; try { new MutationObserver(function(){ poserBouton(); }).observe(m, { childList: true }); } catch (e) {} });
+    var zone = document.getElementById('cartes'); if (zone) { try { new MutationObserver(function(){ if (!attenteCartes) attenteCartes = setTimeout(poserFormCartes, 0); }).observe(zone, { childList: true, subtree: true }); } catch (e) {} }
+  }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', suivreMenu); else suivreMenu();
-  R.relier = relierAvec; R.telephone = ouvrirTelephone;
+  R.relier = relierAvec; R.telephone = ouvrirTelephone; R.formulaire = ouvrirFormulaire;
 })();
 </script>
 <script>
@@ -848,9 +980,9 @@ function rendrePanier(){
 async function envoyerPanier(){
   if (PANIER_ENVOI || !PANIER.length) return; PANIER_ENVOI = true; rendrePanier(); var res = document.getElementById('panier-res');
   var items = PANIER.slice(), pid = PANIER_PID || ('P-' + stampLocal().replace(/\D/g, '') + '-' + Math.floor(Math.random() * 9000 + 1000)); PANIER_PID = pid; panierSauver();
-  montrer(res, '', 'envoi au tableau… ' + items.length + ' geste' + (items.length > 1 ? 's' : '') + ', un seul appel');
+  montrer(res, '', 'envoi au tableau… ' + items.length + ' geste' + (items.length > 1 ? 's' : '') + '');
   var j; try { j = await envoyer({ type: 'panier', panier_id: pid, items: items.map(function(it){ return it.o; }) }); } catch (e) { j = { ok: false, erreur: String(e.message || e).replace(/^Error:\s*/, '') }; }
-  if (!(j && j.ok)) { PANIER_ENVOI = false; rendrePanier(); montrer(document.getElementById('panier-res'), 'ko', '✖ Pas envoyé (' + ((j && j.erreur) || 'tableau muet') + ') : rien n\'a été écrit · le panier est gardé, réessaie'); return; }
+  if (!(j && j.ok)) { PANIER_ENVOI = false; rendrePanier(); montrer(document.getElementById('panier-res'), 'ko', '✖ Pas fini (' + ((j && j.erreur) || 'tableau muet') + ') · le panier est gardé : renvoie-le, ce qui est déjà écrit n\'est jamais réécrit'); return; }
   var resultats = j.resultats || [], restants = [], manquants = [], aVerifier = [];
   for (var qi = 0; qi < items.length; qi++) { var itq = items[qi], rq = resultats[qi]; if (rq && rq.ok && varianteRefusee(itq.o, rq)) { try { await envoyer(Object.assign({}, itq.o, { type: 'annuler_nouvelle', texte: 'Annuler (tableau pas à jour)' })); } catch (eQ) {} rq.ok = false; rq.erreur = 'annulé aussitôt : le tableau ne connaît pas encore la nouvelle campagne (mise à jour à publier)'; } }   /* v5.27 */
   items.forEach(function(it, i){ var r = resultats[i]; if (r && r.ok) { try { souvenir(it.o, r); appliquerLocal(it.o, r); } catch (e2) {} ajouterClic(heure() + ' : ' + it.texte + ' — ' + it.nom + ' (panier)'); aVerifier.push({ i: i, type: it.o.type, ordre_id: r.ordre_id || '', note_id: r.note_id || '', siret: it.o.siret || '', compte_id: it.compte_id }); if (it.vague) { var vg = VAGUES[it.vague]; if (!vg || vg.panier || !vg.annul) vg = VAGUES[it.vague] = { h: heure(), n: 0, total: 0, echecs: [], annul: [], suite: suite(it.o, r) }; vg.n++; vg.total++; var an = annulDe(it.o, r); if (an) vg.annul.push(an); } }   /* v5.11 : une vague venue du panier ({ panier: true }) n'avait pas de liste annul → « reading 'push' », l'envoi s'arrêtait net */
