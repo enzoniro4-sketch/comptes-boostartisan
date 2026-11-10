@@ -1,0 +1,1145 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Les comptes</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'self'; style-src 'unsafe-inline'; img-src 'self' data:; manifest-src 'self'; worker-src 'self'; connect-src https://script.google.com https://script.googleusercontent.com https://recherche-entreprises.api.gouv.fr; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#f5f5f7"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Comptes">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" href="icone-192.png"><link rel="apple-touch-icon" href="icone-180.png">
+<meta name="ba-version" content="v5.27-r1">
+<style>/* --- version rapide : ce qui s'ajoute à la page (rien d'autre ne change) --- */
+#ba-etat{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;max-width:calc(100vw - 24px);background:#1d1d1f;color:#fff;padding:9px 16px;border-radius:999px;font-size:13px;line-height:1.35;z-index:60;box-shadow:0 4px 18px rgba(0,0,0,.22);text-align:center}
+#ba-etat.ko{background:#8e1b1b}
+.ba-perime #cartes,.ba-perime #panier{opacity:.5;pointer-events:none;filter:grayscale(.6)}
+#ba-tel-btn{display:block;width:100%;margin:18px 0 6px;background:#fff;color:#1d1d1f;border:1px solid #e3e3e8;border-radius:12px;padding:10px 12px;font:inherit;font-size:14px;cursor:pointer;text-align:center}
+#ba-tel-btn:hover{border-color:#0071e3;color:#005bb5}
+@media (max-width:760px),(display-mode:standalone){#ba-tel-btn{display:none}}
+#ba-voile{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:80;display:flex;align-items:center;justify-content:center;padding:16px}
+.ba-carte{background:#fff;color:#1d1d1f;border-radius:18px;padding:24px 24px 20px;max-width:440px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.25);max-height:calc(100vh - 32px);overflow:auto}
+.ba-carte h1{font-size:21px;margin:0 0 8px;letter-spacing:-.01em}
+.ba-carte p{margin:0 0 12px;font-size:15px;line-height:1.45}
+.ba-carte ol{margin:0 0 14px;padding-left:20px;font-size:15px;line-height:1.5}
+.ba-carte .ba-qr{display:flex;justify-content:center;margin:6px 0 14px}
+.ba-carte .ba-qr svg{border-radius:10px;border:1px solid #e3e3e8}
+.ba-carte .ba-gris{color:#6e6e73;font-size:13px}
+.ba-carte button,.ba-carte .ba-bouton{font:inherit;font-size:15px;border-radius:10px;border:1px solid #d2d2d7;background:#fff;color:#1d1d1f;padding:9px 14px;cursor:pointer;text-decoration:none;display:inline-block}
+.ba-carte button.ba-bleu,.ba-carte .ba-bouton.ba-bleu{background:#0071e3;border-color:#0071e3;color:#fff;font-weight:600}
+.ba-carte .ba-rang{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.ba-carte input[type=text]{width:100%;font:inherit;font-size:15px;padding:9px 10px;border:1px solid #d2d2d7;border-radius:10px;margin:0 0 8px}
+.ba-carte details{margin-top:10px;font-size:14px}
+.ba-carte summary{cursor:pointer;color:#005bb5}
+.ba-res{font-size:13px;color:#8e1b1b;min-height:18px;margin:6px 0 0}
+#ba-liaison{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;background:#f5f5f7}
+:root{--fond:#f5f5f7;--blanc:#fff;--txt:#1d1d1f;--gris:#6e6e73;--gris2:#5f5f66;--trait:#e3e3e8;--chip:#ececf0;--bleu:#0071e3;--bleut:#005bb5;--vert:#1f7a3a;--rouge:#c62828;--orange:#b35c00;--rougef:#fdecec;--rouget:#8e1b1b;--orangef:#fff3e0;--vertf:#eaf6ee;--bleuf:#e8f1fd;--grisf:#f0f0f3}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fond);color:var(--txt);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+a{color:var(--bleut)}
+.app{display:flex;min-height:100vh}
+aside{width:270px;flex:0 0 270px;border-right:1px solid var(--trait);padding:20px 16px;position:sticky;top:0;height:100vh;overflow:auto}
+main{flex:1;padding:20px 28px 60px;max-width:980px;min-width:0}
+h1{font-size:22px;font-weight:700;margin:0 0 8px;letter-spacing:-.01em}
+.releve{display:block;background:var(--blanc);border-radius:12px;padding:10px 12px;margin:0 0 12px;border-left:5px solid var(--vert)}
+.releve b{display:block;font-size:13px;font-weight:700;white-space:nowrap}
+.releve small{font-size:13px;color:var(--gris)}
+.releve.vieux{border-left-color:var(--rouge);background:var(--rougef)}
+.releve.vieux b{color:var(--rouge)}
+.releve.inconnu{border-left-color:#c8c8cd}
+.releve button{background:none;border:0;padding:0;font:inherit;font-size:13px;color:var(--bleut);cursor:pointer;text-decoration:underline}
+.relu{font-size:12px;color:var(--gris);margin:0 0 10px}
+.rech{display:block;width:100%;height:40px;border:1px solid var(--trait);border-radius:10px;background:var(--blanc);padding:0 12px;font:inherit;font-size:15px;color:var(--txt);margin:0 0 14px}
+.totaux{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 16px}
+.tot{background:var(--blanc);border-radius:12px;padding:8px 10px}
+.tot b{display:block;font-size:18px;white-space:nowrap;font-weight:600;line-height:1.2}
+.tot small{font-size:12px;color:var(--gris)}
+aside h2{font-size:12px;font-weight:600;color:var(--gris);margin:14px 0 6px}
+nav{display:flex;flex-direction:column;gap:2px}
+nav button{display:flex;font-size:14px;justify-content:space-between;align-items:center;width:100%;height:40px;padding:0 12px;border:0;border-radius:10px;background:transparent;font:inherit;color:var(--txt);cursor:pointer;text-align:left}
+nav button.on{background:var(--blanc);box-shadow:0 1px 3px rgba(0,0,0,.08);font-weight:600}
+nav button b{font-weight:600;color:var(--gris2);font-size:13px;background:var(--chip);border-radius:999px;padding:1px 8px;min-width:26px;text-align:center}
+nav button b.rouge{background:var(--rouge);color:#fff}
+nav button b.orange{background:#d98400;color:#fff}
+nav button b.zero{opacity:.45}
+.pt{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;background:#c8c8cd;vertical-align:middle}
+.pt.rouge{background:var(--rouge)}.pt.orange{background:#d98400}.pt.vert{background:var(--vert)}.pt.bleu{background:var(--bleu)}
+.note-google{font-size:12px;color:var(--gris);margin:14px 0 0}
+main h2{font-size:13px;font-weight:600;color:var(--gris);margin:22px 0 8px}main h2:first-child{margin-top:0}main h2 span{color:var(--txt);margin-left:6px}
+.bandeau{background:#e3f1ff;color:#0b4a8a;font-size:13px;font-weight:600;padding:6px 12px;border-radius:8px;display:inline-block;margin:0 0 14px}
+.bandeau.rouge{background:var(--rougef);color:var(--rouget)}
+.attente{color:var(--gris);padding:30px 0}
+.vide{color:var(--gris);padding:20px 0}
+.panier{position:sticky;top:0;z-index:5;background:#fff8e6;border:1px solid #f0d9a0;border-radius:14px;padding:12px 16px;margin:0 0 14px;box-shadow:0 2px 8px rgba(0,0,0,.08)}.panier b{display:block;font-size:16px}.panier>span{display:block;font-size:14px;color:var(--gris2);margin-top:2px}.panier .boutons{margin-top:8px}.panier.ok{background:var(--vertf);border-color:#bfe3c8}.panier.ko{background:var(--rougef);border-color:#f3b9b9}.panier .liste{margin:8px 0 0;padding:0 0 0 18px;font-size:14px}.panier .liste li{margin:4px 0}.panier .liste small{color:var(--gris)}.pb.panier{background:#fff8e6;color:#7a5200}
+.sous-liste{color:var(--gris);font-size:14px;margin:-4px 0 12px}.grp-pire{font-size:13px;text-transform:uppercase;letter-spacing:.04em;margin:18px 0 8px;padding-left:8px;border-left:4px solid var(--gris);color:var(--gris)}.grp-pire.sans,.grp-pire.rouge{border-color:var(--rouge);color:var(--rouge)}.grp-pire.orange{border-color:var(--orange);color:var(--orange)}.grp-pire.vert{border-color:var(--vert);color:var(--vert)}.pire{display:grid;grid-template-columns:44px 1fr;gap:8px;align-items:start}.pire .rang{font-size:24px;font-weight:800;color:var(--gris);text-align:center;padding-top:14px}.pire .carte{margin-left:0}.carte.opt .pb{margin-top:10px}.carte.opt .autres{font-size:13px;color:var(--gris);margin:8px 0 0}.carte.opt .autres .lien{background:none;border:0;padding:0;font:inherit;color:var(--bleut);text-decoration:underline;cursor:pointer}
+.carte{background:var(--blanc);border-radius:16px;padding:14px 16px;margin:0 0 10px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.carte.touchee{border-left:6px solid var(--bleu);background:#f3f8ff}.badge-touche{display:inline-block;background:var(--bleu);color:#fff;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin:0 0 8px}
+.ligne{display:flex;align-items:flex-start;gap:12px}
+.dot{width:10px;height:10px;border-radius:50%;background:#c8c8cd;flex:0 0 10px;margin-top:7px}.dot.vert{background:var(--vert)}.dot.rouge{background:var(--rouge)}.dot.orange{background:#d98400}.dot.bleu{background:var(--bleu)}
+.qui{flex:1 1 auto;min-width:0}
+.nom{font-weight:600;font-size:16px}.nom a{color:var(--txt);text-decoration:none}.nom a:hover{text-decoration:underline}.nom small{font-weight:400;color:var(--gris);font-size:13px;margin-left:8px}
+.etat{font-size:14px;color:var(--gris);margin-top:2px}.etat b{color:var(--txt);font-weight:600}
+.chiffres{font-size:14px;color:var(--gris);text-align:right;white-space:nowrap;line-height:1.5}.chiffres b{color:var(--txt);font-weight:600}
+.chiffres .cpd{font-weight:700}.chiffres .cpd.rouge{color:var(--rouge)}.chiffres .cpd.orange{color:var(--orange)}.chiffres .cpd.vert{color:var(--vert)}.chiffres .cpd.gris{color:var(--gris);font-weight:500}
+.chiffres small{display:block;font-size:12px;color:#9a9aa0}
+.chiffres .stats{display:inline-block;margin-top:6px;text-align:left;font-size:12px;line-height:1.4;color:var(--gris2);border-top:1px solid var(--trait);padding-top:5px}.chiffres .stats .cap{display:block;color:var(--gris);font-size:11px;text-transform:uppercase;letter-spacing:.03em}.chiffres .stats .st{display:block}.chiffres .stats .st em{font-style:normal;color:var(--gris);display:inline-block;width:122px}.chiffres .stats .st b{display:inline-block;min-width:62px;text-align:right;color:var(--txt);font-weight:600}
+.pb{margin:10px 0 0;padding:10px 12px;border-radius:10px;font-size:15px;line-height:1.45}
+.pb.panier{position:static;box-shadow:none}.pb.panier .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-right:6px;padding:1px 7px;border-radius:6px;color:#fff;vertical-align:middle}.pb.panier.p-stop{background:#fdecec;border:1px solid #f3b4b4;border-left:6px solid var(--rouge)}.pb.panier.p-stop .tag{background:var(--rouge)}.pb.panier.p-go{background:#e9f7ee;border:1px solid #b6e2c4;border-left:6px solid var(--vert)}.pb.panier.p-go .tag{background:var(--vert)}.pb.panier.p-new{background:#e8f1ff;border:1px solid #b9d4fb;border-left:6px solid var(--bleu)}.pb.panier.p-new .tag{background:var(--bleu)}.pb.panier.p-bud{background:#f1e9ff;border:1px solid #d3c1f5;border-left:6px solid #6d28d9}.pb.panier.p-bud .tag{background:#6d28d9}.pb.panier.p-autre{background:var(--grisf);border:1px solid var(--trait);border-left:6px solid var(--gris)}.pb.panier.p-autre .tag{background:var(--gris)}
+.pb.rouge{background:var(--rougef);color:var(--rouget)}.pb.orange{background:var(--orangef);color:#7a3e00}.pb.bleu{background:var(--bleuf);color:#0b4a8a}.pb.vert{background:var(--vertf);color:var(--vert)}.pb.gris{background:var(--grisf);color:var(--gris2)}
+.pb .num{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;opacity:.75;margin-bottom:2px}
+.pb .t{display:block;font-weight:600}.pb .bb{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}
+.b{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:6px 14px;border-radius:10px;border:1px solid var(--trait);background:var(--blanc);color:var(--txt);font:inherit;font-weight:500;cursor:pointer;text-decoration:none}
+.b:disabled{opacity:.55;cursor:default}
+.b.prim{background:var(--bleu);border-color:var(--bleu);color:#fff;font-weight:600}
+.b.danger{color:var(--rouge);border-color:#f0c4c4}.b.danger.plein{background:var(--rouge);border-color:var(--rouge);color:#fff}
+.b.gris{color:var(--gris)}.b.gris.on{background:var(--txt);color:#fff;border-color:var(--txt)}
+.b.lien{border-color:transparent;background:transparent;color:var(--bleut);min-height:32px;padding:4px 8px}
+.b.plus{width:100%;margin-top:10px;background:var(--fond);border-color:var(--fond);font-weight:600}
+.b.plus.pbs{color:var(--rouge);background:var(--rougef);border-color:var(--rougef)}
+.b.plus.pbs.orange{color:var(--orange);background:var(--orangef);border-color:var(--orangef)}
+.b.plus.pbs.bleu{color:#0b4a8a;background:var(--bleuf);border-color:var(--bleuf)}
+.b.plus.ok{color:var(--vert);background:var(--vertf);border-color:var(--vertf)}
+.b.plus.voir{color:var(--bleut);background:transparent;border-color:var(--trait)}
+.b.petit{min-height:34px;padding:4px 12px;font-size:14px}
+/* v5.2 vagues : un bandeau par geste en haut de la famille (MAQUETTE-VAGUES.md, pièce A validée 31/10 6 h 36) */
+.vague{background:var(--blanc);border-radius:16px;padding:14px 16px;margin:0 0 14px;box-shadow:0 1px 3px rgba(0,0,0,.06);border-left:5px solid var(--rouge)}
+.vague.orange{border-left-color:#d98400}.vague.bleu{border-left-color:var(--bleu)}.vague.gris{border-left-color:#c8c8cd;background:var(--grisf)}
+.vague h3{margin:0 0 2px;font-size:17px;font-weight:700}.vague h3 small{font-weight:500;color:var(--gris);font-size:14px;margin-left:8px}
+.vague .sous{font-size:14px;color:var(--gris);margin:0 0 10px}.vague .sous.ok{color:var(--vert);font-weight:600}
+.vague label{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-top:1px solid var(--trait);font-size:15px;cursor:pointer}
+.vague label input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--bleu);flex:0 0 20px}.vague label b{font-weight:600}.vague label small{display:block;color:var(--gris2);font-size:14px}
+.vague label.fait b{text-decoration:line-through;color:var(--gris)}.vague .act{color:#0b4a8a;font-weight:600}
+.vague .boutons{margin-top:10px}.vague .b.prim{flex:1 1 auto}.vague .aide{font-size:13px;color:var(--gris);margin-top:8px}.vague .res{margin-top:8px}
+.boutons{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.volet{margin-top:10px;padding:12px 14px;border-radius:12px;background:var(--fond);border:1px solid var(--trait)}.volet b{display:block;margin-bottom:6px}.volet .boutons{margin-top:8px}
+.volet p{margin:4px 0 0;font-size:14px;color:var(--gris2)}
+.volet.fiche .grille{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 12px;margin:8px 0}.volet.fiche label{display:block;font-size:13px;color:var(--gris)}.volet.fiche label input{display:block;width:100%;margin-top:3px;height:36px;border:1px solid var(--trait);border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:var(--txt);background:var(--blanc)}.volet.fiche .cands{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px}.volet.fiche .cands .b{min-height:32px;font-size:13px;text-align:left}.volet.fiche .aide{font-size:13px;color:var(--gris);margin:6px 0 0}
+@media (max-width:760px){.volet.fiche .grille{grid-template-columns:1fr 1fr}}
+.champ{height:40px;width:110px;border:1px solid var(--trait);border-radius:10px;padding:0 10px;font:inherit;font-size:16px;background:var(--blanc)}
+.champ.long{width:100%;height:auto;min-height:70px;padding:8px 10px;resize:vertical}
+.montant{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:15px}
+.res{margin-top:8px;font-size:14px;min-height:0}.res.ok{color:var(--vert);font-weight:600}.res.ko{color:var(--rouge);font-weight:600}.res .b.lien{min-height:28px}
+.note{margin-top:10px;font-size:13px;color:var(--gris)}
+.pubs{margin-top:8px}
+.pubs h4{font-size:12px;font-weight:600;color:var(--gris);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.03em}
+.pub{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-top:1px solid var(--trait);flex-wrap:wrap}
+.pub .dot{margin-top:6px}
+.pub .pn{flex:1 1 220px;min-width:0}.pub .pn a{color:var(--txt);text-decoration:none;font-weight:600}.pub .pn small{display:block;color:var(--gris);font-size:13px}
+.pub .pg{flex:1 1 260px;font-size:13px;color:var(--gris2);text-align:right;white-space:nowrap}.pub .pg b{color:var(--txt);font-weight:600}
+.pub .pg.stats{text-align:left;flex:0 0 330px;font-size:12px;line-height:1.4}.pub .pg.stats .st{display:block}.pub .pg.stats .st em{font-style:normal;color:var(--gris);display:inline-block;width:122px}.pub .pg.stats .st b{display:inline-block;min-width:62px;text-align:right}
+.pub .pb{flex:1 1 100%;margin:4px 0 0}
+.pub .pact{flex:0 0 auto;display:flex;gap:6px}
+.pub .res,.pub .volet{flex:1 1 100%}
+.barre{display:none}
+.clics{margin-top:24px;font-size:13px;color:var(--gris)}.clics ul{margin:4px 0 0;padding-left:18px}
+@media (max-width:760px){
+  .app{display:block}
+  aside{display:none}
+  .barre{display:block;background:var(--fond);padding:10px 12px 8px;border-bottom:1px solid var(--trait)}
+  .barre h1{font-size:18px;margin:0 0 6px}
+  .barre .releve{margin:0 0 8px;padding:8px 10px}
+  .barre .totaux{margin:0 0 8px;gap:6px}.barre .tot b{font-size:16px}
+  .chips{display:flex;gap:6px;overflow-x:auto;white-space:nowrap;padding:6px 0;-webkit-overflow-scrolling:touch;position:sticky;top:0;z-index:5;background:var(--fond)}
+  .chip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 10px;border-radius:999px;background:var(--blanc);border:1px solid var(--trait);font:inherit;font-size:13px;font-weight:600;color:var(--txt);cursor:pointer;flex:0 0 auto}
+  .chip.on{background:var(--txt);color:#fff;border-color:var(--txt)}
+  .chip b{font-weight:600;background:var(--chip);color:var(--gris2);border-radius:999px;padding:0 6px;font-size:12px}
+  .chip.on b{background:#444;color:#fff}.chip b.rouge{background:var(--rouge);color:#fff}.chip b.orange{background:#d98400;color:#fff}
+  .barre .rech{margin:8px 0 0;height:38px}
+  main{padding:12px 12px 60px}
+  .ligne{flex-wrap:wrap}
+  .chiffres{text-align:left;white-space:normal;flex:1 1 100%;padding-left:22px}
+  .boutons .b{width:100%}
+  .pb .bb .b{width:100%}
+  .pub .pg{text-align:left;white-space:normal;flex:1 1 100%;padding-left:20px}
+  .pub .pact{flex:1 1 100%}.pub .pact .b{flex:1}
+}</style></head>
+<body>
+<div class="barre" id="barre"></div>
+<div class="app">
+<aside id="aside"></aside>
+<main>
+<div id="panier"></div>
+<div id="bandeau"></div>
+<div id="attente" class="attente">Je lis le tableau (10 à 20 secondes)…</div>
+<div id="cartes"></div>
+<div id="clics" class="clics" style="display:none"><b>Tes clics d'aujourd'hui</b> <span id="clics-n"></span><ul id="clics-liste"></ul></div>
+</main>
+</div>
+<script>
+/* Mini code QR (octets, niveau M, versions 1 à 10) pour « Mettre sur mon téléphone » — écrit pour la page des comptes rapide (10/11/2026).
+   QRBA.matrice(texte[, masqueForce]) → { n, m: [[0|1]], version, masque } ; QRBA.svg(texte, taillePx) → chaîne SVG (fond blanc, marge de 4 modules). */
+var QRBA = (function(){
+  var T = [null, {ec:10,b:[[1,16]]}, {ec:16,b:[[1,28]]}, {ec:26,b:[[1,44]]}, {ec:18,b:[[2,32]]}, {ec:24,b:[[2,43]]},
+           {ec:16,b:[[4,27]]}, {ec:18,b:[[4,31]]}, {ec:22,b:[[2,38],[2,39]]}, {ec:22,b:[[3,36],[2,37]]}, {ec:26,b:[[4,43],[1,44]]}];
+  var ALIGN = [null, [], [6,18], [6,22], [6,26], [6,30], [6,34], [6,22,38], [6,24,42], [6,26,46], [6,28,50]];
+  var EXP = new Array(512), LOG = new Array(256);
+  (function(){ var x = 1, i; for (i = 0; i < 255; i++) { EXP[i] = x; LOG[x] = i; x <<= 1; if (x & 256) x ^= 0x11d; } for (i = 255; i < 512; i++) EXP[i] = EXP[i - 255]; })();
+  function mul(a, b){ return (a && b) ? EXP[LOG[a] + LOG[b]] : 0; }
+  function rsGen(n){ var g = [1], i, j, ng; for (i = 0; i < n; i++) { ng = new Array(g.length + 1).fill(0); for (j = 0; j < g.length; j++) { ng[j] ^= g[j]; ng[j + 1] ^= mul(g[j], EXP[i]); } g = ng; } return g; }
+  function rsReste(d, n){ var g = rsGen(n), r = new Array(n).fill(0), i, j, f; for (i = 0; i < d.length; i++) { f = d[i] ^ r[0]; r.shift(); r.push(0); for (j = 0; j < n; j++) r[j] ^= mul(g[j + 1], f); } return r; }
+  function octets(s){ return Array.prototype.slice.call(new TextEncoder().encode(String(s))); }
+  function coder(texte){
+    var by = octets(texte), v = 0, cap = 0, i;
+    for (i = 1; i <= 10; i++) { var d = T[i].b.reduce(function(a, x){ return a + x[0] * x[1]; }, 0); if (Math.ceil((4 + (i < 10 ? 8 : 16) + 8 * by.length) / 8) <= d) { v = i; cap = d; break; } }
+    if (!v) throw new Error('texte trop long pour le code');
+    var bits = []; function mettre(val, n){ for (var k = n - 1; k >= 0; k--) bits.push((val >> k) & 1); }
+    mettre(4, 4); mettre(by.length, v < 10 ? 8 : 16); by.forEach(function(b){ mettre(b, 8); });
+    for (i = 0; i < 4 && bits.length < cap * 8; i++) bits.push(0);
+    while (bits.length % 8) bits.push(0);
+    var cw = [], p, q, x; for (p = 0; p < bits.length; p += 8) { x = 0; for (q = 0; q < 8; q++) x = (x << 1) | bits[p + q]; cw.push(x); }
+    for (i = 0; cw.length < cap; i++) cw.push(i % 2 ? 0x11 : 0xEC);
+    var blocs = [], pos = 0; T[v].b.forEach(function(g){ for (var k = 0; k < g[0]; k++) { var dd = cw.slice(pos, pos + g[1]); pos += g[1]; blocs.push({ d: dd, e: rsReste(dd, T[v].ec) }); } });
+    var out = [], maxd = Math.max.apply(null, blocs.map(function(b){ return b.d.length; })), c;
+    for (c = 0; c < maxd; c++) blocs.forEach(function(b){ if (c < b.d.length) out.push(b.d[c]); });
+    for (c = 0; c < T[v].ec; c++) blocs.forEach(function(b){ out.push(b.e[c]); });
+    return { v: v, cw: out };
+  }
+  function masque(k, r, c){ switch (k) { case 0: return (r + c) % 2 === 0; case 1: return r % 2 === 0; case 2: return c % 3 === 0; case 3: return (r + c) % 3 === 0; case 4: return (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0;
+    case 5: return (r * c) % 2 + (r * c) % 3 === 0; case 6: return ((r * c) % 2 + (r * c) % 3) % 2 === 0; default: return ((r + c) % 2 + (r * c) % 3) % 2 === 0; } }
+  function penalite(M, n){
+    var p = 0, r, c, k, run, coul, noirs = 0;
+    for (k = 0; k < 2; k++) for (r = 0; r < n; r++) { run = 0; coul = -1; var ligne = '';
+      for (c = 0; c < n; c++) { var v = k ? M[c][r] : M[r][c]; ligne += v; if (v === coul) { run++; if (run === 5) p += 3; else if (run > 5) p++; } else { coul = v; run = 1; } }
+      var i = -1; while ((i = ligne.indexOf('10111010000', i + 1)) >= 0) p += 40; i = -1; while ((i = ligne.indexOf('00001011101', i + 1)) >= 0) p += 40; }
+    for (r = 0; r < n - 1; r++) for (c = 0; c < n - 1; c++) { var a = M[r][c]; if (a === M[r][c + 1] && a === M[r + 1][c] && a === M[r + 1][c + 1]) p += 3; }
+    for (r = 0; r < n; r++) for (c = 0; c < n; c++) noirs += M[r][c];
+    return p + Math.floor(Math.abs(noirs * 20 - n * n * 10) / (n * n)) * 10;
+  }
+  function matrice(texte, force){
+    var e = coder(texte), v = e.v, n = 17 + 4 * v, M = [], R = [], i, r, c;
+    for (i = 0; i < n; i++) { M.push(new Array(n).fill(0)); R.push(new Array(n).fill(false)); }
+    function poser(rr, cc, val){ M[rr][cc] = val ? 1 : 0; R[rr][cc] = true; }
+    function repere(r0, c0){ for (var a = -1; a <= 7; a++) for (var b = -1; b <= 7; b++) { var rr = r0 + a, cc = c0 + b; if (rr < 0 || rr >= n || cc < 0 || cc >= n) continue;
+      poser(rr, cc, (a >= 0 && a <= 6 && (b === 0 || b === 6)) || (b >= 0 && b <= 6 && (a === 0 || a === 6)) || (a >= 2 && a <= 4 && b >= 2 && b <= 4)); } }
+    repere(0, 0); repere(0, n - 7); repere(n - 7, 0);
+    var al = ALIGN[v]; for (var x = 0; x < al.length; x++) for (var y = 0; y < al.length; y++) { var r0 = al[x], c0 = al[y]; if (R[r0][c0]) continue;
+      for (r = -2; r <= 2; r++) for (c = -2; c <= 2; c++) poser(r0 + r, c0 + c, Math.max(Math.abs(r), Math.abs(c)) !== 1); }
+    for (i = 8; i < n - 8; i++) { if (!R[6][i]) poser(6, i, i % 2 === 0); if (!R[i][6]) poser(i, 6, i % 2 === 0); }
+    poser(n - 8, 8, 1);
+    for (i = 0; i < 9; i++) { R[8][i] = true; R[i][8] = true; } for (i = 0; i < 8; i++) { R[8][n - 1 - i] = true; R[n - 1 - i][8] = true; }
+    if (v >= 7) { var rem = v; for (i = 0; i < 12; i++) rem = (rem << 1) ^ ((rem >> 11) * 0x1F25); var vb = (v << 12) | rem;
+      for (i = 0; i < 18; i++) { var bit = (vb >> i) & 1, a2 = n - 11 + (i % 3), b2 = Math.floor(i / 3); poser(a2, b2, bit); poser(b2, a2, bit); } }
+    var k = 0, total = e.cw.length * 8;
+    for (var droite = n - 1; droite >= 1; droite -= 2) { if (droite === 6) droite = 5;
+      for (var vert = 0; vert < n; vert++) for (var j = 0; j < 2; j++) { c = droite - j; var haut = ((droite + 1) & 2) === 0; r = haut ? n - 1 - vert : vert;
+        if (!R[r][c] && k < total) { M[r][c] = (e.cw[k >> 3] >> (7 - (k & 7))) & 1; k++; } } }
+    function finir(mk){
+      var N = M.map(function(l){ return l.slice(); });
+      for (var rr = 0; rr < n; rr++) for (var cc = 0; cc < n; cc++) if (!R[rr][cc] && masque(mk, rr, cc)) N[rr][cc] ^= 1;
+      var data = mk, rm = data, t; for (t = 0; t < 10; t++) rm = (rm << 1) ^ ((rm >> 9) * 0x537); var f = ((data << 10) | rm) ^ 0x5412;   /* niveau M = 00 */
+      function b(i2){ return (f >> i2) & 1; }
+      for (t = 0; t <= 5; t++) N[t][8] = b(t); N[7][8] = b(6); N[8][8] = b(7); N[8][7] = b(8); for (t = 9; t < 15; t++) N[8][14 - t] = b(t);
+      for (t = 0; t < 8; t++) N[8][n - 1 - t] = b(t); for (t = 8; t < 15; t++) N[n - 15 + t][8] = b(t); N[n - 8][8] = 1;
+      return N;
+    }
+    var meilleur = null, mm = -1, score = Infinity;
+    for (var q = 0; q < 8; q++) { if (force != null && q !== force) continue; var cand = finir(q), s = penalite(cand, n); if (s < score) { score = s; meilleur = cand; mm = q; } }
+    return { n: n, m: meilleur, version: v, masque: mm };
+  }
+  function svg(texte, taille){
+    var q = matrice(texte), n = q.n, bord = 4, t = n + 2 * bord, d = '', r, c;
+    for (r = 0; r < n; r++) for (c = 0; c < n; c++) if (q.m[r][c]) d += 'M' + (c + bord) + ' ' + (r + bord) + 'h1v1h-1z';
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + taille + '" height="' + taille + '" viewBox="0 0 ' + t + ' ' + t + '" shape-rendering="crispEdges" role="img" aria-label="Code à scanner"><rect width="' + t + '" height="' + t + '" fill="#fff"/><path d="' + d + '" fill="#000"/></svg>';
+  }
+  return { matrice: matrice, svg: svg };
+})();
+/* Les comptes — VERSION RAPIDE v5.27-r1 (page fixe sur notre domaine, hors du tableau). Fabriquée par plan/comptes-rapide-1011/construire_comptes_rapide.py :
+   la page des comptes n'est PAS réécrite ; ce bloc remplace seulement son fil avec le tableau (google.script.run → envoi direct au tableau, avec le code d'Enzo gardé sur l'appareil)
+   et montre tout de suite les derniers chiffres lus, en gris, pendant que le tableau est relu. Tant que les chiffres sont en gris, aucun ordre ne part. */
+(function(){
+  var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', LIER = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec?x=rapide', CLE_CODE = 'ba_comptes_code', NOM_CACHE = 'ba-comptes-donnees', CLE_SECOURS = 'ba_comptes_donnees';
+  var R = window.__RAPIDE__ = { version: 'v5.27-r1', code: '', perime: false, frais: false, echec: '', recu: 0, duree: 0, envois: 0 };
+  function lire(k){ try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+  function ecrire(k, v){ try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  /* 1. Le code arrive une seule fois : par le nom de la fenêtre (bouton « Ouvrir ma page rapide » du tableau) ou par le lien / le carré à scanner (#k=).
+        Il est gardé sur l'appareil ; l'adresse est nettoyée aussitôt (le code ne reste jamais dans l'adresse). */
+  try { var mn = /^ba_k_([0-9a-f]{8,64})$/.exec(String(window.name || '')); if (mn) { ecrire(CLE_CODE, mn[1]); window.name = ''; } } catch (e) {}
+  try { var mh = /[#&]k=([0-9a-f]{8,64})(?:&|$)/.exec(String(location.hash || '')); if (mh) ecrire(CLE_CODE, mh[1]); if (location.hash) history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  try { window.opener = null; } catch (e) {}
+  /* la page est déjà ouverte et le lien du téléphone arrive dans le même onglet : seule la fin de l'adresse change, la page ne se recharge pas d'elle-même */
+  window.addEventListener('hashchange', function(){ try { var m2 = /[#&]k=([0-9a-f]{8,64})(?:&|$)/.exec(String(location.hash || '')); if (location.hash) history.replaceState(null, '', location.pathname + location.search); if (m2) { ecrire(CLE_CODE, m2[1]); location.reload(); } } catch (e) {} });
+  R.code = lire(CLE_CODE);
+
+  /* 2. Les derniers chiffres lus, gardés sur l'appareil (jamais envoyés ailleurs) */
+  function secours(){ try { return JSON.parse(lire(CLE_SECOURS) || 'null'); } catch (e) { return null; } }
+  function cacheLire(){
+    try { if (window.caches && caches.open) return caches.open(NOM_CACHE).then(function(c){ return c.match('/donnees'); }).then(function(r){ return r ? r.json() : secours(); }).catch(function(){ return secours(); }); } catch (e) {}
+    return Promise.resolve(secours());
+  }
+  function cacheEcrire(o){
+    var t; try { t = JSON.stringify(o); } catch (e) { return Promise.resolve(); }
+    try { if (window.caches && caches.open) return caches.open(NOM_CACHE).then(function(c){ return c.put('/donnees', new Response(t, { headers: { 'Content-Type': 'application/json' } })); }).catch(function(){ ecrire(CLE_SECOURS, t); }); } catch (e) {}
+    ecrire(CLE_SECOURS, t); return Promise.resolve();
+  }
+  function cacheVider(){ ecrire(CLE_SECOURS, null); try { if (window.caches && caches.delete) return caches.delete(NOM_CACHE).catch(function(){}); } catch (e) {} return Promise.resolve(); }
+
+  /* 3. Le fil avec le tableau : un envoi simple (texte), sans témoin de connexion ; 90 secondes au plus */
+  function poster(corps){
+    var ctl = ('AbortController' in window) ? new AbortController() : null, minuteur = setTimeout(function(){ if (ctl) ctl.abort(); }, 90000);
+    R.envois++;
+    return fetch(TABLEAU, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(corps), redirect: 'follow', cache: 'no-store', credentials: 'omit', signal: ctl ? ctl.signal : undefined })
+      .then(function(r){ clearTimeout(minuteur); if (!r.ok) throw new Error('le tableau a répondu ' + r.status); return r.text(); })
+      .then(function(t){ try { return JSON.parse(t); } catch (e) { throw new Error('réponse illisible du tableau'); } })
+      .catch(function(e){ clearTimeout(minuteur); throw (e && e.name === 'AbortError') ? new Error('le tableau met plus de 90 secondes à répondre') : (e && /Failed to fetch|NetworkError|Load failed/i.test(String(e.message || e)) ? new Error('pas de connexion au tableau') : e); });
+  }
+
+  /* 4. L'état affiché : chiffres d'avant = gris + bandeau ; chiffres frais = rien */
+  function deux(n){ return ('0' + n).slice(-2); }
+  function quand(t){ var d = new Date(t), a = new Date(); var h = deux(d.getHours()) + ' h ' + deux(d.getMinutes()); return (d.toDateString() === a.toDateString()) ? h : (deux(d.getDate()) + '/' + deux(d.getMonth() + 1) + ' à ' + h); }
+  function marquer(){
+    if (!document.body) return;
+    document.documentElement.classList.toggle('ba-perime', !!R.perime);
+    var b = document.getElementById('ba-etat'); if (!b) { b = document.createElement('div'); b.id = 'ba-etat'; b.setAttribute('role', 'status'); document.body.appendChild(b); }
+    if (R.perime) { b.className = R.echec ? 'ko' : ''; b.textContent = 'Chiffres de ' + quand(R.recu) + ' (ton heure) · ' + (R.echec ? 'le tableau ne répond pas : ' + R.echec + ' · clique « Relire »' : 'je relis le tableau…'); b.style.display = ''; }
+    else b.style.display = 'none';
+  }
+
+  /* 5. Lire le tableau : d'abord les chiffres gardés (tout de suite), puis les frais */
+  var premiere = true, enCours = 0;
+  function lireDonnees(ok, ko){
+    if (!R.code) { montrerLiaison(''); return; }
+    var debut = Date.now(), moi = ++enCours, avant = premiere ? cacheLire() : Promise.resolve(null); premiere = false; R.echec = ''; marquer();
+    avant.then(function(c){ if (c && c.donnees && c.donnees.ok && !R.frais && moi === enCours) { R.perime = true; R.recu = c.recu || 0; try { ok(c.donnees); } catch (e) {} marquer(); } });
+    poster({ action: 'optimiser_donnees', code: R.code }).then(function(d){
+      if (moi !== enCours) return;
+      if (d && d.ok) { R.frais = true; R.perime = false; R.echec = ''; R.recu = Date.now(); R.duree = R.recu - debut; cacheEcrire({ recu: R.recu, donnees: d }); ok(d); marquer(); return; }
+      if (d && /acc[eè]s r[eé]serv[eé]/i.test(String(d.erreur || ''))) { ecrire(CLE_CODE, null); R.code = ''; cacheVider(); montrerLiaison('Le code gardé sur cet appareil n\'est plus bon. Relie-le à nouveau.'); return; }
+      R.echec = String((d && d.erreur) || 'rien reçu').slice(0, 120); ok(d); marquer();
+    }).catch(function(e){ if (moi !== enCours) return; R.echec = String((e && e.message) || e).replace(/^Error:\s*/, '').slice(0, 120); try { ko(e); } catch (e2) {} marquer(); });
+  }
+  function garderEtat(){ try { if (window.D && window.D.ok && R.frais && !R.perime) cacheEcrire({ recu: R.recu, donnees: window.D }); } catch (e) {} }
+  function envoyerOrdre(o, ok, ko){
+    if (!R.code) return ko(new Error('cet appareil n\'est pas relié au tableau'));
+    if (R.perime) return ko(new Error('je relis encore le tableau : réessaie dans quelques secondes'));
+    if (!o || typeof o !== 'object' || ('action' in o) || ('code' in o)) return ko(new Error('ordre inattendu : rien n\'a été envoyé'));
+    poster(Object.assign({}, o, { action: 'optimiser_ordre', code: R.code })).then(function(j){ ok(j); if (j && j.ok) setTimeout(garderEtat, 2000); }).catch(function(e){ ko(e); });
+  }
+  function coureur(ok, ko){
+    ok = ok || function(){}; ko = ko || function(){};
+    return { withSuccessHandler: function(f){ return coureur(f, ko); }, withFailureHandler: function(f){ return coureur(ok, f); }, withUserObject: function(){ return coureur(ok, ko); },
+             optimiserDonnees: function(){ lireDonnees(ok, ko); }, optimiserOrdre: function(_code, o){ envoyerOrdre(o, ok, ko); } };
+  }
+  window.google = window.google || {};
+  window.google.script = { url: { getLocation: function(cb){ setTimeout(function(){ cb({ parameter: { code: R.code }, parameters: {}, hash: '' }); }, 0); } }, host: { close: function(){} } };
+  Object.defineProperty(window.google.script, 'run', { get: function(){ return coureur(); } });
+
+  /* 6. Pas encore relié : l'écran de liaison (rien n'est demandé au tableau) */
+  function relierAvec(texte){
+    var t = String(texte || '').trim(), m = /(?:[?&#]code=|[#&]k=)([0-9a-f]{8,64})(?:[&#]|$)/i.exec(t) || /^([0-9a-f]{8,64})$/i.exec(t);
+    if (!m) return false; ecrire(CLE_CODE, m[1].toLowerCase()); return true;
+  }
+  function montrerLiaison(message){
+    function poser(){
+      var a = document.querySelector('.app'); if (a) a.style.display = 'none'; var ba = document.getElementById('barre'); if (ba) ba.style.display = 'none'; var tb = document.getElementById('ba-tel-btn'); if (tb) tb.style.display = 'none';
+      var d = document.getElementById('ba-liaison'); if (!d) { d = document.createElement('div'); d.id = 'ba-liaison'; document.body.appendChild(d); }
+      d.innerHTML = '<div class="ba-carte"><h1>Les comptes</h1><p>' + esc(message || 'Cet appareil n\'est pas encore relié à ton tableau.') + '</p>'
+        + '<p><b>Sur ton ordinateur :</b></p><div class="ba-rang"><a class="ba-bouton ba-bleu" href="' + esc(LIER) + '" target="_blank" rel="noopener">Relier cet ordinateur</a></div><p class="ba-gris" style="margin-top:8px">Ton compte Google s\'ouvre, puis clique « Ouvrir ma page rapide ».</p>'
+        + '<p><b>Sur ton téléphone :</b> ouvre d\'abord la page sur ton ordinateur, clique « Sur mon téléphone » en bas à gauche, puis vise le carré avec l\'appareil photo.</p>'
+        + '<details><summary>Autre moyen : coller mon ancien lien</summary><p style="margin-top:8px">Colle ici le lien de ta page des comptes (celui qui contient « code= ») :</p><input id="ba-colle" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://script.google.com/…code=…"><button type="button" id="ba-colle-ok" class="ba-bleu">Relier</button><p id="ba-colle-res" class="ba-res"></p></details></div>';
+      document.getElementById('ba-colle-ok').onclick = function(){ if (relierAvec(document.getElementById('ba-colle').value)) location.reload(); else document.getElementById('ba-colle-res').textContent = 'Je ne trouve pas le code dans ce texte : colle le lien entier.'; };
+    }
+    if (document.body) poser(); else document.addEventListener('DOMContentLoaded', poser);
+  }
+
+  /* 7. « Sur mon téléphone » : le carré à scanner (le lien avec le code est fabriqué ICI, sur l'appareil ; il n'est envoyé nulle part) */
+  function lienTelephone(){ return location.origin + location.pathname + '#k=' + R.code; }
+  function ouvrirTelephone(){
+    var v = document.getElementById('ba-voile'); if (v) v.remove(); if (!R.code) return;
+    v = document.createElement('div'); v.id = 'ba-voile';
+    var carre = ''; try { carre = QRBA.svg(lienTelephone(), 232); } catch (e) { carre = ''; }
+    v.innerHTML = '<div class="ba-carte" role="dialog" aria-label="Sur mon téléphone"><h1>Sur mon téléphone</h1>'
+      + (carre ? '<div class="ba-qr">' + carre + '</div>' : '')
+      + '<ol><li>Ouvre l\'appareil photo de ton téléphone et vise ce carré.</li><li>Touche le lien qui s\'affiche : ta page s\'ouvre.</li><li>Dans le menu du navigateur, choisis « Ajouter à l\'écran d\'accueil ».</li></ol>'
+      + '<p class="ba-gris">Ce carré ouvre ta page à ta place : ne le montre à personne.</p>'
+      + '<div class="ba-rang"><button type="button" id="ba-copier">Copier le lien</button><button type="button" id="ba-oublier">Oublier cet appareil</button><button type="button" id="ba-fermer" class="ba-bleu">Fermer</button></div><p id="ba-tel-res" class="ba-res" style="color:#1f7a3a"></p></div>';
+    document.body.appendChild(v);
+    v.addEventListener('click', function(e){ if (e.target === v) v.remove(); });
+    document.getElementById('ba-fermer').onclick = function(){ v.remove(); };
+    document.getElementById('ba-copier').onclick = function(){ var res = document.getElementById('ba-tel-res'); try { navigator.clipboard.writeText(lienTelephone()).then(function(){ res.textContent = 'Lien copié. Envoie-le seulement à toi.'; }, function(){ res.textContent = 'Copie refusée par le navigateur : utilise le carré.'; }); } catch (e) { res.textContent = 'Copie impossible ici : utilise le carré.'; } };
+    document.getElementById('ba-oublier').onclick = function(){ var b = this; if (b.getAttribute('data-sur') !== '1') { b.setAttribute('data-sur', '1'); b.textContent = 'Sûr ? Cliquer encore'; return; } ecrire(CLE_CODE, null); cacheVider().then(function(){ location.reload(); }); };
+  }
+  /* le bouton vit en bas du menu de gauche ; la page redessine ce menu à chaque lecture : on le remet à sa place chaque fois */
+  var boutonTel = null;
+  function poserBouton(){
+    var m = document.getElementById('aside'); if (!R.code || !m) return;
+    if (!boutonTel) { boutonTel = document.createElement('button'); boutonTel.type = 'button'; boutonTel.id = 'ba-tel-btn'; boutonTel.textContent = '📱 Sur mon téléphone'; boutonTel.addEventListener('click', function(e){ e.stopPropagation(); ouvrirTelephone(); }); }
+    if (boutonTel.parentNode !== m || m.lastElementChild !== boutonTel) m.appendChild(boutonTel);
+  }
+  function suivreMenu(){ var m = document.getElementById('aside'); if (!m) return; poserBouton(); try { new MutationObserver(function(){ poserBouton(); }).observe(m, { childList: true }); } catch (e) {} }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', suivreMenu); else suivreMenu();
+  R.relier = relierAvec; R.telephone = ouvrirTelephone;
+})();
+</script>
+<script>
+/* Les comptes v5.27 (09/11/2026 09 h 41 UTC) — fabriquée par plan/construire_comptes.py depuis MAQUETTE-COMPTES.md (9 pièces) + CATALOGUE-ALERTES.md.
+   Page EN DIRECT : tout est relu dans le tableau à chaque ouverture (optimiserDonnees) ; un clic = un ordre écrit dans le tableau (optimiserOrdre),
+   appliqué par le script Google Ads (xx h 19 : arrêter, rallumer, budget) ou le robot (xx h 43 : nouvelle pub, allumage, site). Annuler tant que ce n'est pas appliqué.
+   Comptage (Enzo 29/10) : une demande = un appel OU un formulaire reçu au tableau. Chiffres d'un compte = toute la période dès que le relevé Google les fournit (D.periode = 'total'), sinon 30 jours, et la page le dit. */
+var CODE = '', D = null, FILTRE = '', SOUVENIR = {}, OUV = { pb: {}, pubs: {}, volet: {} }, CLICS_LOCAUX = [];
+var U = '__u=5357573647', DEXEM = 'https://app.dexem.com/google_ads_client_accounts';
+var SEUIL_ROUGE = 90, SEUIL_OK = 70, MIN_DEPENSE = 150, RETARD_ORDRE = 90, RETARD_ROBOT = 120, RELEVE_VIEUX = 120, GOOGLE_MIN = 5;
+var CAT = {"1": {"f": "Branchement cassé", "t": "Le téléphone Dexem n'est pas relié : les appels ne sont pas comptés.", "b": "Brancher Dexem clic « Autoriser » = toi"}, "2": {"f": "Branchement cassé", "t": "Google compte X demandes, le tableau aucune : formulaire ou téléphone pas branché.", "b": "Vérifier le branchement"}, "3": {"f": "Branchement cassé", "t": "Facturé : X demandes ; Google n'en voit que Y : les appels ne remontent pas.", "b": "Vérifier le branchement"}, "4": {"f": "Branchement cassé", "t": "Allumage bloqué : Dexem n'est pas relié. Les pubs attendent.", "b": "Brancher Dexem"}, "5": {"f": "Trop cher", "t": "La pub « Y » a coûté Z € pour N demandes (X € la demande sur le compte).", "b": "Arrêter « Y »"}, "6": {"f": "Trop cher", "t": "X € dépensés pour 0 demande.", "b": "Arrêter les pubs"}, "7": {"f": "Trop cher", "t": "X € la demande : ça rapporte, mais c'est cher (bon = moins de 70 €).", "b": "Baisser le budget à N €/j"}, "8": {"f": "Erreur", "t": "Les pubs demandent X €/j, ton plafond chez Google est Y € : elles ne s'allument pas.", "b": "Monter le plafond ou Baisser un budget"}, "9": {"f": "Erreur", "t": "Google refuse la pub « Y ».", "b": "Corriger la pub"}, "10": {"f": "Erreur", "t": "Le robot a planté sur ce compte (site ou pub).", "b": "Relancer le robot"}, "11": {"f": "Erreur", "t": "Google dépense X €/j au lieu des Y €/j prévus.", "b": "Remettre Y €/j"}, "12": {"f": "Erreur", "t": "Pub allumée mais 0 € dépensé depuis 7 jours : carte, budget ou diffusion.", "b": "Vérifier chez Google carte = toi"}, "13": {"f": "Erreur", "t": "Ton ordre de HH h MM n'est pas appliqué : Google n'est pas passé.", "b": "Réessayer maintenant"}, "14": {"f": "Erreur", "t": "Vendu le JJ/MM par X, mais pas de fiche ou pas de compte Google.", "b": "Créer la fiche compte Google = Céline"}, "15": {"f": "Site à refaire", "t": "Le site est encore à l'ancienne version. Ses pubs ne bougent pas.", "b": "Refaire le site"}, "16": {"f": "Site à refaire", "t": "Le client a changé de métier : X → Y. Site et image à refaire.", "b": "Refaire le site"}, "15bis": {"f": "Site à refaire", "t": "Pas de fiche dans le tableau : il faut créer sa fiche et son site.", "b": "Créer la fiche + le site"}, "17": {"f": "Pub à l'ancienne", "t": "Les pubs sont encore à l'ancienne méthode.", "b": "Lancer la nouvelle pub · 30 €/j"}, "18": {"f": "Message sans réponse", "t": "Le client a écrit le JJ/MM : « … ».", "b": "Répondre réponse proposée"}, "19": {"f": "Message sans réponse", "t": "Céline demande : « … ».", "b": "Répondre à Céline"}, "20": {"f": "À lancer", "t": "Nouveau client, vendu le JJ/MM : site et pub à lancer.", "b": "Lancer site + pub"}, "21": {"f": "À lancer", "t": "Vendu, mais le formulaire n'est pas rempli.", "b": "Relancer le client"}, "22": {"f": "À lancer", "t": "Le site n'est pas commencé.", "b": "Faire le site"}, "23": {"f": "À lancer", "t": "Aucune pub sur ce compte.", "b": "Lancer la nouvelle pub · 30 €/j"}, "24": {"f": "À lancer", "t": "N pubs prêtes, elles attendent ton feu vert.", "b": "Allumer bloqué si Dexem pas relié"}, "25": {"f": "Ça tourne", "t": "X € la demande : ça tourne, rien à toucher.", "b": "aucun"}, "26": {"f": "Ça tourne", "t": "Trop tôt pour juger : X € dépensés. On regarde dans une semaine.", "b": "aucun"}, "27": {"f": "Ça tourne", "t": "Même site que X : ses demandes sont comptées chez X.", "b": "aucun"}, "28": {"f": "Ça tourne", "t": "Coupées aujourd'hui : N pubs (par toi ou par la règle des 90 €).", "b": "Annuler"}, "29": {"f": "En veille", "t": "Ça marchait à X € la demande et tout est en veille.", "b": "Rallumer"}, "30": {"f": "En veille", "t": "N pubs en veille, X € dépensés pour rien.", "b": "Lancer la nouvelle pub · 30 €/j"}, "30bis": {"f": "En veille", "t": "N pubs en veille, X € dépensés pour D demandes (Y € la demande).", "b": "Lancer la nouvelle pub · 30 €/j"}, "31": {"f": "En veille", "t": "N pubs en veille, 0 € dépensé. Rien à faire.", "b": "aucun"}, "32": {"f": "Archivés", "t": "Archivé : ses pubs sont en veille. Rien à faire.", "b": "Remettre actif"}, "33": {"f": "Archivés", "t": "Archivé, mais N pubs encore allumées : le robot les coupe à xx h 43.", "b": "Arrêter maintenant"}, "34": {"f": "En cours (gris, sur n'importe quelle carte)", "t": "Site en train d'être refait par le robot, prêt vers HH h.", "b": "Annuler"}, "35": {"f": "En cours (gris, sur n'importe quelle carte)", "t": "Nouvelle pub en création par le robot, prête vers HH h.", "b": "Annuler"}, "36": {"f": "En cours (gris, sur n'importe quelle carte)", "t": "Ton ordre de HH h MM (arrêter / rallumer / budget) sera appliqué à xx h 19.", "b": "Annuler"}, "37": {"f": "En cours (gris, sur n'importe quelle carte)", "t": "Allumage automatique prévu à xx h 43 dès que Dexem sera relié.", "b": "Bloquer l'allumage"}, "37bis": {"f": "En cours (gris, sur n'importe quelle carte)", "t": "Allumage noté à HH h MM : les pubs s'allument à xx h 43.", "b": "Annuler"}, "38": {"f": "Argent (gris)", "t": "Ce client n'a pas payé ce mois : X € dus depuis le JJ/MM.", "b": "Voir son relevé"}};
+var FAM = [ ['branchement','Branchement cassé','rouge','regler'], ['cher','Trop cher','rouge','regler'], ['erreur','Erreur','rouge','regler'], ['site','Site à refaire','orange','regler'], ['ancienne','Pub à l\'ancienne','orange','regler'], ['message','Message sans réponse','orange','regler'],
+            ['lancer','À lancer','bleu','reste'], ['tourne','Ça tourne','vert','reste'], ['veille','En veille','gris','reste'], ['archives','Archivés','gris','reste'], ['tout','Tout le monde','','reste'] ];
+var FAM_DE = { 'Branchement cassé':'branchement', 'Trop cher':'cher', 'Erreur':'erreur', 'Site à refaire':'site', 'Pub à l\'ancienne':'ancienne', 'Message sans réponse':'message', 'À lancer':'lancer', 'Ça tourne':'tourne', 'En veille':'veille', 'Archivés':'archives' };
+var COUL_FAM = { branchement:'rouge', cher:'rouge', erreur:'rouge', site:'orange', ancienne:'orange', message:'orange', lancer:'bleu', tourne:'vert', veille:'gris', archives:'gris' };
+
+/* ---------- outils ---------- */
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function eur(x){ x = Number(x)||0; return String(Math.round(x)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f')+' €'; }
+function nb(x){ x = Number(x)||0; var s = (Math.round(x*100)/100).toString().replace('.', ','); return s.replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f'); }
+function nb2(x){ x = Number(x)||0; var s = x.toFixed(2).replace('.', ','); return s.replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f'); }   /* 2 décimales, comme Google Ads les affiche */
+function hp(stamp){ stamp = String(stamp||''); return stamp.length >= 16 ? stamp.slice(11,13)+' h '+stamp.slice(14,16) : ''; }
+function jm(stamp){ stamp = String(stamp||''); return stamp.length >= 10 ? stamp.slice(8,10)+'/'+stamp.slice(5,7) : ''; }
+function heure(){ var t = new Date(); return t.getHours()+' h '+String(t.getMinutes()).padStart(2,'0'); }
+function stampLocal(){ var t = new Date(), z = function(n){ return String(n).padStart(2,'0'); }; return t.getFullYear()+'-'+z(t.getMonth()+1)+'-'+z(t.getDate())+' '+z(t.getHours())+':'+z(t.getMinutes()); }
+function minutesEntre(a, b){ var r = /^(\d{4})-(\d\d)-(\d\d)[ T](\d\d):(\d\d)/, pa = r.exec(String(a||'')), pb = r.exec(String(b||'')); if (!pa || !pb) return 0; var ta = Date.UTC(+pa[1], pa[2]-1, +pa[3], +pa[4], +pa[5]), tb = Date.UTC(+pb[1], pb[2]-1, +pb[3], +pb[4], +pb[5]); return Math.round((tb-ta)/60000); }
+function premierMot(s){ return String(s||'').trim().split(/\s+/)[0].toLowerCase(); }
+function stampDe(s){ var m = /^(oui|en_cours|fait|annule|erreur|attend_dexem)\S*\s+(\d{4}-\d\d-\d\d \d\d:\d\d)/i.exec(String(s||'')); return m ? { etat: m[1].toLowerCase(), stamp: m[2] } : { etat: premierMot(s), stamp: '' }; }
+function lienCompte(c){ return c.ocid ? 'https://ads.google.com/aw/overview?ocid='+c.ocid+'&'+U : 'https://ads.google.com/aw/accounts?ocid=8086333388&'+U; }
+function lienPub(c, kid){ return c.ocid && kid ? 'https://ads.google.com/aw/adgroups?campaignId='+kid+'&ocid='+c.ocid+'&'+U : lienCompte(c); }
+function pl(n, mot, f){ n = Number(n)||0; return n+' '+mot+(n > 1 ? (f||'s') : ''); }
+function pubsMot(n){ return n > 1 ? n+' pubs' : n+' pub'; }
+/* la phrase du catalogue, remplie (jamais un texte libre) */
+function ph(n, v){
+  var t = (CAT[n]||{}).t || ''; v = v||{};
+  if (v.np !== undefined && /^1 pub$/.test(String(v.np))) t = t.replace('N pubs prêtes, elles attendent', 'N pub prête, elle attend').replace('N pubs encore allumées : le robot les coupe', 'N pub encore allumée : le robot la coupe').replace('N pubs en veille', 'N pub en veille').replace('Coupées aujourd\'hui : N pubs', 'Coupée aujourd\'hui : N pub');   /* le singulier */
+  var subs = [ ['« Y »', v.pub !== undefined ? '« '+v.pub+' »' : undefined], ['« … »', v.texte !== undefined ? '« '+v.texte+' »' : undefined], ['X € la demande sur le compte', v.xcompte], ['X €/j', v.xj], ['Y €/j', v.yj], ['N €/j', v.nj], ['Z €', v.z], ['Y €', v.y], ['X €', v.x], ['X demandes', v.xd], ['D demandes', v.dd], ['N pubs', v.np], ['N pub', v.np], ['JJ/MM', v.date], ['HH h MM', v.heure], ['HH h', v.heure], ['X → Y', v.de ? v.de+' → '+v.vers : undefined], ['par X', v.par ? 'par '+v.par : undefined], ['chez X', v.chez ? 'chez '+v.chez : undefined], ['que X', v.que ? 'que '+v.que : undefined], ['que Y', v.y2 !== undefined ? 'que '+v.y2 : undefined], ['arrêter / rallumer / budget', v.action], ['N demandes', v.nd] ];
+  subs.forEach(function(s){ if (s[1] !== undefined && s[1] !== null) t = t.split(s[0]).join(String(s[1])); });
+  return t;
+}
+function nbMots(t){ return String(t).replace(/«[^»]*»/g,' ').replace(/[«»(),.:;!?]/g,' ').split(/\s+/).filter(function(m){ return /[a-zà-ÿ]/i.test(m); }).length; }   /* les mots, sans les chiffres ni les noms entre guillemets */
+
+/* ---------- 1. Le modèle : une carte par compte, ses problèmes (catalogue), ses pubs, ses états gris ---------- */
+function calculer(D){
+  var TOTAL = D.periode === 'total';
+  var campBy = {}; (D.campagnes||[]).forEach(function(k){ (campBy[k.compte_id] = campBy[k.compte_id]||[]).push(k); });
+  var ordA = {}, ordFaitAuj = {}, ordErr = {}, ordParCompte = {};
+  (D.ordres||[]).forEach(function(o){ var k = o.compte_id+'|'+o.campagne_id+'|'+o.action; if (o.statut === 'a_faire') { ordA[k] = o; (ordParCompte[o.compte_id] = ordParCompte[o.compte_id]||[]).push(o); } else if (o.statut === 'fait') ordFaitAuj[k] = o; else if (o.statut === 'erreur') ordErr[k] = o; });   /* v5.15 : les échecs aussi */
+  var domaines = {}; (D.clients||[]).forEach(function(c){ var dmn = String(c.domaine||'').toLowerCase().trim(); if (dmn) (domaines[dmn] = domaines[dmn]||[]).push(c); });
+  var releveGlobal = ''; (D.campagnes||[]).forEach(function(k){ if (k.maj > releveGlobal) releveGlobal = k.maj; });
+  var cartes = [];
+  (D.clients||[]).forEach(function(c){
+    var cid = c.compte_id, l = (D.lot||{})[cid] || null, ks = campBy[cid] || [], dm = (TOTAL && D.demandes_total ? D.demandes_total[cid] : (D.demandes||{})[cid]) || { app:0, form:0, fact:0, derniere:'' };
+    var x = { cid: cid, c: c, l: l, nom: c.nom || (l && l.nom) || cid, archive: c.statut === 'archive', pubs: [], pbs: [], gris: [], couleur: 'gris', famille: '', releve: '', total: TOTAL, siret: l ? l.siret : '' };
+    var pauseAnc = {}; if (l && /^campagnes\s*:/i.test(l.pause||'')) l.pause.replace(/^campagnes\s*:/i,'').split(';').forEach(function(t){ var id = t.split('|')[0].trim(); if (id) pauseAnc[id] = true; });
+    var cout = 0, conv = 0, cout7 = 0, nOn = 0, nOnG = 0, budgetOn = 0, nOnLibre = 0, coupeesAuj = 0, neuves = false;
+    ks.forEach(function(k){
+      var j = (D.jours||{})[cid+'|'+k.campagne_id] || { cout30:0, conv30:0, cout7:0, conv7:0, imp_hier:0 };
+      var on = k.statut === 'ENABLED', anc = /^\[ancienne/i.test(k.campagne);
+      var gC = k.cout_total, gV = k.conv_total, gK = k.cout_conv;   /* exactement les textes de Google Ads (v4.2 du relevé), sinon absents */
+      var cT = TOTAL && gC != null && gC !== '' ? Number(String(gC).replace(/\s/g,'').replace(',','.'))||0 : (j.cout30||0);
+      var vT = TOTAL && gV != null && gV !== '' ? Number(String(gV).replace(/\s/g,'').replace(',','.'))||0 : (j.conv30||0);
+      var p = { kid: k.campagne_id, nom: k.campagne, on: on, ancienne: anc, budget: Number(k.budget_jour)||0, diffusion: k.diffusion||'', maj: k.maj||'', cout: cT, conv: vT, cout7: j.cout7||0, mc: j.mc_cout||0, mcv: j.mc_conv||0, mp: j.mp_cout||0, mpv: j.mp_conv||0, gCout: gC, gConv: gV, gCpc: gK, ordre: null, ordreBudget: null, retard: false, rouge: false, neuve: /LARGE|EXACT/i.test(k.campagne), coupeeAuj: false, faitAuj: '' };
+      var kp = cid+'|'+k.campagne_id;
+      if (ordA[kp+'|pause']) p.ordre = ordA[kp+'|pause']; else if (ordA[kp+'|activer']) p.ordre = ordA[kp+'|activer'];
+      if (ordA[kp+'|budget']) p.ordreBudget = ordA[kp+'|budget'];
+      [p.ordre, p.ordreBudget].forEach(function(o){ if (o && !o.local && minutesEntre(o.quand, D.quand) > RETARD_ORDRE) p.retard = true; });
+      if (!p.ordre && pauseAnc[k.campagne_id] && on) p.pauseLot = true;
+      var fp = ordFaitAuj[kp+'|pause']; if (fp) { p.coupeeAuj = true; coupeesAuj++; p.faitAuj = 'coupée à '+hp(fp.fait_le||fp.quand); }
+      var fa = ordFaitAuj[kp+'|activer']; if (fa) p.faitAuj = 'rallumée à '+hp(fa.fait_le||fa.quand);
+      /* v5.15 (2/11, maquette 8.5) : un ordre en ERREUR ne disparaît plus : il s'écrit sur la ligne de la pub avec la réponse de Google */
+      var fe = ordErr[kp+'|activer'] || ordErr[kp+'|pause'] || ordErr[kp+'|budget']; if (fe) p.faitAuj = 'ÉCHEC de ton ordre de '+hp(fe.quand)+' ('+(fe.action === 'pause' ? 'arrêter' : fe.action === 'activer' ? 'rallumer' : 'budget')+') : '+String(fe.resultat||'').replace(/^Error: ?/, '').slice(0, 120)+' — à faire dans Google Ads';
+      /* v5.9 (Enzo 31/10 18 h 39 : « affiche le tableau avec les modifs que j'ai faites, c'est juste pour moi, que je sois à jour et que je puisse continuer ») :
+         l'état MONTRÉ = Google + tes gestes : ordre fait après le relevé de la pub, ordre noté pas encore passé, geste dans le panier. `on` reste l'état vrai chez Google. */
+      p.onEff = on; p.budgetEff = p.budget; p.src = ''; p.srcH = ''; p.panier = false; p.panierBudget = false;
+      var fb = ordFaitAuj[kp+'|budget']; if (fb && (fb.fait_le||fb.quand) > (k.maj||'')) p.budgetEff = Number(String(fb.valeur||'').replace(',','.')) || p.budgetEff;
+      var dern = [fp, fa].filter(function(o){ return o && (o.fait_le||o.quand) > (k.maj||''); }).sort(function(a, b){ return (a.fait_le||a.quand) < (b.fait_le||b.quand) ? 1 : -1; })[0];
+      if (dern) { p.onEff = dern.action !== 'pause'; p.src = 'fait'; p.srcH = hp(dern.fait_le||dern.quand); if (dern.action === 'activer' && Number(dern.valeur)) p.budgetEff = Number(dern.valeur); }
+      if (p.ordre) { p.onEff = p.ordre.action !== 'pause'; p.src = 'ordre'; p.srcH = hp(p.ordre.quand); if (p.ordre.action === 'activer' && Number(p.ordre.valeur)) p.budgetEff = Number(p.ordre.valeur); }
+      if (p.ordreBudget) p.budgetEff = Number(String(p.ordreBudget.valeur||'').replace(',','.')) || p.budgetEff;
+      if (p.pauseLot) { p.onEff = false; p.src = 'lot'; }
+      (typeof PANIER !== 'undefined' ? PANIER : []).forEach(function(it){ var o = it && it.o; if (!o || it.compte_id !== cid || String(o.campagne_id||'') !== String(k.campagne_id)) return;
+        if (o.type === 'eteindre') { p.onEff = false; p.src = 'panier'; p.panier = true; } else if (o.type === 'rallumer') { p.onEff = true; p.src = 'panier'; p.panier = true; if (Number(o.valeur)) p.budgetEff = Number(o.valeur); } else if (o.type === 'budget') { p.budgetEff = Number(o.valeur) || p.budgetEff; p.panierBudget = true; } });   /* v5.12 (famille 8, OUI 1/11) : un budget au panier ne retire plus Arrêter */
+      p.libre = p.onEff && !p.ordre && !p.pauseLot && !p.panier;   /* allumée (pour toi) et sans geste en attente : Arrêter / Budget possibles sans doublon */
+      if (k.maj > x.releve) x.releve = k.maj;
+      cout += p.cout; conv += p.conv; cout7 += p.cout7; if (p.neuve) neuves = true;
+      if (p.onEff) { nOn++; budgetOn += p.budgetEff; if (p.libre) nOnLibre++; } if (on) nOnG++;
+      p.cpc = p.conv > 0 ? p.cout / p.conv : (p.cout > 0 ? Infinity : 0);
+      if (p.onEff && p.cout >= SEUIL_ROUGE && p.cpc > SEUIL_ROUGE && !(p.ordre && p.ordre.action === 'pause') && !p.pauseLot) p.rouge = true;
+      x.pubs.push(p);
+    });
+    x.pubs.sort(function(a,b){ return (b.onEff - a.onEff) || (a.ancienne - b.ancienne) || (b.cout - a.cout); });
+    var demandes = (dm.app||0) + (dm.form||0), fact = (dm.fact||0), cpd = demandes > 0 ? cout / demandes : (cout > 0 ? Infinity : 0);   /* v5.13 : fact = demandes facturées (verdict du tableau) */
+    x.n = { pubs: ks.length, on: nOn, onGoogle: nOnG, onLibre: nOnLibre, budgetOn: budgetOn, cout: cout, cout7: cout7, conv: conv, demandes: demandes, cpd: cpd, coupeesAuj: coupeesAuj };
+    x.budgetCompte = l ? (Number(String(l.budget_jour||'').replace(',','.'))||0) : 0;
+    var act = l ? String(l.activer||'').trim() : '', actMot = premierMot(act), actS = stampDe(act), site = l ? String(l.site_statut||'').trim() : '', ns = l ? stampDe(l.nouvelle_structure) : { etat:'', stamp:'' }, dexemOui = l ? String(l.dexem_ads||'').trim().toLowerCase() === 'oui' : true;
+    var fiche = (D.fiches||{})[x.siret] || null, metierLot = l ? String(l.metier||'') : '', metierFiche = fiche ? String(fiche.metier||'') : '';
+    var sousTitre = []; if (c.domaine || (l && l.domaine)) sousTitre.push(c.domaine || l.domaine); else sousTitre.push('pas de site dans le tableau'); if (metierLot && !/→/.test(metierLot)) sousTitre.push(metierLot.replace(/\s*\(.*$/,'')); x.sous = sousTitre.join(' · ');
+    var P = x.pbs, G = x.gris, h = hp(D.quand);
+    function pb(n, c, v, bouton){ P.push({ n: n, c: c, t: ph(n, v), b: bouton || null, fam: FAM_DE[(CAT[n]||{}).f] || '' }); }
+    function gris(n, v, bouton, texte){ G.push({ n: n, t: (texte || '')+ph(n, v), b: bouton || null }); }
+    var Bt = function(type, extra, texte, cls){ return Object.assign({ type: type, siret: x.siret, compte_id: cid, nom: x.nom, texte: texte, cls: cls||'' }, extra||{}); };
+    /* --- états gris (en cours), relus dans le tableau --- */
+    x.pubs.forEach(function(p){
+      if (p.ordre) G.push({ n: '36', t: (p.ordre.local ? '✔ Noté à '+hp(p.ordre.quand)+' (ton heure) · ' : '')+ph('36', { heure: hp(p.ordre.quand), action: (p.ordre.action === 'pause' ? 'arrêter' : 'rallumer')+' « '+p.nom+' »' })+(p.retard ? ' ⚠ Pas encore appliqué : Google n\'est pas passé.' : ''), b: Bt('annuler_ordre', { ordre_id: p.ordre.id, campagne_id: p.kid }, 'Annuler'), pub: p.kid });
+      if (p.ordreBudget) G.push({ n: '36', t: (p.ordreBudget.local ? '✔ Noté à '+hp(p.ordreBudget.quand)+' (ton heure) · ' : '')+ph('36', { heure: hp(p.ordreBudget.quand), action: 'budget '+nb(p.ordreBudget.valeur)+' €/j pour « '+p.nom+' »' }), b: Bt('annuler_budget', { ordre_id: p.ordreBudget.id, campagne_id: p.kid, budget_avant: (SOUVENIR['ordre|'+p.ordreBudget.id]||{}).budget_avant }, 'Annuler'), pub: p.kid });
+      if (p.pauseLot) G.push({ n: '36', t: ph('36', { heure: '?', action: 'arrêter « '+p.nom+' »' }).replace('Ton ordre de ? ', 'Ton ordre ').replace('xx h 19', 'xx h 43'), b: null, pub: p.kid });
+    });
+    /* v5.7 (Enzo 31/10 17 h 21 : « peu importe le nombre de fois que j'actualise, mes modifs restent enregistrées ? vérifie ») : une demande déjà notée dans le tableau (→ Claude / Céline, a_faire) ne redevient jamais un bouton après rechargement */
+    var notesCid = (D.notes||{})[cid] || [], attentes = notesCid.filter(function(n){ return n.statut === 'a_faire' && /→ (Claude|Céline)/.test(String(n.par||'')); });
+    function attente(re){ return attentes.filter(function(n){ return re.test(String(n.note||'')); })[0] || null; }
+    function grisDemande(n){ var pour = /Céline/.test(String(n.par||'')) ? 'Céline' : 'Claude'; G.push({ n: '', t: '✔ Demandé à '+pour+' le '+jm(n.quand)+' à '+hp(n.quand)+' · en attente de sa réponse', b: Bt('annuler_note', { note_id: n.id }, 'Annuler') }); }
+    var fx = SOUVENIR[cid+'|fiche'];
+    var robotFera = !!(l && site === '' && String(l.accepte||'').trim() === 'oui' && !/^bloqu/i.test(String(l.lancement||'')) && String(l.abandonne||'').trim() !== 'oui');
+    /* v5.15 (2/11, maquette 8.6) : la raison pour laquelle le robot bloque (lot.lancement « bloqué 6/9 : il manque … ») est montrée, au lieu de « Faire le site » tout seul */
+    /* v5.20 (Enzo 2/11 06 h 06) : les 9 cases ne bloquent que le lancement AUTOMATIQUE (lot.activer = auto) ; les boutons d'Enzo passent toujours */
+    if (l && /^bloqu/i.test(String(l.lancement||''))) { var enLigne = String(l.site_statut||'') === 'ok' && String(l.campagne_statut||'') === 'ok';
+      G.push({ n: '', t: enLigne ? 'ℹ️ Lancement automatique en pause (fiche incomplète) : '+String(l.lancement).replace(/^bloqu[ée]*\s*/i, '').slice(0, 260)+'. Tes boutons (Arrêter, Rallumer, Budget, Nouvelle pub), eux, marchent.'
+        : '⛔ Le robot n\'avance pas automatiquement sur ce client : '+String(l.lancement).replace(/^bloqu[ée]*\s*/i, '').slice(0, 260)+' — tant que la fiche n\'est pas complète, le robot ne lance ni le site ni les pubs tout seul (tes boutons, eux, marchent).', b: null }); }
+    if (fx && l && site === '') gris('34', { heure: 'xx h 43' }, Bt('annuler_fiche_express', { siret: fx.siret }, 'Annuler'), '✔ Fiche créée à '+fx.h+' (ton heure) · '+(fx.pub === 'non' ? 'site' : 'site + nouvelle campagne')+' · ');
+    else if (!fx && site === '' && robotFera && !SOUVENIR[cid+'|refaire']) gris('34', { heure: 'xx h 43' }, null, '');   /* après rechargement : le site vidé = dans la file du robot, même sans souvenir */
+    else if (ns.etat === 'oui' || ns.etat === 'en_cours') gris('35', { heure: ns.stamp ? (parseInt(ns.stamp.slice(11,13),10)+1)+' h' : 'xx h 43' }, ns.etat === 'oui' ? Bt('annuler_nouvelle', {}, 'Annuler') : null, (SOUVENIR[cid+'|nouvelle'] ? '✔ Noté à '+SOUVENIR[cid+'|nouvelle'].h+' (ton heure) · ' : ''));
+    if (!fx && (site === 'en_cours' || (site === '' && SOUVENIR[cid+'|refaire']))) gris('34', { heure: 'xx h 43' }, site === '' ? Bt('annuler_refaire', { site_avant: (SOUVENIR[cid+'|refaire']||{}).site_avant||'ok' }, 'Annuler') : null, (SOUVENIR[cid+'|refaire'] ? '✔ Noté à '+SOUVENIR[cid+'|refaire'].h+' (ton heure) · ' : ''));
+    if (actMot === 'oui' || actMot === 'oui!') gris('37bis', { heure: actS.stamp ? hp(actS.stamp) : h }, Bt('annuler_activer', { avant: (SOUVENIR[cid+'|activer']||{}).avant||'non' }, 'Annuler'), (SOUVENIR[cid+'|activer'] ? '✔ ' : ''));
+    if (actMot === 'auto' && !dexemOui && !x.archive) gris('37', {}, Bt('bloquer_allumage', {}, 'Bloquer l\'allumage'));
+    /* --- les problèmes, du plus urgent au moins urgent (catalogue) --- */
+    if (x.archive) {
+      if (nOn) pb('33', 'rouge', { np: pubsMot(nOn) }, Bt('arreter_tout', {}, 'Arrêter maintenant', 'danger')); else pb('32', 'gris', {}, Bt('desarchiver', { avant: 'archive' }, 'Remettre actif'));
+    } else {
+      /* Branchement cassé */
+      if (l && actMot === 'attend_dexem') pb('4', 'rouge', {}, { lien: DEXEM, texte: 'Brancher Dexem', aide: 'clic « Autoriser » = toi' });
+      else if (l && !dexemOui) pb('1', 'rouge', {}, { lien: DEXEM, texte: 'Brancher Dexem', aide: 'clic « Autoriser » = toi' });
+      var dVb = attente(/^Vérifier le branchement/i);
+      if (dVb && nOn && ((conv >= GOOGLE_MIN && demandes === 0) || (fact >= GOOGLE_MIN && conv < fact / 3))) grisDemande(dVb);
+      else if (nOn && conv >= GOOGLE_MIN && demandes === 0) pb('2', 'rouge', { xd: pl(Math.round(conv), 'demande') }, Bt('verifier_branchement', { google: Math.round(conv), tableau: 0 }, 'Vérifier le branchement'));
+      else if (nOn && fact >= GOOGLE_MIN && conv < fact / 3) pb('3', 'rouge', { xd: pl(fact, 'demande'), y2: Math.round(conv) }, Bt('verifier_branchement', { google: Math.round(conv), tableau: fact }, 'Vérifier le branchement'));   /* v5.13 : facturées seulement (Élégance : 7 demandes dont 2 facturées, Google 1 = pas une panne) */
+      /* Trop cher */
+      x.pubs.filter(function(p){ return p.rouge; }).forEach(function(p){ pb('5', 'rouge', { pub: p.nom, z: eur(p.cout), nd: Math.round(p.conv) === 0 ? '0 demande' : pl(Math.round(p.conv), 'demande'), x: eur(cpd), xcompte: demandes ? undefined : '0 demande sur le compte' }, Bt('eteindre', { campagne_id: p.kid, campagne: p.nom }, 'Arrêter « '+p.nom+' »', 'danger')); });
+      if (nOnLibre && cout > MIN_DEPENSE && demandes === 0 && !x.pubs.some(function(p){ return p.rouge; }) && !(conv >= GOOGLE_MIN)) pb('6', 'rouge', { x: eur(cout) }, Bt('arreter_tout', {}, 'Arrêter les pubs', 'danger'));
+      else if (nOn && demandes > 0 && cpd > SEUIL_OK) { var nj = Math.max(10, Math.round(budgetOn * SEUIL_OK / cpd / 5) * 5); pb('7', cpd > SEUIL_ROUGE ? 'rouge' : 'orange', { x: eur(cpd) }, Bt('budget_compte', { valeur: nj }, 'Baisser le budget à '+nj+' €/j')); }
+      /* Erreur */
+      if (actMot === 'erreur') { var mp = /(\d+(?:[.,]\d+)?)\s*€\/j\s*>\s*plafond\s*(\d+(?:[.,]\d+)?)/i.exec(act); if (mp) pb('8', 'rouge', { xj: nb(mp[1])+' €/j', y: nb(mp[2])+' €' }, { lien: lienCompte(c), texte: 'Monter le plafond', aide: 'chez Google = toi', ouvrir: 'pubs', texte2: 'Baisser un budget' }); else pb('10', 'rouge', {}, Bt('relancer_robot', {}, 'Relancer le robot')); }
+      if ((l && l.erreur) || site === 'erreur') { if (!P.some(function(a){ return a.n === '10'; })) pb('10', 'rouge', {}, Bt('relancer_robot', {}, 'Relancer le robot')); }
+      x.pubs.forEach(function(p){ if (p.on && /not eligible|disapproved/i.test(p.diffusion)) pb('9', 'rouge', { pub: p.nom }, { lien: lienPub(c, p.kid), texte: 'Corriger la pub', aide: 'dans Google Ads' }); });
+      var prevu = l ? Number(String(l.budget_prevu||'').replace(',','.'))||0 : 0;   /* lot.budget_jour = budget PAR PUB (pas le total) : on ne compare que si le tableau fournit un total prévu */
+      if (nOn && prevu > 0 && budgetOn > prevu * 1.25) pb('11', 'rouge', { xj: nb(budgetOn)+' €/j', yj: nb(prevu)+' €/j' }, Bt('budget_compte', { valeur: prevu }, 'Remettre '+nb(prevu)+' €/j'));
+      /* v5.14 (1/11, maillon 8.12) : le relevé Google marque « diffusion arrêtée » (etat.arret_diffusion : pubs allumées, 0 affichage depuis avant-hier) → carte 12 ; l'aide dit depuis quand et ce que Google a écrit (paiements_google) */
+      var arr = (D.arret||{})[cid] || null, pgo = (D.google||{})[cid] || null;
+      if (arr) pb('12', 'rouge', {}, { lien: lienCompte(c), texte: 'Vérifier chez Google', aide: '0 affichage depuis le ' + (jm(arr.depuis) || '?') + (arr.n ? ' (' + pubsMot(arr.n) + ' allumée' + (arr.n > 1 ? 's' : '') + ')' : '') + (pgo ? ' · Google a écrit « paiement ' + (pgo.type === 'suspendu' ? 'compte suspendu' : 'refusé') + ' » le ' + jm(pgo.quand) : '') + ' — carte bancaire = toi' });
+      else if (nOnG && cout7 === 0 && x.releve && !x.pubs.some(function(p){ return p.on && /learning/i.test(p.diffusion); })) pb('12', 'rouge', {}, { lien: lienCompte(c), texte: 'Vérifier chez Google', aide: 'carte bancaire = toi' });
+      (ordParCompte[cid]||[]).filter(function(o){ return !o.local && minutesEntre(o.quand, D.quand) > RETARD_ORDRE; }).slice(0, 1).forEach(function(o){ pb('13', 'rouge', { heure: hp(o.quand) }, Bt('reessayer_ordre', { ordre_id: o.id }, 'Réessayer maintenant')); });
+      /* Site à refaire */
+      if (l && (D.sites_anciens||{})[cid]) pb('15', 'orange', {}, Bt('refaire_site', {}, 'Refaire le site'));
+      var chg = /(.+?)\s*→\s*(.+)/.exec(metierLot); if (chg) pb('16', 'orange', { de: chg[1].trim(), vers: chg[2].trim() }, Bt('refaire_site', { metier: chg[2].trim() }, 'Refaire le site'));
+      else if (metierLot && metierFiche && metierDifferent(metierLot, metierFiche)) pb('16', 'orange', { de: metierLot.replace(/\s*\(.*$/,''), vers: metierFiche }, Bt('refaire_site', { metier: metierFiche }, 'Refaire le site'));   /* v5.1 : accents, « Autre : … » et libellés plus longs ne sont pas un changement de métier */
+      /* v5.10 (Enzo 31/10 19 h 37 : « Lancer site + pub n'a rien à faire dans À optimiser ; le site, c'est dans les lancements groupés ») : sans fiche du lot = famille Site à refaire, bouton « Créer la fiche + le site » (fiche express SANS pub) ; la nouvelle pub se lance ensuite depuis À optimiser */
+      if (sansFiche(x)) pb('15bis', 'orange', {}, { volet: 'fiche', pub: 'non', texte: 'Créer la fiche + le site' });
+      /* Pub à l'ancienne : des pubs, aucune LARGE / EXACT, et ça ne tourne pas bien */
+      if (ks.length && !neuves && !(demandes > 0 && cpd <= SEUIL_OK) && ns.etat !== 'oui' && ns.etat !== 'en_cours') pb('17', 'orange', {}, sansFiche(x) ? null : Bt('nouvelle', {}, 'Nouvelle campagne'));   /* v5.10 : sans fiche, pas de bouton (le tableau refuserait) : d'abord « Créer la fiche + le site » */
+      /* Message sans réponse (dès que le tableau les fournit) */
+      ((D.messages||{})[cid]||[]).slice(0, 2).forEach(function(m){ var dR = attente(new RegExp('^Répondre .*\\(message '+String(m.id).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')+'\\)')); if (dR) return grisDemande(dR); pb('18', 'orange', { date: jm(m.quand), texte: String(m.texte||'').slice(0, 60) }, Bt('repondre', { message_id: m.id }, 'Répondre')); });
+      ((D.celine||{})[cid]||[]).slice(0, 2).forEach(function(m){ var dC = attente(new RegExp('^Répondre .*\\(message '+String(m.id).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')+'\\)')); if (dC) return grisDemande(dC); pb('19', 'orange', { texte: String(m.texte||'').slice(0, 60) }, Bt('repondre', { message_id: m.id, celine: true }, 'Répondre à Céline')); });
+      /* À lancer */
+      var dRc = attente(/^Relancer le client/i);
+      if (!l && c.statut === 'actif') { if (dRc) grisDemande(dRc); else pb('21', 'bleu', {}, Bt('relancer_client', {}, 'Relancer le client')); }
+      if (l && !ks.length && site === '' && !robotFera && ns.etat !== 'oui' && ns.etat !== 'en_cours' && ns.etat !== 'fait') { var dv = c.lance || (fiche && fiche.recu_le) || ''; if (dv) pb('20', 'bleu', { date: jm(dv) }, Bt('refaire', { budget: 30 }, 'Lancer site + pub')); else { pb('22', 'bleu', {}, Bt('refaire_site', {}, 'Faire le site')); pb('23', 'bleu', {}, Bt('nouvelle', {}, 'Nouvelle campagne')); } }
+      else if (l && site === '' && !robotFera && ks.length && ns.etat !== 'oui' && ns.etat !== 'en_cours' && !SOUVENIR[cid+'|refaire']) pb('22', 'bleu', {}, Bt('refaire_site', {}, 'Faire le site'));
+      if (l && !ks.length && site && site !== 'erreur' && ns.etat !== 'oui' && ns.etat !== 'en_cours' && ns.etat !== 'fait') pb('23', 'bleu', {}, Bt('nouvelle', {}, 'Nouvelle campagne'));
+      if (l && ns.etat === 'fait' && l.campagne_statut === 'pret' && actMot !== 'oui' && actMot !== 'oui!' && actMot !== 'attend_dexem') pb('24', 'bleu', { np: pubsMot(2) }, dexemOui ? Bt('activer', {}, 'Allumer') : { lien: DEXEM, texte: 'Brancher Dexem', aide: 'bloqué tant que Dexem n\'est pas relié' });
+      /* Ça tourne (informations, pas des problèmes) */
+      var autres = Object.keys(domaines).length && c.domaine ? (domaines[String(c.domaine).toLowerCase().trim()]||[]).filter(function(o){ return o.compte_id !== cid; }) : [];
+      var memeSite = autres.length && demandes === 0 && ks.length; x.memeSite = memeSite ? autres[0].nom : ''; if (memeSite) pb('27', 'vert', { que: autres[0].nom, chez: autres[0].nom }, null);   /* ses demandes sont comptées chez l'autre : pas de « pour rien » */
+      if (coupeesAuj) pb('28', 'vert', { np: pubsMot(coupeesAuj) }, { ouvrir: 'pubs', texte: 'Annuler' });
+      if (!P.some(function(a){ return a.c === 'rouge' || a.c === 'orange' || a.c === 'bleu'; })) {
+        if (nOn && demandes > 0 && cpd <= SEUIL_OK && cout >= MIN_DEPENSE) pb('25', 'vert', { x: eur(cpd) }, null);
+        else if (nOn) pb('26', 'vert', { x: eur(cout) }, null);
+        else if (ks.length && demandes > 0 && cpd <= SEUIL_OK) pb('29', 'gris', { x: eur(cpd) }, { ouvrir: 'pubs', texte: 'Rallumer' });
+        else if (ks.length && cout > 0 && demandes === 0 && !memeSite) pb('30', 'gris', { np: pubsMot(ks.length), x: eur(cout) }, sansFiche(x) ? null : Bt('nouvelle', {}, 'Nouvelle campagne'));
+        else if (ks.length && cout > 0 && !memeSite) pb('30bis', 'gris', { np: pubsMot(ks.length), x: eur(cout), dd: pl(demandes, 'demande'), y: eur(cpd) }, sansFiche(x) ? null : Bt('nouvelle', {}, 'Nouvelle campagne'));
+        else if (ks.length && !memeSite) pb('31', 'gris', { np: pubsMot(ks.length) }, null);
+      }
+    }
+    /* la famille = celle du problème le plus urgent (un compte = une seule famille) */
+    var ordreFam = {}; FAM.forEach(function(f, i){ ordreFam[f[0]] = i; });
+    P.sort(function(a, b){ return (ordreFam[a.fam]||0) - (ordreFam[b.fam]||0); });
+    /* v5.5 (Enzo 7 h 20 : « s'ils ont un autre problème, tu remets leur carte dans la bonne famille ») : un compte est dans CHAQUE famille où il a un problème (x.familles) ; x.famille = la plus urgente (pour « Tout le monde » et la couleur) */
+    var fams = {}; P.forEach(function(a){ if (a.fam && a.c !== 'vert' && a.c !== 'gris' && a.fam !== 'tourne' && a.fam !== 'veille') fams[a.fam] = 1; });
+    x.familles = x.archive ? ['archives'] : Object.keys(fams);
+    if (x.archive) x.famille = 'archives';
+    else if (P.length && P[0].fam && P[0].fam !== 'tourne' && P[0].fam !== 'veille') x.famille = P[0].fam;
+    else if (nOn) x.famille = 'tourne';
+    else if (ks.length) x.famille = 'veille';
+    else x.famille = 'lancer';
+    if (x.famille === 'cher' && !P.some(function(a){ return a.fam === 'cher' && a.c === 'rouge'; })) x.couleur = 'orange'; else x.couleur = COUL_FAM[x.famille] || 'gris';
+    if (x.archive && nOn) x.couleur = 'rouge';
+    x.nProblemes = P.filter(function(a){ return a.c !== 'vert' && a.c !== 'gris'; }).length;
+    /* v5.21 : touchée aujourd'hui = un ordre noté, un geste dans le panier, un geste fait aujourd'hui, ou une nouvelle pub demandée */
+    x.touche = x.pubs.some(function(p){ return !!(p.ordre || p.ordreBudget || p.panier || p.panierBudget || p.faitAuj); }) || /^(oui|en_cours)/i.test(String((l && l.nouvelle_structure) || '')) || x.gris.some(function(g){ return /✔|not[ée]|panier|xx h 19|xx h 43/i.test(String(g.t || '')); });
+    x.notes = (D.notes||{})[cid] || [];
+    cartes.push(x);
+  });
+  var ordreCoul = { rouge: 0, orange: 1, bleu: 2, vert: 3, gris: 4 };
+  cartes.sort(function(a,b){ return ((b.touche?1:0)-(a.touche?1:0)) || (ordreCoul[a.couleur]-ordreCoul[b.couleur]) || (b.n.cout - a.n.cout) || a.nom.localeCompare(b.nom); });   /* v5.21 : les cartes touchées aujourd'hui en tête */
+  var tot = { comptes: 0, on: 0, pubs: 0, budget: 0, cout: 0, demandes: 0, fam: {} }; FAM.forEach(function(f){ tot.fam[f[0]] = 0; });
+  cartes.forEach(function(x){ var reglerF = {}; FAM.forEach(function(f){ if (f[3] === 'regler') reglerF[f[0]] = 1; }); x.familles.forEach(function(f){ if (reglerF[f]) tot.fam[f]++; }); if (!reglerF[x.famille]) tot.fam[x.famille]++; tot.fam.tout++; if (x.archive) return; tot.comptes++; tot.on += x.n.on; tot.pubs += x.n.pubs; tot.budget += x.n.budgetOn; tot.cout += x.n.cout; tot.demandes += x.n.demandes; });
+  tot.cpd = tot.demandes ? tot.cout / tot.demandes : 0;
+  var opt = optDe(cartes); tot.opt = { optimiser: opt.optimiser.filter(function(it){ return it.as.length; }).length }; tot.optTous = opt.optimiser.length;
+  return { cartes: cartes, tot: tot, releve: releveGlobal, total: TOTAL, opt: opt };
+}
+
+/* ---------- 2. Le dessin : squelette unique (ligne · problèmes repliés · pubs repliées · 5 boutons · note) ---------- */
+/* v5.1 (31/10, Enzo 5 h 48 : « elagueur → Élagueur », « tapissier → Autre : Tapissier décorateur ébéniste » n'étaient pas des changements de métier) : même métier si, sans accents ni majuscules ni « Autre : », les deux mots se valent ou l'un contient l'autre ; une fiche « Autre : … » ne déclenche jamais l'alerte (seul « A → B » écrit dans le tableau le fait). */
+function normMetier(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s*\(.*$/,'').replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim(); }
+function metierDifferent(a, b){ if (/^\s*autre\s*:/i.test(String(b||''))) return false; var x = normMetier(a), y = normMetier(b); if (!x || !y || x === y) return false; if (x.indexOf(y) >= 0 || y.indexOf(x) >= 0) return false; var fx = x.split(' ')[0], fy = y.split(' ')[0]; if (fx === fy || (fx.length > 4 && fy.length > 4 && fx.slice(0, 5) === fy.slice(0, 5))) return false; return true; }
+function periodeMot(x){ return (x.total ? 'depuis le début' : '30 derniers jours') + (x.releve ? ' · relevé Google '+hp(x.releve) : ''); }
+function dBtn(b, prim){
+  if (!b) return '';
+  if (b.lien) return '<a class="b'+(prim ? ' prim' : '')+'" href="'+esc(b.lien)+'" target="_blank" rel="noopener">'+esc(b.texte)+'</a>'+(b.aide ? ' <small style="color:var(--gris)">'+esc(b.aide)+'</small>' : '')+(b.ouvrir ? ' <button type="button" class="b" data-ouvrir="pubs">'+esc(b.texte2||'Voir les pubs')+'</button>' : '');
+  if (b.ouvrir) return '<button type="button" class="b'+(prim ? ' prim' : '')+'" data-ouvrir="pubs">'+esc(b.texte)+'</button>';
+  if (b.volet) return '<button type="button" class="b'+(prim ? ' prim' : '')+'" data-volet="'+esc(b.volet)+'"'+(b.pub ? ' data-pub="'+esc(b.pub)+'"' : '')+'>'+esc(b.texte)+'</button>';   /* v5.10 : ouvre le volet fiche (Créer la fiche + le site) */
+  return '<button type="button" class="b '+(prim ? 'prim' : (b.cls||''))+'" data-o=\''+esc(JSON.stringify(b))+'\' onclick="ordre(this)">'+esc(b.texte)+'</button>';
+}
+function dGris(g){ return '<div class="pb gris" data-pub="'+esc(g.pub||'')+'"><span class="t">'+esc(g.t)+'</span>'+(g.b ? '<div class="bb">'+dBtn(g.b)+'</div><div class="res" data-res="gris-'+esc(g.b.ordre_id||g.n)+'"></div>' : '')+'</div>'; }
+function dProbleme(a, i, n, x, v){ var volet = (a.b && a.b.volet && v && v.type === a.b.volet && x) ? dVolet(x, v) : '';   /* v5.11 : le volet s'ouvre sous SON bouton, pas en bas de la carte */
+  return '<div class="pb '+a.c+'">'+(n > 1 ? '<span class="num">Problème '+(i+1)+' sur '+n+'</span>' : '')+'<span class="t">'+esc(a.t)+'</span>'+(a.b ? '<div class="bb">'+dBtn(a.b, true)+'</div><div class="res" data-res="pb-'+i+'"></div>' : '')+volet+'</div>'; }
+function nconv(v){ v = Number(v)||0; return Math.round(v) === v ? String(v) : (Math.round(v*10)/10).toString().replace('.', ','); }
+function moisLib(m){ var M = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'], i = Number(String(m||'').slice(5, 7)) - 1; return M[i] || String(m||''); }
+function ligneStat(lib, c, v){ return '<span class="st"><em>'+esc(lib)+'</em><b>'+eur(c)+'</b> · '+nconv(v)+' conv · '+(Number(v) ? eur(c/v)+'/conv' : '—')+'</span>'; }
+function dPub(x, p){
+  /* v5.16 (Enzo 2/11 05 h 26) : 3 petites lignes — depuis le début · ce mois · mois dernier (coût, conv, coût/conv) ; sans D.mois (ancien tableau) : l'ancienne ligne */
+  var stats = !!(D && D.mois);
+  var g = stats ? ligneStat(x.total ? 'Depuis le début' : '30 jours', p.cout, p.conv) + ligneStat('Ce mois ('+moisLib(D.mois.courant)+')', p.mc, p.mcv) + ligneStat('Mois dernier ('+moisLib(D.mois.precedent)+')', p.mp, p.mpv)
+    : (p.gCout != null && p.gCout !== '' ? '<b>Coût '+esc(p.gCout)+' €</b> · Conversions '+esc(p.gConv)+' · Coût/conv. '+esc(p.gCpc)+' €' : '<b>Coût '+nb2(p.cout)+' €</b> · Conversions '+nb2(p.conv)+' · Coût/conv. '+(p.conv ? nb2(p.cout/p.conv)+' €' : '—'));
+  /* v5.9 : la ligne montre l'état que TU as demandé (p.onEff / p.budgetEff) ; le vrai état Google (p.on) est dit en mots quand il n'a pas encore suivi */
+  var bEff = nb(p.budgetEff), bChg = p.budgetEff !== p.budget ? ' (avant '+nb(p.budget)+')' : '';
+  var et = p.onEff ? 'allumée · '+bEff+' € par jour'+bChg : 'en veille · '+bEff+' € par jour si rallumée'+bChg;
+  if (p.src === 'panier') et += p.onEff ? ' · rallumage dans ton panier, part à l\'envoi' : ' · arrêt dans ton panier, part à l\'envoi';
+  else if (p.src === 'ordre') et += ' · '+(p.onEff ? 'rallumage' : 'arrêt')+' noté à '+p.srcH+', Google l\'applique à xx h 19';
+  else if (p.src === 'fait') et += ' · '+(p.onEff ? 'rallumée' : 'coupée')+' à '+p.srcH+(p.onEff !== p.on ? ', Google le confirme au prochain relevé' : '');
+  else if (p.src === 'lot') et += ' · arrêt demandé au robot';
+  else if (p.faitAuj) et += ' · '+p.faitAuj+(((/^coupée/.test(p.faitAuj) && p.on) || (/^rallumée/.test(p.faitAuj) && !p.on)) ? ' (mais Google la montre '+(p.on ? 'allumée' : 'en veille')+' au relevé)' : '');
+  if (p.ordreBudget) et += ' · budget '+nb(p.ordreBudget.valeur)+' €/j noté à '+hp(p.ordreBudget.quand); if (p.panierBudget) et += ' · budget dans ton panier, part à l\'envoi'; if (p.ancienne) et += ' · ancienne';
+  var act = (p.ordre || p.panier) ? '' : (p.onEff ? dBtn({ type:'eteindre', siret:x.siret, compte_id:x.cid, nom:x.nom, campagne_id:p.kid, campagne:p.nom, texte:'Arrêter', cls:'danger petit' }) : '<button type="button" class="b petit" data-volet="rallumer" data-kid="'+esc(p.kid)+'">Rallumer</button>');   /* un geste déjà noté ou dans le panier : pas de 2e bouton, l'Annuler / Retirer est sur la carte */
+  act += ' <button type="button" class="b petit" data-volet="budget_pub" data-kid="'+esc(p.kid)+'">Budget</button>';
+  var volet = OUV.volet[x.cid+'|'+p.kid] ? dVoletPub(x, p, OUV.volet[x.cid+'|'+p.kid]) : '';
+  return '<div class="pub" data-kid="'+esc(p.kid)+'"><i class="dot '+(p.onEff ? 'vert' : '')+'"></i><div class="pn"><a href="'+esc(lienPub(x.c, p.kid))+'" target="_blank" rel="noopener">'+esc(p.nom)+'</a><small>'+esc(et)+'</small></div><div class="pg'+(stats ? ' stats' : '')+'">'+g+((x.total || stats) ? '' : '<br><small>30 j</small>')+'</div><div class="pact">'+act+'</div>'+volet+'<div class="res" data-res="pub-'+esc(p.kid)+'"></div></div>';
+}
+function dVoletPub(x, p, v){
+  var val = v.val != null ? v.val : p.budgetEff, id = 'm-'+x.cid.replace(/\D/g,'')+'-'+p.kid;
+  var lib = v.type === 'rallumer' ? 'Rallumer « '+p.nom+' »' : 'Budget de « '+p.nom+' »';
+  return '<div class="volet" data-volet-pub="'+esc(p.kid)+'"><b>'+esc(lib)+'</b><div class="montant"><input class="champ" id="'+id+'" type="text" inputmode="decimal" value="'+esc(nb(val))+'" oninput="recalc(this)"> € par jour</div>'
+    +'<div class="boutons"><button type="button" class="b prim" data-valider="'+v.type+'" data-kid="'+esc(p.kid)+'" data-champ="'+id+'">'+(v.type === 'rallumer' ? 'Rallumer' : 'Changer')+' · <span class="rc">'+esc(nb(val))+'</span> €/j</button><button type="button" class="b" data-fermer="'+esc(p.kid)+'">Annuler</button></div></div>';
+}
+function dVolet(x, v){
+  var id = 'm-'+x.cid.replace(/\D/g,''), nOn = x.n.onLibre;
+  if (v.type === 'fiche') return ficheVolet(x, v);
+  if (v.type === 'nouvelle') { var bm = budgetMoisBase(x), val = v.val != null ? v.val : bm.mois, bj = jourDeMois(val);
+    return '<div class="volet"><b>Nouvelle campagne (un groupe de pub par service, mots exacts)</b><div class="montant">Budget par mois : <input class="champ" id="'+id+'" type="text" inputmode="decimal" value="'+esc(nb(val))+'" oninput="recalcMois(this)"> € · = <span class="rc">'+esc(nb(bj))+'</span> € par jour chez Google (÷ 30,4)</div>'
+    +'<p>'+esc(bm.source)+'. Le robot fabrique la campagne (une heure), puis l\'enchère (coût par demande visé 150 €, clic maxi 4 €, 3 € élagueurs) et l\'image de l\'accueil sont posées. Elle ne s\'allume que si Dexem est relié. Les anciennes pubs ne bougent pas : c\'est toi qui les arrêtes.</p>'
+    +'<div class="boutons"><button type="button" class="b prim" data-valider="nouvelle" data-champ="'+id+'">Lancer la nouvelle campagne · <span class="rc2">'+esc(nb(bj))+'</span> €/j</button><button type="button" class="b" data-fermer="compte">Annuler</button></div></div>'; }
+  if (v.type === 'budget') { var vb = v.val != null ? v.val : (x.n.budgetOn || x.budgetCompte || 30); return '<div class="volet"><b>Budget du compte</b><div class="montant">Total par jour, partagé entre '+pubsMot(nOn)+' allumée'+(nOn>1?'s':'')+' : <input class="champ" id="'+id+'" type="text" inputmode="decimal" value="'+esc(nb(vb))+'" oninput="recalc(this)"> €</div><p>Google applique à xx h 19.</p>'
+    +'<div class="boutons"><button type="button" class="b prim" data-valider="budget" data-champ="'+id+'">Changer le budget · <span class="rc">'+esc(nb(vb))+'</span> €/j</button><button type="button" class="b" data-fermer="compte">Annuler</button></div></div>'; }
+  if (v.type === 'arreter') return '<div class="volet"><b>Arrêter les '+pubsMot(nOn)+' allumée'+(nOn>1?'s':'')+' de '+esc(x.nom)+' ?</b><p>Google les coupe à xx h 19. Tu pourras les rallumer plus tard, pub par pub.</p><div class="boutons"><button type="button" class="b danger plein" data-valider="arreter">Oui, tout arrêter</button><button type="button" class="b" data-fermer="compte">Non</button></div></div>';
+  if (v.type === 'archiver') return '<div class="volet"><b>Archiver '+esc(x.nom)+' ?</b><p>Il disparaît de toutes les pages, celle de Céline comprise. '+(x.n.on ? 'Ses '+pubsMot(x.n.on)+' allumée'+(x.n.on>1?'s':'')+' passe'+(x.n.on>1?'nt':'')+' en veille, rien' : 'Rien')+' n\'est supprimé chez Google : tu peux le remettre actif plus tard depuis « Archivés ».</p><div class="boutons"><button type="button" class="b prim" data-valider="archiver">Oui, archiver</button><button type="button" class="b" data-fermer="compte">Non</button></div></div>';
+  if (v.type === 'note') return '<div class="volet"><b>Ta note sur '+esc(x.nom)+'</b><textarea class="champ long" id="'+id+'" placeholder="gardée dans le tableau">'+esc(v.val||'')+'</textarea><div class="boutons"><button type="button" class="b prim" data-valider="note" data-champ="'+id+'">Garder la note</button><button type="button" class="b" data-fermer="compte">Annuler</button></div></div>';
+  return '';
+}
+/* v5.17 (Enzo 2/11 05 h 42) : le bloc 3 lignes du compte = somme de ses pubs listées (le « dépensés » au-dessus vient du relevé du compte entier, pubs supprimées comprises) */
+function statsCompte(x){
+  if (!(D && D.mois) || !x.pubs || !x.pubs.length) return '';
+  var S = { c:0, v:0, mc:0, mcv:0, mp:0, mpv:0 }; x.pubs.forEach(function(p){ S.c += Number(p.cout)||0; S.v += Number(p.conv)||0; S.mc += Number(p.mc)||0; S.mcv += Number(p.mcv)||0; S.mp += Number(p.mp)||0; S.mpv += Number(p.mpv)||0; });
+  return '<div class="stats"><em class="cap">Ses '+x.pubs.length+' pub'+(x.pubs.length>1?'s':'')+'</em>'+ligneStat(x.total ? 'Depuis le début' : '30 jours', S.c, S.v)+ligneStat('Ce mois ('+moisLib(D.mois.courant)+')', S.mc, S.mcv)+ligneStat('Mois dernier ('+moisLib(D.mois.precedent)+')', S.mp, S.mpv)+'</div>';
+}
+function ligneDe(x){
+  var h = '';
+  var etat = x.archive ? '<b>archivé</b>'+(x.n.on ? ' · <b>'+pubsMot(x.n.on)+' encore allumée'+(x.n.on>1?'s':'')+'</b>' : '') : (x.n.pubs ? '<b>'+pubsMot(x.n.on)+' allumée'+(x.n.on>1?'s':'')+'</b> sur '+x.n.pubs+' · <b>'+eur(x.n.budgetOn)+'</b> par jour'+(x.n.on ? '' : ' · en veille') : '<b>pas de pub</b>');
+  /* v5.19 (Enzo 2/11 05 h 48) : l'en-tête ne montre que les conversions comptées par Google (celles des pubs listées) */
+  var cpcG = x.n.conv > 0 ? x.n.cout / x.n.conv : 0;
+  var cpdH = x.n.conv ? '<span class="cpd '+(cpcG > SEUIL_ROUGE ? 'rouge' : cpcG > SEUIL_OK ? 'orange' : 'vert')+'">'+eur(cpcG)+' par conv</span>' : (x.n.cout > MIN_DEPENSE ? '<span class="cpd rouge">pas une seule conversion</span>' : '<span class="cpd gris">'+(x.n.cout ? '0 conv' : '0 € dépensé')+'</span>');
+  h += '<div class="ligne"><i class="dot '+x.couleur+'"></i><div class="qui"><div class="nom"><a href="'+esc(lienCompte(x.c))+'" target="_blank" rel="noopener">'+esc(x.nom)+'</a><small>'+esc(x.sous)+'</small></div><div class="etat">'+etat+'</div></div>'
+     + '<div class="chiffres"><b>'+eur(x.n.cout)+'</b> dépensés · <b>'+nconv(x.n.conv)+'</b> conv<br>'+cpdH+'<small>'+esc(periodeMot(x))+'</small>'+statsCompte(x)+'</div></div>';
+  return h;
+}
+/* v5.3 (Enzo 31/10 7 h 11 : « je cherche à optimiser les comptes de mes clients mais je ne trouve pas qui je dois allumer, éteindre, lancer ; regroupe tout ce qu'il faut optimiser ») :
+   ses 4 gestes, chacun sa liste : une ligne par client = la ligne de la carte + LE problème + son bouton. Le reste (vagues) = Claude et Céline. */
+var OPT = [ ['optimiser','Tous mes clients','bleu','Chaque client une fois, ses pubs et tes commandes : Arrêter · Rallumer · Budget sur chaque pub, Nouvelle campagne, Budget, Arrêter toutes. Ses autres problèmes (site, branchement, message) sont dans leur famille, en vague.'] ];   /* v5.4 (Enzo 7 h 20 : « mets tous les clients au même endroit et je me débrouille ») */
+var OPT_FAM_CACHEES = { cher: 1, ancienne: 1 };   /* ces familles ne sont plus dans le menu : leurs gestes sont dans « À optimiser » (toujours dans « Tout le monde ») */
+function gesteDe(a){ var b = a && a.b; if (!b) return ''; if (b.type === 'eteindre' || b.type === 'arreter_tout') return 'opt_arreter'; if (b.type === 'budget_compte') return 'opt_budget'; if (b.type === 'activer' || a.n === '29' || a.n === '24') return 'opt_rallumer'; if (b.type === 'nouvelle' || b.type === 'refaire') return 'opt_nouvelle'; return ''; }
+function optDe(cartes){ var l = []; cartes.forEach(function(x){ if (x.archive && !x.n.on) return; var as = x.pbs.filter(function(a){ return gesteDe(a); }); l.push({ x: x, as: as, autres: famillesAutres(x) }); });
+  var rang = { rouge: 0, orange: 1, bleu: 2, vert: 3, gris: 4 }; l.sort(function(p, q){ var cp = p.as.length ? rang[p.as[0].c] : 9, cq = q.as.length ? rang[q.as[0].c] : 9; return (cp - cq) || (q.x.n.cout - p.x.n.cout) || p.x.nom.localeCompare(q.x.nom); });
+  return { optimiser: l }; }
+function famillesAutres(x){ return (x.familles || []).filter(function(k){ return !OPT_FAM_CACHEES[k] && k !== 'archives'; }).map(function(k){ return FAM.filter(function(f){ return f[0] === k; })[0]; }).filter(Boolean); }
+function carteOpt(x, as, autres){
+  as = as || []; autres = autres || famillesAutres(x);
+  var h = '<div class="carte opt'+(x.touche ? ' touchee' : '')+'" id="c-'+esc(x.cid)+'" data-fam="'+x.famille+'">'+(x.touche ? '<span class="badge-touche">Modifiée par toi aujourd\'hui</span>' : '');
+  h += ligneDe(x);
+  h += panierCarte(x);
+  h += x.gris.map(dGris).join('');
+  /* Enzo 7 h 25 : « pas de message en rouge, juste ses campagnes et toutes les options » → pas de phrase, pubs ouvertes d'office */
+  var ouvP = (x.cid in OUV.pubs) ? !!OUV.pubs[x.cid] : true;
+  if (x.n.pubs) { h += '<button type="button" class="b plus voir" data-plier="pubs">'+(ouvP ? 'Replier' : 'Voir')+' '+(x.n.pubs > 1 ? 'les '+x.n.pubs+' pubs' : 'la pub')+' '+(ouvP ? '▴' : '▾')+'</button>';
+    if (ouvP) { var on = x.pubs.filter(function(p){ return p.onEff; }), off = x.pubs.filter(function(p){ return !p.onEff; }); h += '<div class="pubs">'+(on.length ? '<h4>Allumées · '+on.length+'</h4>'+on.map(function(p){ return dPub(x, p); }).join('') : '')+(off.length ? '<h4>En veille · '+off.length+'</h4>'+off.map(function(p){ return dPub(x, p); }).join('') : '')+'</div>'; } }
+  else h += '<button type="button" class="b plus voir" disabled>Pas encore de pub</button>';
+  var v = OUV.volet[x.cid] || null;
+  h += '<div class="boutons">'
+     + (sansFiche(x) ? '<button type="button" class="b" disabled title="pas de fiche dans le tableau">Nouvelle campagne</button> <small style="color:var(--gris)">Pas de fiche dans le tableau : il faut créer sa fiche et son site → <button type="button" class="lien" data-fam="site">Site à refaire</button></small>' : '<button type="button" class="b'+(v && v.type === 'nouvelle' ? ' prim' : '')+'" data-volet="nouvelle">Nouvelle campagne</button>')
+     + '<button type="button" class="b'+(v && v.type === 'budget' ? ' prim' : '')+'" data-volet="budget"'+(x.n.onLibre ? '' : ' disabled title="aucune pub allumée"')+'>Budget</button>'
+     + '<button type="button" class="b danger'+(v && v.type === 'arreter' ? ' plein' : '')+'" data-volet="arreter"'+(x.n.onLibre ? '' : ' disabled title="aucune pub allumée"')+'>Arrêter toutes les pubs</button>'
+     + '<button type="button" class="b'+(v && v.type === 'note' ? ' prim' : '')+'" data-volet="note">Note</button>'
+     + '</div>';
+  if (v) h += dVolet(x, v);
+  h += '<div class="res" data-res="compte"></div>';
+  if (autres.length) h += '<p class="autres">Aussi à régler, en vague : '+autres.map(function(f){ return '<button type="button" class="lien" data-fam="'+f[0]+'">'+esc(f[1])+'</button>'; }).join(' · ')+'</p>';
+  var n0 = x.notes.filter(function(n){ return !/→/.test(String(n.par||'')) && !/^Dexem relié/.test(String(n.note||'')); })[0]; h += '<div class="note">'+(n0 ? 'Ta dernière note, le '+jm(n0.quand)+' : « '+esc(n0.note)+' »' : 'Pas encore de note.')+'</div>';
+  return h+'</div>';
+}
+function carte(x){
+  var h = '<div class="carte'+(x.touche ? ' touchee' : '')+'" id="c-'+esc(x.cid)+'" data-fam="'+x.famille+'">'+(x.touche ? '<span class="badge-touche">Modifiée par toi aujourd\'hui</span>' : '');
+  /* (1) la ligne */
+  h += ligneDe(x);
+  h += panierCarte(x);
+  /* états gris du compte (hors pubs) : toujours visibles */
+  h += x.gris.map(dGris).join('');   /* y compris ceux d'une pub : le ✔ et son Annuler restent visibles, pubs repliées ou non */
+  /* (2) les problèmes, repliés */
+  var pbs = x.pbs, nP = x.nProblemes, ouvert = !!OUV.pb[x.cid], v = OUV.volet[x.cid] || null;
+  var voletSousBouton = !!(v && ouvert && pbs.some(function(a){ return a.b && a.b.volet === v.type; }));
+  if (nP) h += '<button type="button" class="b plus pbs '+(x.couleur === 'rouge' ? '' : x.couleur)+'" data-plier="pb">'+(ouvert ? 'Replier' : 'Voir')+' '+(nP > 1 ? 'les '+nP+' problèmes' : 'le problème')+' '+(ouvert ? '▴' : '▾')+'</button>';
+  else h += '<button type="button" class="b plus ok" disabled>Aucun problème · '+(x.archive ? 'archivé' : x.n.on ? 'ça tourne' : x.n.pubs ? 'en veille' : 'à lancer')+'</button>';
+  if (ouvert || !nP) { var vis = ouvert ? pbs : pbs.filter(function(a){ return a.c === 'vert' || a.c === 'gris'; }); var pr = vis.filter(function(a){ return a.c !== 'vert' && a.c !== 'gris'; }); h += vis.map(function(a, i){ return dProbleme(a, pr.indexOf(a), pr.length, x, v); }).join(''); }
+  /* (3) les pubs, repliées */
+  var ouvP = !!OUV.pubs[x.cid];
+  if (x.n.pubs) { h += '<button type="button" class="b plus voir" data-plier="pubs">'+(ouvP ? 'Replier' : 'Voir')+' '+(x.n.pubs > 1 ? 'les '+x.n.pubs+' pubs' : 'la pub')+' '+(ouvP ? '▴' : '▾')+'</button>';
+    if (ouvP) { var on = x.pubs.filter(function(p){ return p.onEff; }), off = x.pubs.filter(function(p){ return !p.onEff; }); h += '<div class="pubs">'+(on.length ? '<h4>Allumées · '+on.length+'</h4>'+on.map(function(p){ return dPub(x, p); }).join('') : '')+(off.length ? '<h4>En veille · '+off.length+'</h4>'+off.map(function(p){ return dPub(x, p); }).join('') : '')+'</div>'; } }
+  else h += '<button type="button" class="b plus voir" disabled>Pas encore de pub</button>';
+  /* (4) les 5 boutons, toujours les mêmes */
+  h += '<div class="boutons">'
+     + (sansFiche(x) ? '<button type="button" class="b" disabled title="pas de fiche dans le tableau">Nouvelle campagne</button> <small style="color:var(--gris)">Pas de fiche dans le tableau : il faut créer sa fiche et son site → <button type="button" class="lien" data-fam="site">Site à refaire</button></small>' : '<button type="button" class="b'+(v && v.type === 'nouvelle' ? ' prim' : '')+'" data-volet="nouvelle">Nouvelle campagne</button>')
+     + '<button type="button" class="b'+(v && v.type === 'budget' ? ' prim' : '')+'" data-volet="budget"'+(x.n.onLibre ? '' : ' disabled title="aucune pub allumée"')+'>Budget</button>'
+     + '<button type="button" class="b danger'+(v && v.type === 'arreter' ? ' plein' : '')+'" data-volet="arreter"'+(x.n.onLibre ? '' : ' disabled title="aucune pub allumée"')+'>Arrêter toutes les pubs</button>'
+     + '<button type="button" class="b'+(v && v.type === 'note' ? ' prim' : '')+'" data-volet="note">Note</button>'
+     + (x.archive ? dBtn({ type:'desarchiver', siret:x.siret, compte_id:x.cid, nom:x.nom, avant:'archive', texte:'Remettre actif', cls:'gris' }) : '<button type="button" class="b gris'+(v && v.type === 'archiver' ? ' on' : '')+'" data-volet="archiver">Archiver</button>')
+     + '</div>';
+  if (v && !voletSousBouton) h += dVolet(x, v);
+  h += '<div class="res" data-res="compte"></div>';
+  /* (5) la dernière note */
+  var n0 = x.notes.filter(function(n){ return !/→/.test(String(n.par||'')) && !/^Dexem relié/.test(String(n.note||'')); })[0]; h += '<div class="note">'+(n0 ? 'Ta dernière note, le '+jm(n0.quand)+' : « '+esc(n0.note)+' »' : 'Pas encore de note.')+'</div>';
+  return h+'</div>';
+}
+function rendreMenu(M){
+  var tot = M ? M.tot : null, lab = function(f){ var n = tot ? tot.fam[f[0]] : 0, cls = f[2] === 'rouge' || f[2] === 'orange' ? (n ? f[2] : 'zero') : (n ? '' : 'zero'); return '<span><i class="pt '+f[2]+'"'+(f[0]==='tout' ? ' style="display:none"' : '')+'></i>'+esc(f[1])+'</span><b class="'+cls+'">'+(tot ? n : '–')+'</b>'; };
+  var regler = FAM.filter(function(f){ return f[3] === 'regler'; }), reste = FAM.filter(function(f){ return f[3] === 'reste'; });
+  var rel = M && M.releve ? minutesEntre(M.releve, D.quand) : null, releveH;
+  if (!M || !M.releve) releveH = '<div class="releve inconnu"><b>Relevé Google : pas lu</b><small><button type="button" onclick="charger()">Relire</button></small></div>';
+  else if (rel > RELEVE_VIEUX) releveH = '<div class="releve vieux"><b>Relevé vieux de '+(rel >= 120 ? Math.round(rel/60)+' h' : rel+' min')+'</b><small>Google n\'a pas répondu depuis le '+jm(M.releve)+' à '+hp(M.releve)+' · <button type="button" onclick="charger()">Relire</button></small></div>';
+  else releveH = '<div class="releve"><b>Relevé Google : '+jm(M.releve)+' à '+hp(M.releve)+'</b><small>il y a '+(rel < 1 ? 'moins d\'une minute' : rel+' min')+' · <button type="button" onclick="charger()">Relire</button></small></div>';
+  var totH = tot ? '<div class="totaux"><div class="tot"><b>'+tot.comptes+'</b><small>comptes</small></div><div class="tot"><b>'+tot.on+'/'+tot.pubs+'</b><small>pubs allumées</small></div><div class="tot"><b>'+eur(tot.budget)+'</b><small>par jour</small></div><div class="tot"><b>'+(tot.demandes ? eur(tot.cpd) : '—')+'</b><small>la demande, '+(M.total ? 'depuis le début' : '30 derniers jours')+'</small></div></div>' : '';
+  var relu = '<p class="relu" id="relu">'+esc(window.__RELU__||'')+'</p>';
+  document.getElementById('aside').innerHTML = '<h1>Les comptes</h1>'+releveH+relu+'<input class="rech" id="rech" type="search" placeholder="Chercher un nom…" value="'+esc(window.__RECH__||'')+'" oninput="chercher(this.value)" aria-label="Chercher un nom">'+totH
+    + '<h2>À optimiser · toi</h2><nav>'+OPT.map(function(o){ var n = tot ? tot.opt[o[0]] : 0; return '<button type="button" class="'+(FILTRE === o[0] ? 'on' : '')+'" data-fam="'+o[0]+'"><span><i class="pt '+o[2]+'"></i>'+esc(o[1])+(tot ? ' · '+tot.optTous : '')+'</span><b class="'+(n ? 'rouge' : 'zero')+'" title="avec un geste conseillé">'+(tot ? n : '–')+'</b></button>'; }).join('')+'</nav>'
+    + '<h2>Vagues · Claude et Céline</h2><nav>'+regler.filter(function(f){ return !OPT_FAM_CACHEES[f[0]]; }).map(function(f){ return '<button type="button" class="'+(FILTRE === f[0] ? 'on' : '')+'" data-fam="'+f[0]+'">'+lab(f)+'</button>'; }).join('')+'</nav>'
+    + '<h2>Le reste</h2><nav>'+reste.map(function(f){ return '<button type="button" class="'+(FILTRE === f[0] ? 'on' : '')+'" data-fam="'+f[0]+'">'+lab(f)+'</button>'; }).join('')+'</nav>'
+    + '<p class="note-google">Google applique tes ordres à xx h 19 (arrêts, budgets, rallumages) et à xx h 43 (nouvelles pubs, allumages). Heure de Paris = ton heure + 1.</p>';
+  document.getElementById('barre').innerHTML = '<h1>Les comptes</h1>'+releveH+totH+'<div class="chips">'+OPT.map(function(o){ var n = tot ? tot.opt[o[0]] : 0; return '<button type="button" class="chip'+(FILTRE === o[0] ? ' on' : '')+'" data-fam="'+o[0]+'">À optimiser <b class="'+(n ? 'rouge' : '')+'">'+(tot ? n : '–')+'</b></button>'; }).join('')+FAM.filter(function(f){ return !OPT_FAM_CACHEES[f[0]]; }).map(function(f){ var n = tot ? tot.fam[f[0]] : 0; return '<button type="button" class="chip'+(FILTRE === f[0] ? ' on' : '')+'" data-fam="'+f[0]+'">'+esc(f[1])+' <b class="'+((f[2]==='rouge'||f[2]==='orange') && n ? f[2] : '')+'">'+(tot ? n : '–')+'</b></button>'; }).join('')+'</div>'
+    + '<input class="rech" type="search" placeholder="Chercher un nom…" value="'+esc(window.__RECH__||'')+'" oninput="chercher(this.value)" aria-label="Chercher un nom">';
+}
+function chercher(v){ window.__RECH__ = v; rendreCartes(); }
+function rendreCartes(){
+  if (!D) return; var M = calculer(D), q = String(window.__RECH__||'').trim().toLowerCase(), cs = M.cartes;
+  if (q) cs = cs.filter(function(x){ return (x.nom+' '+x.sous).toLowerCase().indexOf(q) >= 0; });
+  var h = '';
+  var o = OPT.filter(function(o){ return o[0] === FILTRE; })[0];
+  if (o) { var g = M.opt.optimiser || [], nG = g.filter(function(it){ return it.as.length; }).length; if (q) g = g.filter(function(it){ return (it.x.nom+' '+it.x.sous).toLowerCase().indexOf(q) >= 0; }); if (window.__OPT_SEUL__) g = g.filter(function(it){ return it.as.length; });
+    var cher = function(it){ var n = it.x.n; return n.conv > 0 ? (n.cout / n.conv) > SEUIL_ROUGE : n.cout > MIN_DEPENSE; }, nC = (M.opt.optimiser || []).filter(cher).length; if (window.__OPT_CHER__) g = g.filter(cher);
+    var pireCle = function(it){ var n = it.x.n, c = n.conv > 0 ? n.cout / n.conv : 0; return (n.cout >= MIN_DEPENSE && !n.conv) ? [0, -n.cout] : (n.cout >= MIN_DEPENSE ? [1, -c] : [2, -n.cout]); };   /* v5.26 (Enzo 7/11 14 h 18) : du pire au moins pire = € la conversion Google depuis le début */
+    var pireGrp = function(it){ var n = it.x.n, c = n.conv > 0 ? n.cout / n.conv : 0; if (n.cout >= MIN_DEPENSE && !n.conv) return ['sans', 'Dépensent et n’ont jamais eu une demande chez Google']; if (n.cout < MIN_DEPENSE) return ['tot', 'Trop tôt pour juger : moins de 150 € dépensés']; if (c > SEUIL_ROUGE) return ['rouge', 'Trop cher : plus de 90 € la demande']; if (c >= SEUIL_OK) return ['orange', 'À surveiller : entre 70 et 90 € la demande']; return ['vert', 'Ça marche : moins de 70 € la demande']; };
+    if (window.__OPT_PIRE__) g = g.slice().sort(function(a, b){ var ka = pireCle(a), kb = pireCle(b); return (ka[0] - kb[0]) || (ka[1] - kb[1]) || String(a.x.nom).localeCompare(String(b.x.nom)); });   /* v5.25 : plus de 90 € la conversion depuis le début (chiffres Google de l'en-tête), ou dépense sans aucune conversion */
+    h = '<h2>À optimiser · toi <span>'+g.length+'</span></h2><p class="sous-liste">'+esc(o[3])+'</p><p class="sous-liste"><button type="button" class="b petit'+(window.__OPT_SEUL__ ? ' prim' : '')+'" data-opt-seul="1">'+(window.__OPT_SEUL__ ? 'Tous mes clients · '+M.opt.optimiser.length : 'Seulement ceux avec un geste conseillé · '+nG)+'</button> <button type="button" class="b petit'+(window.__OPT_CHER__ ? ' prim' : '')+'" data-opt-cher="1">'+(window.__OPT_CHER__ ? 'Tous mes clients · '+M.opt.optimiser.length : 'Plus de 90 € la conversion depuis le début · '+nC)+'</button> <button type="button" class="b petit'+(window.__OPT_PIRE__ ? ' prim' : '')+'" data-opt-pire="1">'+(window.__OPT_PIRE__ ? 'Tous mes clients · '+M.opt.optimiser.length : 'Du pire au moins pire · '+M.opt.optimiser.length)+'</button></p>'+(window.__OPT_PIRE__ ? '<p class="sous-liste">Le plus cher par demande chez Google en haut, le moins cher en bas, depuis le début. Même carte, mêmes boutons.</p>' : '')+(g.length ? (window.__OPT_PIRE__ ? (function(){ var prec = '', sh = ''; g.forEach(function(it, i){ var gr = pireGrp(it); if (gr[1] !== prec) { sh += '<h3 class="grp-pire '+gr[0]+'">'+esc(gr[1])+'</h3>'; prec = gr[1]; } sh += '<div class="pire"><div class="rang">'+(i+1)+'</div>'+carteOpt(it.x, it.as, it.autres)+'</div>'; }); return sh; })() : g.map(function(it){ return carteOpt(it.x, it.as, it.autres); }).join('')) : '<p class="vide">Personne ici.</p>'); document.getElementById('cartes').innerHTML = h; document.getElementById('attente').style.display = 'none'; return; }
+  if (q || FILTRE === 'tout') { FAM.filter(function(f){ return f[0] !== 'tout'; }).forEach(function(f){ var l = cs.filter(function(x){ return x.famille === f[0]; }); if (!l.length) return; h += '<h2>'+esc(f[1])+' <span>'+l.length+'</span></h2>'+vaguesHtml(l, f[0])+l.map(carte).join(''); }); if (!h) h = '<p class="vide">Personne ne s\'appelle comme ça.</p>'; }
+  else { var f = FAM.filter(function(f){ return f[0] === FILTRE; })[0], l = cs.filter(function(x){ return f && f[3] === 'regler' ? x.familles.indexOf(FILTRE) >= 0 : x.famille === FILTRE; }); h = '<h2>'+esc(f ? f[1] : '')+' <span>'+l.length+'</span></h2>'+(l.length ? vaguesHtml(l, FILTRE)+l.map(carte).join('') : '<p class="vide">Personne dans cette famille.</p>'); }
+  document.getElementById('cartes').innerHTML = h; document.getElementById('attente').style.display = 'none';
+}
+function rendreTout(){ rendrePanier(); var M = calculer(D); if (!FILTRE) { FILTRE = 'optimiser'; } rendreMenu(M); rendreCartes(); }
+function redessiner(cid){ var old = document.getElementById('c-'+cid); if (!old) { rendreTout(); return; } var M = calculer(D), x = M.cartes.filter(function(c){ return c.cid === cid; })[0]; if (!x) { rendreTout(); return; } if (FILTRE === 'optimiser' && old.classList.contains('opt')) { old.outerHTML = carteOpt(x, x.pbs.filter(function(a){ return gesteDe(a); })); } else old.outerHTML = carte(x); rendreMenu(M); }
+function ouvrirPubs(cid){ OUV.pubs[cid] = true; redessiner(cid); }
+
+/* ---------- 2 ter. FICHE EXPRESS (v5.6, Enzo 31/10 16 h 20 → 16 h 58 UTC : « rajoute un bouton sur la carte pour les cas comme Fortin : ça me demande le rayon, après c'est à toi de chercher… fais le bouton, go, et qu'il fonctionne ») ----------
+   Un compte Google Ads sans fiche du lot : bouton « Lancer site + pub » → volet pré-rempli avec tout ce que le tableau, Dexem et l'annuaire public savent ; Enzo complète la zone, clique Lancer →
+   ordre fiche_express (Code.gs rq) = la fiche entre dans le lot, le robot refait le site puis crée la nouvelle campagne, allumage auto dès que Dexem est relié. Annuler tant que le robot n'a pas commencé.
+   v5.10 (Enzo 31/10 19 h 37 : « Lancer site + pub n'a rien à faire dans À optimiser, il a déjà une pub ; le site, c'est dans les lancements groupés ») : le bouton quitte À optimiser (Nouvelle pub grisée tant que pas de fiche) ;
+   le client sans fiche est dans la vague Site à refaire (phrase 15 bis) avec « Créer la fiche + le site » = le même volet SANS budget → fiche_express pub = non (Code.gs rt : nouvelle_structure vide). */
+var METIERS = ['couvreur','elagueur','peintre','gouttiere','debarras','paysagiste','plombier','vehicule','tapissier','antiquaire','maçon','menuisier','chauffagiste','electricien'];
+var NAF = { '43.91B': 'couverture', '43.91A': 'charpente', '43.34Z': 'peinture', '43.22A': 'plomberie', '43.22B': 'chauffage', '43.21A': 'électricité', '43.99C': 'maçonnerie', '43.32A': 'menuiserie', '81.30Z': 'paysage', '02.40Z': 'élagage', '81.29B': 'nettoyage', '38.11Z': 'débarras', '47.79Z': 'antiquités', '45.11Z': 'véhicules', '31.09B': 'tapisserie', '43.99D': 'bâtiment', '41.20A': 'bâtiment', '41.20B': 'bâtiment' };
+function sansFiche(x){ return !x.archive && (!x.l || String(x.l.abandonne||'').trim() === 'oui'); }
+function ficheVolet(x, v){
+  var cid = x.cid, idp = 'f-'+cid.replace(/\D/g,'')+'-', ch = v.champs || {}, inf = v.infos, cand = v.annuaire || null;
+  function val(k, d){ return ch[k] !== undefined ? ch[k] : (d == null ? '' : d); }
+  var cl = inf && inf.client || {}, dx = inf && inf.dexem || { numeros: [], sites: [] };
+  var dNom = val('nom', cl.nom || x.nom), dSiret = val('siret', ''), dMet = val('metier', (inf && inf.metier_devine) || ''), dTel = val('tel', cl.tel || ''), dDom = val('domaine', cl.domaine || ''), dCp = val('cp', (inf && inf.zone_devinee && inf.zone_devinee.cp) || ''), dVille = val('ville', (inf && inf.zone_devinee && inf.zone_devinee.ville) || ''), dRayon = val('rayon', (inf && inf.zone_devinee && inf.zone_devinee.rayon) || ''), dBud = val('budget', 30);   /* v5.23 : ville et rayon devinés depuis les noms de campagnes (Code.gs sa) */
+  var numero = dx.numeros && dx.numeros.filter(function(n){ return n.numero; })[0];
+  function champ(k, label, d, attrs){ return '<label>'+label+'<input class="champ" id="'+idp+k+'" data-f="'+k+'" value="'+esc(d)+'" '+(attrs||'')+' oninput="ficheChamp(\''+cid+'\', this)"></label>'; }
+  var sansPub = v.pub === 'non';
+  var h = '<div class="volet fiche"><b>'+(sansPub ? 'Créer la fiche + le site pour ' : 'Lancer site + pub pour ')+esc(x.nom)+'</b>';
+  if (!inf) h += '<p class="aide">Je cherche ce que le tableau, Dexem et l\'annuaire savent déjà…</p>';
+  else if (inf.erreur) h += '<p class="aide" style="color:var(--rouge)">Le tableau n\'a rien renvoyé ('+esc(inf.erreur)+') : remplis à la main, puis '+(sansPub ? 'Créer' : 'Lancer')+'.</p>';   /* v5.11 : une erreur reste en rouge */
+  else h += '<p class="aide">Pré-rempli avec ce que le tableau, Dexem et Google Ads savent déjà'+((inf.google && (inf.google.site || inf.google.tel)) ? ' (site et téléphone lus dans ses annonces)' : '')+((inf.zone_devinee && (inf.zone_devinee.ville || inf.zone_devinee.rayon)) ? ' · zone lue dans ses campagnes Google, à vérifier' : '')+'. Vérifie, complète, puis '+(sansPub ? 'Créer' : 'Lancer')+'.</p>';
+  h += '<div class="grille">'
+    + champ('nom', 'Entreprise', dNom)
+    + champ('siret', 'Numéro d\'entreprise (14 chiffres)', dSiret, 'inputmode="numeric" placeholder="cherché dans l\'annuaire…"')
+    + champ('metier', 'Métier', dMet, 'list="metiers"')
+    + champ('tel', 'Téléphone du client', dTel, 'inputmode="tel"')
+    + champ('domaine', 'Site', dDom, 'placeholder="vide = nouveau site (41 $ Porkbun)"')
+    + champ('cp', 'Code postal du centre', dCp, 'inputmode="numeric" placeholder="ex. 57000"')
+    + champ('ville', 'Ville du centre', dVille, 'placeholder="ex. Metz"')
+    + champ('rayon', 'Rayon (km)', dRayon, 'inputmode="numeric" placeholder="5 à 200"')
+    + (sansPub ? '' : champ('budget', 'Budget par pub (€/j)', dBud, 'inputmode="decimal"'))
+    + '</div><datalist id="metiers">'+METIERS.map(function(m){ return '<option value="'+m+'">'; }).join('')+'</datalist>';
+  if (cand && cand.length) h += '<p class="aide">Dans l\'annuaire public, clique le bon :</p><div class="cands">'+cand.slice(0, 6).map(function(c){ return '<button type="button" class="b petit'+(c.siret === dSiret ? ' prim' : '')+'" data-cand="'+esc(c.siret)+'" data-cid="'+esc(cid)+'">'+esc(c.nom)+' · '+esc(c.cp)+' '+esc(c.ville)+' · '+esc(c.naf)+(c.ferme ? ' · fermée' : '')+'</button>'; }).join('')+'</div>';
+  else if (cand && !cand.length) h += '<p class="aide">Rien trouvé dans l\'annuaire avec ce nom : écris le numéro, ou cherche-le <a href="https://annuaire-entreprises.data.gouv.fr/rechercher?terme='+encodeURIComponent(dNom)+'" target="_blank" rel="noopener">ici</a>.</p>';
+  if (inf) { var pubs = inf.campagnes || []; h += '<p class="aide">Anciennes pubs : '+(pubs.length ? pubs.length+' ('+pubs.filter(function(k){ return k.statut === 'ENABLED'; }).length+' allumée'+(pubs.filter(function(k){ return k.statut === 'ENABLED'; }).length>1?'s':'')+')' : 'aucune')+' · Dexem : '+(dx.numeros.length ? dx.numeros.length+' ligne'+(dx.numeros.length>1?'s':'')+(numero ? ' ('+esc(numero.numero)+')' : '') : 'aucune ligne, le robot en prend une')+(dx.sites.length ? ' · site Dexem '+esc(dx.sites[0].host) : '')+'.</p>'; }
+  if (sansPub) h += '<p class="aide">Après Créer : la fiche entre dans le tableau et le robot fait le site (ou le refait). Pas de pub : « Nouvelle campagne » s\'active dans À optimiser dès que la fiche existe. Annuler possible tant qu\'il n\'a pas commencé.</p>';
+  else h += '<p class="aide">Après Lancer : le robot refait le site (ou le crée), fabrique la nouvelle campagne (un groupe par service, mots exacts ; budget du formulaire, 30 €/j minimum), allume dès que Dexem est relié. Annuler possible tant qu\'il n\'a pas commencé.</p>';
+  h += '<div class="boutons"><button type="button" class="b prim" data-valider="fiche"'+(inf ? '' : ' disabled')+'>'+(sansPub ? 'Créer · fiche + site' : 'Lancer · site + nouvelle campagne')+'</button><button type="button" class="b" data-fermer="compte">Annuler</button></div></div>';
+  return h;
+}
+function ficheChamp(cid, inp){ var v = OUV.volet[cid]; if (!v || v.type !== 'fiche') return; v.champs = v.champs || {}; v.champs[inp.getAttribute('data-f')] = inp.value; }
+async function chargerFiche(cid){
+  var v = OUV.volet[cid]; if (!v || v.type !== 'fiche') return; var x = calculer(D).cartes.filter(function(c){ return c.cid === cid; })[0]; if (!x) return;
+  try { var j = await Promise.race([envoyer({ type: 'fiche_express_infos', compte_id: cid, nom: x.nom }), new Promise(function(_, ko){ setTimeout(function(){ ko(new Error('le tableau n\'a pas répondu en 12 s')); }, 12000); })]); v.infos = (j && j.ok) ? j : { client: {}, dexem: { numeros: [], sites: [] }, campagnes: [], erreur: (j && j.erreur) || 'tableau muet' }; }   /* v5.11 : jamais un bouton gris sans fin */
+  catch (e) { v.infos = { client: {}, dexem: { numeros: [], sites: [] }, campagnes: [], erreur: String(e.message || e) }; }
+  var num = (v.infos.dexem && v.infos.dexem.numeros || []).filter(function(n){ return n.numero && n.mode !== 'pool'; })[0] || (v.infos.dexem && v.infos.dexem.numeros || [])[0]; if (num) v.dexem_uuid = num.uuid;
+  if (OUV.volet[cid] === v) redessiner(cid);
+  try { var nomQ = (v.champs && v.champs.nom) || (v.infos.client && v.infos.client.nom) || x.nom; var r = await fetch('https://recherche-entreprises.api.gouv.fr/search?q='+encodeURIComponent(nomQ)+'&per_page=8', { mode: 'cors' }); var a = await r.json();
+    v.annuaire = (a.results || []).map(function(e){ var s = e.siege || {}; return { siret: String(s.siret || ''), nom: String(e.nom_complet || ''), cp: String(s.code_postal || ''), ville: String(s.libelle_commune || ''), naf: NAF[String(e.activite_principale || '')] || String(e.activite_principale || ''), ferme: String(e.etat_administratif || 'A') !== 'A' }; }).filter(function(e){ return e.siret.length === 14; });
+    var bon = v.annuaire.filter(function(e){ return !e.ferme; }); if (bon.length === 1 && !(v.champs && v.champs.siret)) { v.champs = v.champs || {}; v.champs.siret = bon[0].siret; } }
+  catch (e2) { v.annuaire = []; }
+  if (OUV.volet[cid] === v) redessiner(cid);
+}
+
+/* ---------- 2 quater. LE PANIER (v5.8, Enzo 31/10 17 h 35 → 18 h 05 UTC : « j'optimise tout et ensuite je dis j'ai fini et tout part d'un coup… aucun oubli ») ----------
+   Chaque geste de la page va dans le panier (gardé dans ce navigateur). « J'ai fini · envoyer » = UN appel au tableau (type panier, Code.gs rs) : tous les gestes traités dans la même
+   exécution, sous le même verrou, poussés puis relus (panier_verifier). La page recompte : « N demandés · N écrits · N vérifiés ». Ce qui manque reste dans le panier, à renvoyer.
+   Les annulations (Annuler, Retirer) restent immédiates. */
+var PANIER = [], PANIER_RES = null, PANIER_OUVERT = false, PANIER_PID = '', PANIER_ENVOI = false;
+var PANIER_TYPES = /^(eteindre|rallumer|budget|nouvelle|refaire|refaire_site|activer|archiver|desarchiver|note|verifier_branchement|relancer_robot|reessayer_ordre|relancer_client|repondre|fiche_express|bloquer_allumage)$/;
+try { var pS = JSON.parse(localStorage.getItem('comptes_panier') || 'null'); if (pS && Array.isArray(pS.items)) { PANIER = pS.items; PANIER_PID = pS.pid || ''; } } catch (e) { PANIER = []; }
+function panierSauver(){ try { localStorage.setItem('comptes_panier', JSON.stringify({ items: PANIER, pid: PANIER_PID, quand: stampLocal() })); } catch (e) {} }
+function panierCle(o){ return o.type + '|' + o.compte_id + '|' + String(o.campagne_id || '') + '|' + String(o.message_id || '') + '|' + String(o.note_id || ''); }
+function auPanier(type){ return PANIER_TYPES.test(String(type || '')); }
+function libellePanier(o, texte){ var c = o.campagne ? ' « ' + o.campagne + ' »' : '';
+  if (o.type === 'eteindre') return 'Arrêter' + c; if (o.type === 'rallumer') return 'Rallumer' + c + (o.valeur ? ' · ' + nb(o.valeur) + ' €/j' : ''); if (o.type === 'budget') return 'Budget' + c + ' ' + nb(o.valeur) + ' €/j';
+  if (o.type === 'note') return 'Note : « ' + String(o.texte || '').slice(0, 60) + (String(o.texte || '').length > 60 ? '…' : '') + ' »'; if (o.type === 'nouvelle') return 'Nouvelle campagne · ' + nb(o.budget_mois || Math.round((o.budget || 30) * 30.4)) + ' € par mois';
+  if (o.type === 'refaire') return 'Lancer site + pub'; if (o.type === 'refaire_site') return 'Refaire le site'; if (o.type === 'fiche_express') return (o.pub === 'non' ? 'Créer la fiche + le site (' : 'Lancer site + pub (fiche ') + String(o.metier || '') + ', ' + String(o.cp || '') + ' / ' + String(o.rayon || '') + ' km)';
+  if (o.type === 'activer') return 'Allumer'; if (o.type === 'archiver') return 'Archiver'; if (o.type === 'desarchiver') return 'Remettre actif'; if (o.type === 'bloquer_allumage') return 'Bloquer l\'allumage';
+  if (VAGUE_TYPES[o.type]) return VAGUE_TYPES[o.type]; return texte || o.texte || o.type; }
+/* ajoute (ou remplace) un geste ; l'inverse sur la même pub est retiré (arrêter ↔ rallumer, archiver ↔ remettre actif) */
+function ajouterPanier(o, texte, vague){
+  var k = panierCle(o), inverse = { eteindre: 'rallumer', rallumer: 'eteindre', archiver: 'desarchiver', desarchiver: 'archiver' }[o.type];
+  PANIER = PANIER.filter(function(it){ return it.k !== k && !(inverse && it.o.type === inverse && it.o.compte_id === o.compte_id && String(it.o.campagne_id || '') === String(o.campagne_id || '')); });
+  PANIER.push({ k: k, o: o, texte: libellePanier(o, texte), nom: o.nom || o.compte_id, compte_id: o.compte_id, quand: heure(), vague: vague || '' });
+  PANIER_RES = null; panierSauver(); rendrePanier(); return k;
+}
+function retirerPanier(k){ PANIER = PANIER.filter(function(it){ return it.k !== k; }); panierSauver(); rendrePanier(); }
+function panierDe(cid){ return PANIER.filter(function(it){ return it.compte_id === cid; }); }
+/* v5.22 (Enzo 2/11 06 h 24) : une couleur et une étiquette par geste du panier */
+function panierStyle(o){ var ty = String((o && o.type) || ''); if (/^(eteindre|couper_compte|archiver|bloquer_allumage)$/.test(ty)) return { cls: 'p-stop', tag: 'Arrêter' }; if (/^(rallumer|activer|desarchiver|debloquer_allumage)$/.test(ty)) return { cls: 'p-go', tag: 'Rallumer' }; if (/^(nouvelle|refaire)$/.test(ty)) return { cls: 'p-new', tag: ty === 'refaire' ? 'Refaire le site' : 'Nouvelle pub' }; if (/^budget/.test(ty)) return { cls: 'p-bud', tag: 'Budget' }; return { cls: 'p-autre', tag: ty === 'note' ? 'Note' : (ty || 'Geste') }; }
+function panierCarte(x){ var l = panierDe(x.cid); if (!l.length) return ''; return l.map(function(it){ var st = panierStyle(it.o); return '<div class="pb panier ' + st.cls + '"><span class="t"><span class="tag">' + esc(st.tag) + '</span>En attente d\'envoi : ' + esc(it.texte) + '</span><div class="bb"><button type="button" class="b petit" data-panier-retirer="' + esc(it.k) + '">Retirer</button></div></div>'; }).join(''); }
+function rendrePanier(){
+  var el = document.getElementById('panier'); if (!el) return; var n = PANIER.length, h = '';
+  if (PANIER_RES) { var r = PANIER_RES, okTout = !r.manquants.length;
+    h += '<div class="panier ' + (okTout ? 'ok' : 'ko') + '"><b>' + (okTout ? '✔ ' : '✖ ') + r.n + ' demandé' + (r.n > 1 ? 's' : '') + ' · ' + r.ecrits + ' écrit' + (r.ecrits > 1 ? 's' : '') + ' · ' + r.verifies + ' vérifié' + (r.verifies > 1 ? 's' : '') + ' dans le tableau' + (okTout ? ' · envoyé à ' + r.h + ' (ton heure)' : '') + '</b>'
+      + '<span>' + (okTout ? 'Google applique à xx h 19 (arrêts, budgets, rallumages), le robot à xx h 43 (nouvelles pubs, sites, allumages). Chaque carte montre ensuite ce qui est fait.' : r.manquants.length + ' geste' + (r.manquants.length > 1 ? 's' : '') + ' pas écrit' + (r.manquants.length > 1 ? 's' : '') + ' : ' + esc(r.manquants.map(function(m){ return m.texte + (m.erreur ? ' (' + m.erreur + ')' : ''); }).join(' ; ')) + '. ' + (n ? 'Ils sont restés dans le panier : renvoie-les.' : '')) + '</span>'
+      + '<div class="boutons">' + (n ? '<button type="button" class="b prim" data-panier="envoyer">Renvoyer les ' + n + '</button>' : '') + '<button type="button" class="b" data-panier="fermer">OK</button></div></div>';
+    if (!n) { el.innerHTML = h; return; } }
+  if (n) { h += '<div class="panier"><b>🧺 Panier : ' + n + ' geste' + (n > 1 ? 's' : '') + ' en attente</b><span>Rien n\'est envoyé au tableau tant que tu n\'as pas cliqué. Le panier reste sur cet appareil si tu fermes la page.</span>'
+      + '<div class="boutons"><button type="button" class="b prim" data-panier="envoyer"' + (PANIER_ENVOI ? ' disabled' : '') + '>J\'ai fini · envoyer les ' + n + '</button><button type="button" class="b" data-panier="voir">' + (PANIER_OUVERT ? 'Replier' : 'Voir') + '</button><button type="button" class="b gris" data-panier="vider">Tout retirer</button></div>'
+      + (PANIER_OUVERT ? '<ul class="liste">' + PANIER.map(function(it){ return '<li><b>' + esc(it.nom) + '</b> · ' + esc(it.texte) + ' <small>' + esc(it.quand) + '</small> <button type="button" class="b petit" data-panier-retirer="' + esc(it.k) + '">Retirer</button></li>'; }).join('') + '</ul>' : '')
+      + '<div class="res" id="panier-res"></div></div>'; }
+  el.innerHTML = h;
+}
+async function envoyerPanier(){
+  if (PANIER_ENVOI || !PANIER.length) return; PANIER_ENVOI = true; rendrePanier(); var res = document.getElementById('panier-res');
+  var items = PANIER.slice(), pid = PANIER_PID || ('P-' + stampLocal().replace(/\D/g, '') + '-' + Math.floor(Math.random() * 9000 + 1000)); PANIER_PID = pid; panierSauver();
+  montrer(res, '', 'envoi au tableau… ' + items.length + ' geste' + (items.length > 1 ? 's' : '') + ', un seul appel');
+  var j; try { j = await envoyer({ type: 'panier', panier_id: pid, items: items.map(function(it){ return it.o; }) }); } catch (e) { j = { ok: false, erreur: String(e.message || e).replace(/^Error:\s*/, '') }; }
+  if (!(j && j.ok)) { PANIER_ENVOI = false; rendrePanier(); montrer(document.getElementById('panier-res'), 'ko', '✖ Pas envoyé (' + ((j && j.erreur) || 'tableau muet') + ') : rien n\'a été écrit · le panier est gardé, réessaie'); return; }
+  var resultats = j.resultats || [], restants = [], manquants = [], aVerifier = [];
+  for (var qi = 0; qi < items.length; qi++) { var itq = items[qi], rq = resultats[qi]; if (rq && rq.ok && varianteRefusee(itq.o, rq)) { try { await envoyer(Object.assign({}, itq.o, { type: 'annuler_nouvelle', texte: 'Annuler (tableau pas à jour)' })); } catch (eQ) {} rq.ok = false; rq.erreur = 'annulé aussitôt : le tableau ne connaît pas encore la nouvelle campagne (mise à jour à publier)'; } }   /* v5.27 */
+  items.forEach(function(it, i){ var r = resultats[i]; if (r && r.ok) { try { souvenir(it.o, r); appliquerLocal(it.o, r); } catch (e2) {} ajouterClic(heure() + ' : ' + it.texte + ' — ' + it.nom + ' (panier)'); aVerifier.push({ i: i, type: it.o.type, ordre_id: r.ordre_id || '', note_id: r.note_id || '', siret: it.o.siret || '', compte_id: it.compte_id }); if (it.vague) { var vg = VAGUES[it.vague]; if (!vg || vg.panier || !vg.annul) vg = VAGUES[it.vague] = { h: heure(), n: 0, total: 0, echecs: [], annul: [], suite: suite(it.o, r) }; vg.n++; vg.total++; var an = annulDe(it.o, r); if (an) vg.annul.push(an); } }   /* v5.11 : une vague venue du panier ({ panier: true }) n'avait pas de liste annul → « reading 'push' », l'envoi s'arrêtait net */
+    else { restants.push(it); manquants.push({ texte: it.nom + ' · ' + it.texte, erreur: (r && r.erreur) || 'pas de réponse' }); if (it.vague && VAGUES[it.vague] && !VAGUES[it.vague].panier) { VAGUES[it.vague].total++; VAGUES[it.vague].echecs.push(it.nom); } } });
+  var verifies = 0; try { var v = await envoyer({ type: 'panier_verifier', items: aVerifier }); if (v && v.ok) { verifies = v.verifies; (v.manquants || []).forEach(function(m){ var it = items[m.i]; if (it && restants.indexOf(it) < 0) { restants.push(it); manquants.push({ texte: it.nom + ' · ' + it.texte, erreur: 'pas retrouvé à la relecture (' + m.vu + ')' }); } }); } } catch (e3) { verifies = -1; }
+  PANIER = restants; PANIER_PID = ''; PANIER_ENVOI = false; PANIER_RES = { h: heure(), n: items.length, ecrits: j.ecrits || 0, verifies: verifies < 0 ? j.ecrits || 0 : verifies, manquants: manquants, prochain: j.prochain || '' }; panierSauver();
+  if (j.deja) PANIER_RES.deja = true;
+  rendreTout(); rendrePanier(); window.scrollTo(0, 0);
+  setTimeout(function(){ if (!window.__DONNEES__) charger(); }, 2500);
+}
+
+/* ---------- 2 bis. Les vagues (v5.2, MAQUETTE-VAGUES.md, Enzo 31/10 5 h 50 « regrouper toutes les personnes qui ont le même problème ») ----------
+   Règle validée 6 h 27 / 6 h 37 : ce qui optimise un compte (éteindre, rallumer, budget, nouvelle pub LARGE + EXACT) reste compte par compte ;
+   tout le reste se lance par vague : un bandeau = UN SEUL geste, en haut de la famille, une case cochée par client. Un clic = le même ordre
+   que le bouton bleu de chaque carte, envoyé client après client. Tournée Dexem = tes clics « Autoriser », avec une case « fait » (gardée sur cet appareil). */
+var VAGUE_TYPES = { verifier_branchement: 'Vérifier le branchement', relancer_robot: 'Relancer le robot', reessayer_ordre: 'Réessayer les ordres', refaire_site: 'Refaire le site', repondre: 'Répondre', relancer_client: 'Relancer le client' };
+var VAGUES = {}, VAGUE_ITEMS = {}, DEXEM_FAIT = {}, DEXEM_NOTE = {};
+try { DEXEM_FAIT = JSON.parse(localStorage.getItem('comptes_dexem_fait') || '{}') || {}; DEXEM_NOTE = JSON.parse(localStorage.getItem('comptes_dexem_note') || '{}') || {}; } catch (e) { DEXEM_FAIT = {}; DEXEM_NOTE = {}; }
+/* v5.12 (famille 8, OUI 1/11 3 h 37) : la coche « fait » vit dans le tableau (note « Dexem relié (coché à HH h MM) » de notes_cartes), pas seulement dans ce navigateur */
+function noteDexem(cid){ return ((D && D.notes) || {})[cid] ? (D.notes[cid].filter(function(n){ return /^Dexem relié/.test(String(n.note||'')) && n.statut !== 'effacee'; })[0] || null) : null; }
+function dexemFait(cid){ var n = noteDexem(cid); if (n) return { h: hp(n.quand) || DEXEM_FAIT[cid] || '', id: n.id, src: 'tableau' }; if (DEXEM_FAIT[cid]) return { h: DEXEM_FAIT[cid], id: DEXEM_NOTE[cid] || '', src: 'local' }; return null; }
+function dexemSauver(){ try { localStorage.setItem('comptes_dexem_fait', JSON.stringify(DEXEM_FAIT)); localStorage.setItem('comptes_dexem_note', JSON.stringify(DEXEM_NOTE)); } catch (er) {} }
+function prochainReleve(){ var t = new Date(); return ((t.getHours() + 1) % 24) + ' h 20'; }
+function vaguesDe(l, fam){
+  var g = {}, dex = [];
+  l.forEach(function(x){ if (x.archive) return; var pris = {};
+    x.pbs.forEach(function(a){ if (!a.b || a.c === 'vert' || a.c === 'gris') return; if (fam && fam !== 'tout' && a.fam !== fam) return;   /* v5.5 : une vague = le geste de SA famille */
+      if (a.b.lien === DEXEM) { if (!pris.dexem) { pris.dexem = 1; dex.push({ x: x, a: a }); } return; }
+      var ty = a.b.type; if (!ty || !VAGUE_TYPES[ty]) return; var k = ty + '|' + (a.b.message_id || ''); if (pris[k]) return; pris[k] = 1; (g[ty] = g[ty] || []).push({ x: x, a: a }); }); });
+  return { g: g, dex: dex };
+}
+function vaguesHtml(l, fam){
+  var V = vaguesDe(l, fam), h = '';
+  if (V.dex.length >= 2) h += dTournee(fam, V.dex);
+  Object.keys(VAGUE_TYPES).forEach(function(ty){ var items = V.g[ty] || [], cle = fam + '|' + ty; if (VAGUES[cle]) h += dVague(fam, ty, items); else if (items.length >= 2) { VAGUE_ITEMS[cle] = items; h += dVague(fam, ty, items); } });
+  return h;
+}
+function sousVague(ty){
+  if (ty === 'verifier_branchement') return 'Google et le tableau ne comptent pas pareil : Claude contrôle Dexem → Google Ads et formulaire → tableau pour chacun.';
+  if (ty === 'relancer_robot') return 'Le robot s\'est arrêté sur une erreur : il reprend chacun à xx h 43.';
+  if (ty === 'reessayer_ordre') return 'Google n\'est pas passé sur ces ordres : ils sont redéposés pour xx h 19.';
+  if (ty === 'refaire_site') return 'Le robot refait le site, les pubs ne bougent pas.';
+  if (ty === 'repondre') return 'Un mot pour Claude ou Céline : la réponse va dans la carte.';
+  if (ty === 'relancer_client') return 'Vendu mais sans fiche ni compte Google : Céline rappelle chacun.';
+  return '';
+}
+function dVague(fam, ty, items){
+  var cle = fam + '|' + ty, v = VAGUES[cle], nomG = VAGUE_TYPES[ty];
+  if (v && v.panier) return '<div class="vague gris" data-vague="' + esc(cle) + '"><h3>' + esc(nomG) + ' <small>' + v.n + ' client' + (v.n > 1 ? 's' : '') + '</small></h3><p class="sous">🧺 ' + v.n + ' dans le panier · pas encore envoyé · clique « J\'ai fini » en haut</p><div class="boutons"><button type="button" class="b" data-vague-retirer="' + esc(cle) + '">Retirer du panier</button></div></div>';
+  if (v) return '<div class="vague gris" data-vague="' + esc(cle) + '"><h3>' + esc(nomG) + ' <small>' + v.n + ' client' + (v.n > 1 ? 's' : '') + '</small></h3><p class="sous ok">✔ Vague notée à ' + v.h + ' (ton heure) · ' + v.n + ' sur ' + v.total + ' · ' + esc(v.suite) + (v.echecs.length ? ' · pas fait : ' + esc(v.echecs.join(' ; ')) : '') + '</p>'
+    + (v.annul.length ? '<div class="boutons"><button type="button" class="b" data-vague-annuler="' + esc(cle) + '">Annuler tout · ' + v.annul.length + '</button></div>' : '<p class="aide">Pas d\'annulation pour ce geste.</p>') + '<div class="res"></div></div>';
+  var coul = items.some(function(i){ return i.a.c === 'rouge'; }) ? 'rouge' : items.some(function(i){ return i.a.c === 'orange'; }) ? 'orange' : 'bleu';
+  var nC = {}; items.forEach(function(i){ nC[i.x.cid] = 1; }); var nCl = Object.keys(nC).length;
+  var h = '<div class="vague ' + coul + '" data-vague="' + esc(cle) + '"><h3>' + esc(nomG) + ' <small>' + (items.length !== nCl ? items.length + ' messages · ' : '') + nCl + ' client' + (nCl > 1 ? 's' : '') + ' · une vague</small></h3><p class="sous">' + esc(sousVague(ty)) + '</p>';
+  items.forEach(function(it, i){ h += '<label><input type="checkbox" checked data-i="' + i + '"><span><b>' + esc(it.x.nom) + '</b> <small>' + esc(it.x.sous) + ' · ' + esc(String(it.a.t).slice(0, 90)) + (String(it.a.t).length > 90 ? '…' : '') + '</small><span class="act">→ ' + esc(it.a.b.texte || nomG) + '</span></span></label>'; });
+  h += '<div class="boutons"><button type="button" class="b prim" data-vague-lancer="' + esc(cle) + '" data-nom="' + esc(nomG.toLowerCase()) + '">Lancer · ' + esc(nomG.toLowerCase()) + ' · ' + items.length + '</button><button type="button" class="b" data-vague-decocher="' + esc(cle) + '">Tout décocher</button></div>'
+    + '<p class="aide">Un geste par client, le même que le bouton de sa carte. Décoche ceux que tu gardes pour plus tard. Les cartes restent en dessous, une par une.</p><div class="res"></div></div>';
+  return h;
+}
+function dTournee(fam, dex){
+  var cle = fam + '|dexem', nF = dex.filter(function(it){ return dexemFait(it.x.cid); }).length;
+  var h = '<div class="vague rouge" data-vague="' + esc(cle) + '"><h3>Relier Dexem <small>' + dex.length + ' comptes · ton clic « Autoriser »' + (nF ? ' · ' + nF + ' fait' + (nF > 1 ? 's' : '') : '') + '</small></h3><p class="sous">Tournée : ouvre Dexem, autorise chaque compte, coche « fait » ici. Le tableau le voit au prochain relevé, Claude vérifie.</p>';
+  dex.forEach(function(it){ var f = dexemFait(it.x.cid); h += '<label class="' + (f ? 'fait' : '') + '"><input type="checkbox" data-dexem="' + esc(it.x.cid) + '" data-nom="' + esc(it.x.nom) + '"' + (f ? ' checked' : '') + '><span><b>' + esc(it.x.nom) + '</b> <small>' + esc(it.x.sous) + ' · ' + esc(String(it.a.t).slice(0, 90)) + '</small><span class="act">' + (f ? '✔ fait à ' + esc(f.h) + ' (ton heure) · ' + (f.src === 'tableau' || f.id ? 'écrit dans le tableau' : 'pas encore écrit dans le tableau') + ' · Claude vérifie au prochain relevé, vers ' + prochainReleve() : '→ Autoriser dans Dexem') + '</span></span></label>'; });
+  h += '<div class="boutons"><a class="b prim" href="' + esc(DEXEM) + '" target="_blank" rel="noopener">Ouvrir Dexem</a><button type="button" class="b" data-vague-relire="1">J\'ai tout relié · Relire</button></div><p class="aide">« fait » est écrit dans le tableau : visible de partout, même d\'un autre appareil. Décoche pour annuler. La ligne disparaît quand Google confirme.</p><div class="res"></div></div>';
+  return h;
+}
+function annulDe(o, j){
+  var base = { siret: o.siret, compte_id: o.compte_id, nom: o.nom };
+  if (j.note_id && (o.type === 'verifier_branchement' || o.type === 'relancer_client' || o.type === 'repondre')) return Object.assign(base, { type: 'annuler_note', note_id: j.note_id });
+  if (o.type === 'refaire_site') return Object.assign(base, { type: 'annuler_refaire', site_avant: j.site_avant || 'ok' });
+  if (o.type === 'reessayer_ordre' && j.ordre_id) return Object.assign(base, { type: 'annuler_ordre', ordre_id: j.ordre_id });
+  return null;
+}
+async function macroVague(btn, cle){
+  var band = btn.closest('.vague'); if (!band) return; var res = band.querySelector('.res'), items = VAGUE_ITEMS[cle] || [], choisis = [];
+  band.querySelectorAll('input[type=checkbox]').forEach(function(i){ if (i.checked && items[+i.getAttribute('data-i')]) choisis.push(items[+i.getAttribute('data-i')]); });
+  if (!choisis.length) return montrer(res, 'ko', 'Personne n\'est coché : rien n\'a été écrit.');
+  if (auPanier(choisis[0].a.b.type)) { choisis.forEach(function(it){ ajouterPanier(it.a.b, it.a.b.texte || VAGUE_TYPES[it.a.b.type] || it.a.b.type, cle); }); VAGUES[cle] = { panier: true, n: choisis.length }; montrer(res, 'ok', '🧺 ' + choisis.length + ' dans le panier · pas encore envoyé'); setTimeout(rendreTout, 600); return; }
+  band.querySelectorAll('button,input').forEach(function(b){ b.disabled = true; }); montrer(res, '', 'envoi au tableau… 0/' + choisis.length);
+  var faits = 0, echecs = [], annul = [];
+  for (var i = 0; i < choisis.length; i++) { var it = choisis[i], o = it.a.b;
+    try { var j = await envoyer(o); if (j && j.ok) { faits++; souvenir(o, j); appliquerLocal(o, j); var an = annulDe(o, j); if (an) annul.push(an); ajouterClic(heure() + ' : ' + (o.texte || o.type) + ' — ' + o.nom + ' (vague)'); } else echecs.push(it.x.nom + ' : ' + ((j && j.erreur) || 'refus')); }
+    catch (e) { echecs.push(it.x.nom + ' : ' + String(e.message || e).replace(/^Error:\s*/, '')); }
+    montrer(res, '', 'envoi au tableau… ' + (i + 1) + '/' + choisis.length); }
+  if (!faits) { montrer(res, 'ko', '✖ Pas fait : ' + echecs.join(' ; ') + ' · rien n\'a été écrit'); band.querySelectorAll('button,input').forEach(function(b){ b.disabled = false; }); return; }
+  VAGUES[cle] = { h: heure(), n: faits, total: choisis.length, echecs: echecs, annul: annul, suite: suite(choisis[0].a.b, null) };
+  montrer(res, 'ok', '✔ Vague notée à ' + heure() + ' (ton heure) · ' + faits + ' sur ' + choisis.length); setTimeout(rendreTout, 1200);
+}
+async function annulerVague(btn, cle){
+  var v = VAGUES[cle]; if (!v || !v.annul.length) return; var band = btn.closest('.vague'), res = band ? band.querySelector('.res') : null;
+  band.querySelectorAll('button').forEach(function(b){ b.disabled = true; }); montrer(res, '', 'annulation… 0/' + v.annul.length);
+  var faits = 0, echecs = [];
+  for (var i = 0; i < v.annul.length; i++) { var o = v.annul[i]; try { var j = await envoyer(o); if (j && j.ok) { faits++; souvenir(o, j); appliquerLocal(o, j); ajouterClic(heure() + ' : annulé — ' + o.nom + ' (vague)'); } else echecs.push(o.nom + ' : ' + ((j && j.erreur) || 'refus')); } catch (e) { echecs.push(o.nom + ' : ' + String(e.message || e)); } montrer(res, '', 'annulation… ' + (i + 1) + '/' + v.annul.length); }
+  if (faits === v.annul.length) { delete VAGUES[cle]; montrer(res, 'ok', '✔ Tout annulé à ' + heure() + ' (ton heure) · rien ne sera fait'); }
+  else { v.annul = []; v.suite = 'annulé pour ' + faits + ', pas pour : ' + echecs.join(' ; '); montrer(res, 'ko', '✖ ' + faits + ' annulé' + (faits > 1 ? 's' : '') + ' · pas annulé : ' + echecs.join(' ; ')); }
+  setTimeout(rendreTout, 1500);
+}
+/* v5.12 : la coche écrit tout de suite dans le tableau (comme une annulation : pas de panier) ; décocher efface la note */
+async function cocherDexem(i, band, cid){
+  var res = band.querySelector('.res'), nom = i.getAttribute('data-nom') || cid, h = heure(); i.disabled = true;
+  if (i.checked) {
+    var o = { type: 'note', compte_id: cid, nom: nom, texte: 'Dexem relié (coché à ' + h + ')' };
+    try { var j = await envoyer(o); if (!(j && j.ok)) throw new Error((j && j.erreur) || 'refus');
+      DEXEM_FAIT[cid] = h; DEXEM_NOTE[cid] = j.note_id || ''; dexemSauver(); appliquerLocal(o, j); ajouterClic(h + ' : Dexem relié (coché) — ' + nom); montrer(res, 'ok', '✔ Noté à ' + h + ' (ton heure) · écrit dans le tableau'); }
+    catch (e) { i.checked = false; i.disabled = false; montrer(res, 'ko', '✖ Pas écrit pour ' + nom + ' : ' + String(e.message || e).replace(/^Error:\s*/, '') + ' · la coche est retirée'); return; }
+  } else {
+    var f = dexemFait(cid), nid = (f && f.id) || '';
+    if (nid) { try { var j2 = await envoyer({ type: 'annuler_note', compte_id: cid, nom: nom, note_id: nid }); if (!(j2 && j2.ok)) throw new Error((j2 && j2.erreur) || 'refus'); }
+      catch (e2) { i.checked = true; i.disabled = false; montrer(res, 'ko', '✖ Pas annulé pour ' + nom + ' : ' + String(e2.message || e2).replace(/^Error:\s*/, '')); return; } }
+    delete DEXEM_FAIT[cid]; delete DEXEM_NOTE[cid]; dexemSauver(); if (D && D.notes && D.notes[cid]) D.notes[cid] = D.notes[cid].filter(function(n){ return String(n.id) !== String(nid) && !/^Dexem relié/.test(String(n.note||'')); });
+    ajouterClic(h + ' : Dexem décoché — ' + nom); montrer(res, 'ok', '✔ Annulé à ' + h + ' (ton heure) · rien dans le tableau');
+  }
+  setTimeout(rendreCartes, 900);
+}
+function majVague(band){ var n = 0; band.querySelectorAll('input[type=checkbox]').forEach(function(i){ if (i.checked) n++; }); var b = band.querySelector('[data-vague-lancer]'); if (b) { b.textContent = 'Lancer · ' + b.getAttribute('data-nom') + ' · ' + n; b.disabled = !n; } }
+document.addEventListener('change', function(e){
+  var i = e.target; if (!i || i.type !== 'checkbox') return; var band = i.closest('.vague'); if (!band) return;
+  var cid = i.getAttribute('data-dexem');
+  if (cid) { cocherDexem(i, band, cid); return; }
+  majVague(band);
+});
+
+/* ---------- 3. Les clics : plier, volets, ordres ---------- */
+document.addEventListener('click', function(e){
+  var t = e.target.closest('button'); if (!t) return;
+  var fam = t.getAttribute('data-fam'); if (fam) { FILTRE = fam; var M = calculer(D); rendreMenu(M); rendreCartes(); window.scrollTo(0, 0); return; }
+  if (t.hasAttribute('data-opt-seul')) { window.__OPT_SEUL__ = !window.__OPT_SEUL__; rendreCartes(); window.scrollTo(0, 0); return; }
+  if (t.hasAttribute('data-opt-pire')) { window.__OPT_PIRE__ = !window.__OPT_PIRE__; if (window.__OPT_PIRE__) { window.__OPT_SEUL__ = false; window.__OPT_CHER__ = false; } rendreCartes(); window.scrollTo(0, 0); return; }   /* v5.26 */
+  if (t.hasAttribute('data-opt-cher')) { window.__OPT_CHER__ = !window.__OPT_CHER__; if (window.__OPT_CHER__) { window.__OPT_SEUL__ = false; window.__OPT_PIRE__ = false; } rendreCartes(); window.scrollTo(0, 0); return; }
+  var cand = t.getAttribute('data-cand'); if (cand) { var cidC = t.getAttribute('data-cid'), vC = OUV.volet[cidC]; if (vC && vC.type === 'fiche') { vC.champs = vC.champs || {}; vC.champs.siret = cand; redessiner(cidC); } return; }
+  var pa = t.getAttribute('data-panier'); if (pa) { if (pa === 'envoyer') envoyerPanier(); else if (pa === 'voir') { PANIER_OUVERT = !PANIER_OUVERT; rendrePanier(); } else if (pa === 'vider') { PANIER = []; PANIER_RES = null; Object.keys(VAGUES).forEach(function(k){ if (VAGUES[k] && VAGUES[k].panier) delete VAGUES[k]; }); panierSauver(); rendreTout(); } else if (pa === 'fermer') { PANIER_RES = null; rendrePanier(); } return; }
+  var pr = t.getAttribute('data-panier-retirer'); if (pr) { retirerPanier(pr); rendreTout(); return; }
+  var vr = t.getAttribute('data-vague-retirer'); if (vr) { PANIER = PANIER.filter(function(it){ return it.vague !== vr; }); delete VAGUES[vr]; panierSauver(); rendreTout(); return; }
+  var vl = t.getAttribute('data-vague-lancer'); if (vl) { macroVague(t, vl); return; }
+  var va = t.getAttribute('data-vague-annuler'); if (va) { annulerVague(t, va); return; }
+  var vd = t.getAttribute('data-vague-decocher'); if (vd) { var bd_ = t.closest('.vague'), tous = Array.prototype.slice.call(bd_.querySelectorAll('input[type=checkbox]')), aucun = tous.every(function(i){ return !i.checked; }); tous.forEach(function(i){ i.checked = aucun; }); t.textContent = aucun ? 'Tout décocher' : 'Tout cocher'; majVague(bd_); return; }
+  if (t.getAttribute('data-vague-relire')) { charger(); return; }
+  var c = t.closest('.carte'); if (!c) return; var cid = c.id.slice(2);
+  var pl_ = t.getAttribute('data-plier'); if (pl_) { OUV[pl_][cid] = (pl_ === 'pubs' && c.classList.contains('opt') && !(cid in OUV.pubs)) ? false : !OUV[pl_][cid]; redessiner(cid); return; }
+  if (t.getAttribute('data-ouvrir') === 'pubs') { OUV.pubs[cid] = true; redessiner(cid); return; }
+  var vol = t.getAttribute('data-volet'); if (vol) { var kid = t.getAttribute('data-kid'); var cle = kid ? cid+'|'+kid : cid; if (OUV.volet[cle] && OUV.volet[cle].type === vol) delete OUV.volet[cle]; else OUV.volet[cle] = { type: vol, val: null, pub: t.getAttribute('data-pub') || '' }; if (kid) OUV.pubs[cid] = true; if (t.closest('.pb')) OUV.pb[cid] = true; redessiner(cid); if (vol === 'fiche' && OUV.volet[cle]) chargerFiche(cid);
+    /* v5.11 : le volet ouvert est amené sous les yeux */ var vEl = document.querySelector('#c-'+cid+' .volet'); if (vEl && OUV.volet[cle]) { try { vEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (eS) {} } if (!kid) { var inp = document.getElementById('m-'+cid.replace(/\D/g,'')); if (inp) { inp.focus(); try { inp.select(); } catch (er) {} } } return; }
+  var fer = t.getAttribute('data-fermer'); if (fer) { delete OUV.volet[fer === 'compte' ? cid : cid+'|'+fer]; redessiner(cid); return; }
+  var val = t.getAttribute('data-valider'); if (val) { valider(t, cid, val); return; }
+});
+function recalc(inp, mult){ var v = montant(inp.value), vol = inp.closest('.volet'); if (!vol) return; vol.querySelectorAll('.rc').forEach(function(s){ s.textContent = v === null ? '?' : nb(mult ? v*mult : v); }); vol.querySelectorAll('.rc2').forEach(function(s){ s.textContent = v === null ? '?' : nb(v*2); }); }
+function montant(v){ var n = Math.round(parseFloat(String(v).replace(',', '.').replace(/[^\d.]/g,'')) * 100) / 100; return (n >= 1 && n <= 500) ? n : null; }
+/* v5.27 : budget PAR MOIS (Enzo 9/11 08 h 35 « par mois je tape, toi tu convertis sur les 30 jours ») : 30,4 jours = le mois de Google ; le robot et le tableau arrondissent le jour a l euro, 30 € au moins */
+function montantMois(v){ var n = Math.round(parseFloat(String(v).replace(',', '.').replace(/[^\d.]/g,''))); return (n >= 30 && n <= 20000) ? n : null; }
+function jourDeMois(m){ return Math.max(30, Math.round((Number(m) || 0) / 30.4)); }
+function budgetMoisBase(x){ var f = (D.fiches||{})[x.siret] || {}, l = (D.lot||{})[x.cid] || {}; var fm = Number(f.budget_mois) || 0, lj = parseFloat(String(l.budget_jour||'').replace(',', '.')) || 0;
+  if (fm > 0) return { mois: Math.round(fm), source: 'Le client avait choisi ' + nb(Math.round(fm)) + ' € par mois à l\'inscription' };
+  if (lj > 0) return { mois: Math.round(lj * 30.4), source: 'Budget du tableau : ' + nb(lj) + ' € par jour, soit ' + nb(Math.round(lj * 30.4)) + ' € par mois' };
+  return { mois: 900, source: 'Pas de budget connu pour ce client : 900 € par mois proposé (ton minimum)' }; }
+function recalcMois(inp){ var m = Number(String(inp.value).replace(',', '.').replace(/[^\d.]/g,'')) || 0, j = jourDeMois(m), v = inp.closest('.volet'); if (!v) return; v.querySelectorAll('.rc,.rc2').forEach(function(e){ e.textContent = nb(j); }); }
+function varianteRefusee(o, j){ return !!(o && o.type === 'nouvelle' && o.variante === 'services' && !(j && String(j.variante||'') === 'services')); }
+function envoyer(o){ return new Promise(function(ok, ko){
+  if (!(window.google && google.script && google.script.run)) return ko(new Error('cette copie n\'est pas reliée au tableau'));
+  google.script.run.withSuccessHandler(ok).withFailureHandler(function(e){ ko(new Error(String(e))); }).optimiserOrdre(CODE, o);
+}); }
+function resDe(c, cle){ return c.querySelector('.res[data-res="'+cle+'"]') || c.querySelector('.res[data-res="compte"]'); }
+function montrer(res, cls, texte){ if (!res) return; res.className = 'res'+(cls ? ' '+cls : ''); res.textContent = texte; }
+function garder(cid, cle, texte){ var c = document.getElementById('c-'+cid); if (!c) return; var res = resDe(c, cle); if (res) { res.className = 'res ok'; res.textContent = texte; } }
+async function valider(btn, cid, type){
+  var x = calculer(D).cartes.filter(function(c){ return c.cid === cid; })[0]; if (!x) return; var c = btn.closest('.carte'), res = resDe(c, 'compte'), kid = btn.getAttribute('data-kid'), champ = btn.getAttribute('data-champ'), v = champ ? document.getElementById(champ) : null;
+  var base = { siret: x.siret, compte_id: cid, nom: x.nom };
+  if (type === 'fiche') { var vf = OUV.volet[cid]; if (!vf || vf.type !== 'fiche') return; var chF = {}; c.querySelectorAll('.volet.fiche [data-f]').forEach(function(i){ chF[i.getAttribute('data-f')] = String(i.value||'').trim(); }); vf.champs = chF;
+    var sirF = chF.siret.replace(/\D/g,''); if (sirF.length !== 14) return montrer(res, 'ko', 'Numéro d\'entreprise : 14 chiffres (clique le bon dans l\'annuaire, ou écris-le) : rien n\'a été écrit.');
+    if (!chF.nom) return montrer(res, 'ko', 'Le nom manque : rien n\'a été écrit.'); if (!chF.metier) return montrer(res, 'ko', 'Le métier manque : rien n\'a été écrit.');
+    if (!/^\d{5}$/.test(chF.cp)) return montrer(res, 'ko', 'Code postal du centre : 5 chiffres : rien n\'a été écrit.'); var rayF = parseInt(chF.rayon, 10); if (!(rayF >= 5 && rayF <= 200)) return montrer(res, 'ko', 'Rayon entre 5 et 200 km : rien n\'a été écrit.');
+    var sansPubF = vf.pub === 'non', budF = sansPubF ? 30 : montant(chF.budget); if (budF === null) return montrer(res, 'ko', 'Budget entre 1 et 500 € par pub : rien n\'a été écrit.');
+    return lancer(btn, Object.assign({ type: 'fiche_express', pub: sansPubF ? 'non' : 'oui', siret: sirF, nom: chF.nom, metier: chF.metier, tel: chF.tel, domaine: chF.domaine, cp: chF.cp, ville: chF.ville, rayon: rayF, budget: budF, dexem_uuid: vf.dexem_uuid || '', texte: (sansPubF ? 'Créer la fiche + le site · ' : 'Lancer site + pub · ')+chF.metier+' · '+chF.cp+' / '+rayF+' km'+(sansPubF ? '' : ' · '+nb(budF)+' €/pub') }, base, { siret: sirF }), res, cid); }
+  if (type === 'nouvelle') { var m = montantMois(v.value); if (m === null) return montrer(res, 'ko', 'Budget entre 30 et 20 000 € par mois : rien n\'a été écrit.'); if (OUV.volet[cid]) OUV.volet[cid].val = m; var bjN = jourDeMois(m); return lancer(btn, Object.assign({ type: 'nouvelle', variante: 'services', budget: bjN, budget_mois: m, texte: 'Nouvelle campagne · '+nb(m)+' € par mois ('+nb(bjN)+' €/j)' }, base), res, cid); }   /* v5.27 : structure 0911 */
+  if (type === 'note') { var t = String(v.value||'').trim(); if (!t) return montrer(res, 'ko', 'La note est vide : rien n\'a été écrit.'); return lancer(btn, Object.assign({ type: 'note', texte: t.slice(0, 500) }, base), res, cid); }
+  if (type === 'archiver') return lancer(btn, Object.assign({ type: 'archiver', texte: 'Archiver' }, base), res, cid);
+  if (type === 'arreter') return macro(btn, Object.assign({ type: 'arreter_tout', texte: 'Arrêter toutes les pubs' }, base), res, x);
+  if (type === 'budget') { var mb = montant(v.value); if (mb === null) return montrer(res, 'ko', 'Budget entre 1 et 500 €/j : rien n\'a été écrit.'); return macro(btn, Object.assign({ type: 'budget_compte', valeur: mb, texte: 'Budget '+nb(mb)+' €/j' }, base), res, x); }
+  var p = x.pubs.filter(function(pp){ return pp.kid === kid; })[0]; if (!p) return; res = resDe(c, 'pub-'+kid); var mp = montant(v.value); if (mp === null) return montrer(res, 'ko', 'Montant entre 1 et 500 €/j : rien n\'a été écrit.');
+  if (type === 'budget_pub') return lancer(btn, Object.assign({ type: 'budget', campagne_id: kid, campagne: p.nom, valeur: mp, texte: 'Budget « '+p.nom+' » '+nb(mp)+' €/j' }, base), res, cid, cid+'|'+kid);
+  if (type === 'rallumer') { var o1 = Object.assign({ type: 'rallumer', campagne_id: kid, campagne: p.nom, valeur: mp, texte: 'Rallumer « '+p.nom+' »' }, base); var okR = await lancer(btn, o1, res, cid, cid+'|'+kid, true); if (okR && Math.abs(mp - p.budget) >= 0.01) await lancer(btn, Object.assign({ type: 'budget', campagne_id: kid, campagne: p.nom, valeur: mp, texte: 'Budget « '+p.nom+' » '+nb(mp)+' €/j' }, base), res, cid, cid+'|'+kid); else if (okR) setTimeout(function(){ redessiner(cid); }, 1500); }
+}
+/* un bouton d'ordre direct (Arrêter une pub, Annuler, Remettre actif, Je propose…) */
+async function ordre(btn){
+  var o = JSON.parse(btn.getAttribute('data-o')), c = btn.closest('.carte'), cid = o.compte_id; if (!c) return;
+  var cle = btn.closest('.pub') ? 'pub-'+(btn.closest('.pub').getAttribute('data-kid')) : (btn.closest('.pb') && btn.closest('.pb').querySelector('.res') ? btn.closest('.pb').querySelector('.res').getAttribute('data-res') : 'compte');
+  var res = resDe(c, cle);
+  if (o.type === 'arreter_tout') { var x = calculer(D).cartes.filter(function(k){ return k.cid === cid; })[0]; return macro(btn, o, res, x); }
+  if (o.type === 'budget_compte') { OUV.volet[cid] = { type: 'budget', val: o.valeur }; redessiner(cid); return; }
+  if (o.type === 'nouvelle' && !o.budget_fixe) { OUV.volet[cid] = { type: 'nouvelle', val: null }; redessiner(cid); return; }   /* v5.27 : la case = budget par mois pre-rempli (budgetMoisBase) */
+  return lancer(btn, o, res, cid);
+}
+function suite(o, j){
+  if (o.type === 'nouvelle') return 'le robot fabrique la nouvelle campagne ('+nb(o.budget_mois || Math.round((o.budget||30)*30.4))+' € par mois = '+nb(o.budget)+' €/j), prête vers '+(new Date().getHours()+1)+' h, enchère et image posées ensuite · ne s\'allume que si Dexem est relié';
+  if (o.type === 'eteindre') return 'Google coupe à xx h 19';
+  if (o.type === 'rallumer') return 'Google rallume à xx h 19'+(j && /dexem/i.test(j.note||'') ? ' · '+j.note : '');
+  if (o.type === 'budget') return 'Google applique à xx h 19';
+  if (o.type === 'archiver') return 'il disparaît des pages ; ses pubs passent en veille à xx h 43';
+  if (o.type === 'desarchiver') return 'il revient dans ses familles';
+  if (o.type === 'activer') return 'les pubs s\'allument à xx h 43'+(j && j.activer === 'attend_dexem' ? ' · bloqué tant que Dexem n\'est pas relié' : '');
+  if (o.type === 'refaire') return 'le robot refait le site puis crée LARGE + EXACT à 30 €/j';
+  if (o.type === 'refaire_site') return 'le robot refait le site ; ses pubs ne bougent pas';
+  if (o.type === 'fiche_express') return (j && j.note) || (o.pub === 'non' ? 'fiche créée : le robot fait le site ; la pub se lance depuis À optimiser' : 'fiche créée : le robot refait le site puis crée LARGE + EXACT');
+  if (o.type === 'annuler_fiche_express') return 'fiche abandonnée : rien ne sera fait';
+  if (o.type === 'note') return 'gardée dans le tableau';
+  if (/^annuler/.test(o.type)) return 'rien ne sera fait';
+  if (o.type === 'verifier_branchement' || o.type === 'relancer_robot' || o.type === 'reessayer_ordre' || o.type === 'relancer_client' || o.type === 'repondre') return 'Claude s\'en occupe à sa prochaine lecture';
+  return (j && j.note) || '';
+}
+async function lancer(btn, o, res, cid, cleVolet, garderRes){
+  if (auPanier(o.type)) { ajouterPanier(o, o.texte || o.type); if (cleVolet) delete OUV.volet[cleVolet]; else delete OUV.volet[cid]; montrer(res, 'ok', '🧺 Dans le panier · pas encore envoyé (' + PANIER.length + ')'); setTimeout(function(){ redessiner(cid); }, 400); return true; }
+  btn.disabled = true; montrer(res, '', 'envoi au tableau…');
+  try {
+    var j = await envoyer(o);
+    if (!(j && j.ok)) { montrer(res, 'ko', '✖ Pas fait : '+((j && j.erreur) || 'refusé par le tableau')+' · rien n\'a été écrit'); btn.disabled = false; return false; }
+    if (varianteRefusee(o, j)) { try { await envoyer(Object.assign({}, o, { type: 'annuler_nouvelle', texte: 'Annuler (tableau pas à jour)' })); } catch (eA) {} montrer(res, 'ko', '✖ Annulé aussitôt : le tableau ne connaît pas encore la nouvelle campagne (mise à jour à publier) · rien ne part'); btn.disabled = false; return false; }   /* v5.27 : jamais l ancienne paire a la place */
+    var texte = '✔ Noté à '+heure()+' (ton heure) · '+suite(o, j); montrer(res, 'ok', texte);
+    souvenir(o, j); appliquerLocal(o, j); ajouterClic(heure()+' : '+(o.texte || o.type)+' — '+o.nom); if (cleVolet) delete OUV.volet[cleVolet]; else delete OUV.volet[cid];
+    var cle = res ? res.getAttribute('data-res') : 'compte';
+    if (!garderRes) setTimeout(function(){ redessiner(cid); if (!/^(eteindre|rallumer|budget|nouvelle|refaire|refaire_site|activer)$/.test(o.type)) garder(cid, cle, texte); }, 1500);
+    return true;
+  } catch (e) { montrer(res, 'ko', '✖ Pas envoyé ('+String(e.message||e).replace(/^Error:\s*/,'')+') : rien n\'a été écrit · Réessayer'); btn.disabled = false; return false; }
+}
+async function macro(btn, o, res, x){
+  var pubs = x.pubs.filter(function(p){ return p.libre; }); if (!pubs.length) return montrer(res, 'ko', 'Aucune pub allumée sans geste déjà noté.');
+  var type = o.type === 'arreter_tout' ? 'eteindre' : 'budget', total = o.valeur || null, parts = [];
+  if (type === 'budget') { var n = pubs.length, base = Math.floor(total*100/n)/100, reste = Math.round((total - base*n)*100)/100; parts = pubs.map(function(_, i){ return Math.round((base + (i === 0 ? reste : 0))*100)/100; }); }
+  if (auPanier(type)) { pubs.forEach(function(p, i){ var env = { type: type, siret: o.siret, compte_id: o.compte_id, nom: o.nom, campagne_id: p.kid, campagne: p.nom }; if (type === 'budget') { env.valeur = parts[i]; if (i === 0) env.total = total; } ajouterPanier(env, type === 'eteindre' ? 'Arrêter « ' + p.nom + ' »' : 'Budget « ' + p.nom + ' » ' + nb(parts[i]) + ' €/j'); }); delete OUV.volet[o.compte_id]; montrer(res, 'ok', '🧺 ' + pubs.length + ' geste' + (pubs.length > 1 ? 's' : '') + ' dans le panier · pas encore envoyé'); setTimeout(function(){ redessiner(o.compte_id); }, 400); return; }
+  btn.disabled = true; montrer(res, '', 'envoi au tableau… 0/'+pubs.length); var faits = 0, echecs = [];
+  for (var i = 0; i < pubs.length; i++) { var p = pubs[i], envoi = { type: type, siret: o.siret, compte_id: o.compte_id, nom: o.nom, campagne_id: p.kid, campagne: p.nom }; if (type === 'budget') { envoi.valeur = parts[i]; if (i === 0) envoi.total = total; }
+    try { var j = await envoyer(envoi); if (j && j.ok) { faits++; souvenir(envoi, j); appliquerLocal(envoi, j); } else echecs.push(p.nom+' : '+((j && j.erreur) || 'refus')); } catch (e) { echecs.push(p.nom+' : '+e.message); } montrer(res, '', 'envoi au tableau… '+(i+1)+'/'+pubs.length); }
+  if (!faits) { montrer(res, 'ko', '✖ Pas fait : '+echecs.join(' ; ')+' · rien n\'a été écrit'); btn.disabled = false; return; }
+  var texte = '✔ Noté à '+heure()+' (ton heure) · '+(type === 'eteindre' ? faits+' arrêt'+(faits>1?'s':'')+', Google coupe à xx h 19' : faits+' budget'+(faits>1?'s':'')+', total '+eur(total)+'/j, Google applique à xx h 19')+(echecs.length ? ' · pas fait : '+echecs.join(' ; ') : '')+' · Annuler : sur chaque pub';
+  montrer(res, 'ok', texte); ajouterClic(heure()+' : '+o.texte+' — '+o.nom+' ('+faits+')'); delete OUV.volet[o.compte_id]; OUV.pubs[o.compte_id] = true; setTimeout(function(){ redessiner(o.compte_id); garder(o.compte_id, 'compte', texte); }, 1500);
+}
+function souvenir(o, j){
+  var h = heure();
+  if (o.type === 'activer') SOUVENIR[o.compte_id+'|activer'] = { avant: j.avant || 'non', h: h };
+  if (o.type === 'fiche_express') SOUVENIR[o.compte_id+'|fiche'] = { h: h, siret: o.siret, pub: o.pub || 'oui' };
+  if (o.type === 'annuler_fiche_express') delete SOUVENIR[o.compte_id+'|fiche'];
+  if (o.type === 'refaire' || o.type === 'refaire_site') SOUVENIR[o.compte_id+'|refaire'] = { site_avant: j.site_avant || 'ok', metier_avant: j.metier_avant || '', h: h };
+  if (o.type === 'nouvelle' || o.type === 'refaire') SOUVENIR[o.compte_id+'|nouvelle'] = { h: h };
+  if (o.type === 'annuler_refaire') delete SOUVENIR[o.compte_id+'|refaire'];
+  if (o.type === 'annuler_nouvelle') delete SOUVENIR[o.compte_id+'|nouvelle'];
+  if (j.ordre_id) SOUVENIR['ordre|'+j.ordre_id] = { budget_avant: j.budget_avant };
+}
+/* après un clic, le tableau en mémoire prend l'état que le vrai aura (sans attendre la relecture), puis la carte est redessinée */
+function appliquerLocal(o, j){
+  var l = (D.lot||{})[o.compte_id], q = (j && j.quand) || String(D.quand||'');
+  if (o.type === 'eteindre' || o.type === 'rallumer' || o.type === 'budget') { if (j.ordre_id) (D.ordres = D.ordres||[]).push({ id: j.ordre_id, quand: stampLocal(), local: true, compte_id: o.compte_id, campagne_id: String(o.campagne_id||''), campagne: o.campagne||'', action: o.type === 'eteindre' ? 'pause' : o.type === 'rallumer' ? 'activer' : 'budget', valeur: String(o.valeur||''), statut: 'a_faire', par: 'Enzo (page)' }); if (o.type === 'budget' && o.total && l) l.budget_jour = String(o.total); }
+  else if (/^annuler_(ordre|budget|rallumer|eteindre)$/.test(o.type)) { (D.ordres||[]).forEach(function(r){ if (r.id === o.ordre_id) r.statut = 'annule'; }); if (o.type === 'annuler_budget' && l && o.budget_avant !== undefined) l.budget_jour = String(o.budget_avant); }
+  else if (l && o.type === 'activer') l.activer = j.activer || ('oui '+stampLocal());
+  else if (l && o.type === 'annuler_activer') l.activer = j.activer || o.avant || 'non';
+  else if (l && o.type === 'bloquer_allumage') l.activer = 'non';
+  else if (l && o.type === 'nouvelle') l.nouvelle_structure = j.nouvelle_structure || ('oui '+stampLocal()+' budget '+(o.budget||30));
+  else if (l && o.type === 'annuler_nouvelle') l.nouvelle_structure = '';
+  else if (l && o.type === 'refaire') { l.site_statut = ''; l.nouvelle_structure = j.nouvelle_structure || ('oui '+stampLocal()+' budget '+(o.budget||30)); }
+  else if (l && o.type === 'refaire_site') { l.site_statut = ''; if (o.metier) l.metier = o.metier; }
+  else if (o.type === 'fiche_express') { D.lot = D.lot || {}; D.lot[o.compte_id] = Object.assign({}, l || {}, (j && j.lot) || {}, { siret: o.siret, compte_id: o.compte_id, nom: o.nom, metier: o.metier, domaine: o.domaine, site_statut: '', nouvelle_structure: (j && j.lot && j.lot.nouvelle_structure !== undefined) ? j.lot.nouvelle_structure : (o.pub === 'non' ? '' : 'oui '+stampLocal()+' budget '+(o.budget||30)), activer: (j && j.lot && j.lot.activer !== undefined) ? j.lot.activer : (o.pub === 'non' ? '' : 'auto'), accepte: 'oui', abandonne: '', budget_jour: String(o.budget||30), cp_site: o.cp, rayon_km: String(o.rayon) }); }
+  else if (l && o.type === 'annuler_fiche_express') { l.site_statut = 'abandonne'; l.activer = 'non'; l.abandonne = 'oui'; l.nouvelle_structure = 'annule '+stampLocal(); }
+  else if (l && o.type === 'annuler_refaire') { l.site_statut = o.site_avant || 'ok'; }
+  else if (o.type === 'archiver' || o.type === 'desarchiver') (D.clients||[]).forEach(function(c){ if (c.compte_id === o.compte_id) c.statut = j.statut || (o.type === 'archiver' ? 'archive' : 'actif'); });
+  else if (o.type === 'note') { var nz = (D.notes = D.notes||{}); (nz[o.compte_id] = nz[o.compte_id]||[]).unshift({ id: j.note_id, quand: j.quand || q, note: j.texte || o.texte, par: 'Enzo (rapport)', statut: '' }); }
+  else if (o.type === 'verifier_branchement' || o.type === 'relancer_client' || o.type === 'repondre') { var nz2 = (D.notes = D.notes||{}); var lab = o.type === 'verifier_branchement' ? 'Vérifier le branchement : noté' : o.type === 'relancer_client' ? 'Relancer le client : noté' : 'Répondre (message '+String(o.message_id||'')+')'; (nz2[o.compte_id] = nz2[o.compte_id]||[]).push({ id: j.note_id || '', quand: j.quand || stampLocal(), note: lab, par: 'Enzo (rapport) → '+(j.pour || 'Claude'), statut: 'a_faire' }); }
+  else if (o.type === 'annuler_note') { var nz3 = (D.notes||{})[o.compte_id] || []; for (var iN = nz3.length - 1; iN >= 0; iN--) if (nz3[iN].id === o.note_id) nz3.splice(iN, 1); }
+}
+function ajouterClic(t){ var ul = document.getElementById('clics-liste'); document.getElementById('clics').style.display = ''; var li = document.createElement('li'); li.textContent = t; ul.insertBefore(li, ul.firstChild); document.getElementById('clics-n').textContent = ul.children.length+' clic(s)'; }
+
+/* ---------- 4. La lecture du tableau (à l'ouverture, sur Relire, toutes les 10 minutes) ---------- */
+function charger(){
+  var att = document.getElementById('attente'); window.__RELU__ = 'Je lis le tableau…'; if (document.getElementById('relu')) document.getElementById('relu').textContent = window.__RELU__;
+  if (!(window.google && google.script && google.script.run)) { if (window.__DONNEES__) { recevoir(window.__DONNEES__); return; }   /* copie d'essai : données fournies par le test ou l'aperçu */
+    att.style.display = ''; att.textContent = 'Cette copie n\'est pas reliée au tableau ('+heure()+', ton heure) : ouvre la page par son lien.'; return; }
+  google.script.run.withSuccessHandler(recevoir).withFailureHandler(function(e){ att.style.display = ''; att.textContent = 'Le tableau n\'a pas répondu à '+heure()+' (ton heure) : '+String(e && e.message ? e.message : e).replace(/^Error:\s*/,'')+' — clique « Relire »'; }).optimiserDonnees(CODE);
+}
+function recevoir(R){
+  var att = document.getElementById('attente');
+  if (!R || !R.ok) { att.style.display = ''; att.textContent = 'Le tableau n\'a rien renvoyé à '+heure()+' (ton heure)'+((R && R.erreur) ? ' : '+R.erreur : '')+' — clique « Relire »'; return; }
+  D = R; var manque = ['erreur_clients','erreur_lot','erreur_campagnes','erreur_jours','erreur_ordres','erreur_notes'].filter(function(k){ return R[k]; });
+  window.__RELU__ = 'Tableau relu à '+hp(R.quand)+' (heure de Paris)'+(manque.length ? ' · ⚠ pas lu : '+manque.map(function(k){ return k.replace('erreur_',''); }).join(', ') : '');
+  var bd = document.getElementById('bandeau'); bd.innerHTML = (R.bandeau ? '<span class="bandeau">'+esc(R.bandeau)+'</span>' : '')+(R.periode !== 'total' ? '<span class="bandeau">Chiffres des 30 derniers jours : « depuis le début » arrive avec le prochain relevé Google.</span>' : '');
+  rendreTout();
+  var ul = document.getElementById('clics-liste'); ul.innerHTML = ''; (R.journal||[]).slice().reverse().forEach(function(x){ var li = document.createElement('li'); li.textContent = hp(x.quand)+' : '+x.quoi; ul.appendChild(li); }); document.getElementById('clics').style.display = (R.journal||[]).length ? '' : 'none'; document.getElementById('clics-n').textContent = (R.journal||[]).length+' clic(s) notés dans le tableau';
+}
+function demarrer(){
+  rendreMenu(null);
+  try { google.script.url.getLocation(function(loc){ CODE = (loc && loc.parameter && loc.parameter.code) || ''; charger(); }); } catch (e) { charger(); }
+  setInterval(function(){ if (!document.hidden && !window.__DONNEES__) charger(); }, 10 * 60 * 1000);
+}
+demarrer();
+</script>
+<script>if ('serviceWorker' in navigator && location.protocol === 'https:') { window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }</script>
+</body></html>
