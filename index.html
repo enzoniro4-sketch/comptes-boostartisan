@@ -5,7 +5,7 @@
 <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#f5f5f7"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Comptes">
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" href="icone-192.png"><link rel="apple-touch-icon" href="icone-180.png">
-<meta name="ba-version" content="v5.27-r2">
+<meta name="ba-version" content="v5.28-r2">
 <style>/* --- version rapide : ce qui s'ajoute à la page (rien d'autre ne change) --- */
 #ba-etat{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;max-width:calc(100vw - 24px);background:#1d1d1f;color:#fff;padding:9px 16px;border-radius:999px;font-size:13px;line-height:1.35;z-index:60;box-shadow:0 4px 18px rgba(0,0,0,.22);text-align:center}
 #ba-etat.ko{background:#8e1b1b}
@@ -83,7 +83,18 @@ main h2{font-size:13px;font-weight:600;color:var(--gris);margin:22px 0 8px}main 
 .etat{font-size:14px;color:var(--gris);margin-top:2px}.etat b{color:var(--txt);font-weight:600}
 .chiffres{font-size:14px;color:var(--gris);text-align:right;white-space:nowrap;line-height:1.5}.chiffres b{color:var(--txt);font-weight:600}
 .chiffres .cpd{font-weight:700}.chiffres .cpd.rouge{color:var(--rouge)}.chiffres .cpd.orange{color:var(--orange)}.chiffres .cpd.vert{color:var(--vert)}.chiffres .cpd.gris{color:var(--gris);font-weight:500}
-.chiffres small{display:block;font-size:12px;color:#9a9aa0}
+.chiffres small{display:block;font-size:12px;color:#9a9aa0}.chiffres small.pm{color:var(--bleut);font-weight:600}
+/* v5.28 : le choix de la période (Depuis le début · Ce mois-ci · Le mois dernier) et le total de tous les comptes */
+.per{background:var(--blanc);border-radius:14px;padding:10px 12px;margin:0 0 16px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px}
+.per .seg{display:inline-flex;background:var(--chip);border-radius:10px;padding:3px;gap:2px;max-width:100%}
+.per .seg button{font:inherit;font-size:14px;font-weight:600;line-height:1.2;color:var(--gris2);background:transparent;border:0;border-radius:8px;min-height:36px;padding:4px 12px;cursor:pointer}
+.per .seg button.on{background:var(--blanc);color:var(--txt);box-shadow:0 1px 3px rgba(0,0,0,.16)}
+.per.mois .seg button.on{background:var(--bleu);color:#fff;box-shadow:none}
+.per .seg button:focus-visible{outline:2px solid var(--bleu);outline-offset:1px}
+.per .pert{font-size:14px;color:var(--gris);line-height:1.5}.per .pert em{display:block;font-style:normal;font-size:11px;text-transform:uppercase;letter-spacing:.03em}.per .pert b{color:var(--txt);font-weight:600}
+.per .pert small.hors{display:block;font-size:12px;color:var(--gris)}
+.per .pert .cpd{font-weight:700}.per .pert .cpd.rouge{color:var(--rouge)}.per .pert .cpd.orange{color:var(--orange)}.per .pert .cpd.vert{color:var(--vert)}.per .pert .cpd.gris{color:var(--gris);font-weight:500}
+.chiffres .stats .st.on,.pub .pg.stats .st.on{background:var(--bleuf);border-radius:4px;box-shadow:0 0 0 2px var(--bleuf)}
 .chiffres .stats{display:inline-block;margin-top:6px;text-align:left;font-size:12px;line-height:1.4;color:var(--gris2);border-top:1px solid var(--trait);padding-top:5px}.chiffres .stats .cap{display:block;color:var(--gris);font-size:11px;text-transform:uppercase;letter-spacing:.03em}.chiffres .stats .st{display:block}.chiffres .stats .st em{font-style:normal;color:var(--gris);display:inline-block;width:122px}.chiffres .stats .st b{display:inline-block;min-width:62px;text-align:right;color:var(--txt);font-weight:600}
 .pb{margin:10px 0 0;padding:10px 12px;border-radius:10px;font-size:15px;line-height:1.45}
 .pb.panier{position:static;box-shadow:none}.pb.panier .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-right:6px;padding:1px 7px;border-radius:6px;color:#fff;vertical-align:middle}.pb.panier.p-stop{background:#fdecec;border:1px solid #f3b4b4;border-left:6px solid var(--rouge)}.pb.panier.p-stop .tag{background:var(--rouge)}.pb.panier.p-go{background:#e9f7ee;border:1px solid #b6e2c4;border-left:6px solid var(--vert)}.pb.panier.p-go .tag{background:var(--vert)}.pb.panier.p-new{background:#e8f1ff;border:1px solid #b9d4fb;border-left:6px solid var(--bleu)}.pb.panier.p-new .tag{background:var(--bleu)}.pb.panier.p-bud{background:#f1e9ff;border:1px solid #d3c1f5;border-left:6px solid #6d28d9}.pb.panier.p-bud .tag{background:#6d28d9}.pb.panier.p-autre{background:var(--grisf);border:1px solid var(--trait);border-left:6px solid var(--gris)}.pb.panier.p-autre .tag{background:var(--gris)}
@@ -150,6 +161,7 @@ main h2{font-size:13px;font-weight:600;color:var(--gris);margin:22px 0 8px}main 
   main{padding:12px 12px 60px}
   .ligne{flex-wrap:wrap}
   .chiffres{text-align:left;white-space:normal;flex:1 1 100%;padding-left:22px}
+  .per{padding:8px;gap:6px}.per .seg{display:flex;width:100%}.per .seg button{flex:1 1 0;padding:4px 6px;font-size:13px}.per .pert{padding:0 4px}
   .boutons .b{width:100%}
   .pb .bb .b{width:100%}
   .pub .pg{text-align:left;white-space:normal;flex:1 1 100%;padding-left:20px}
@@ -245,12 +257,12 @@ var QRBA = (function(){
   }
   return { matrice: matrice, svg: svg };
 })();
-/* Les comptes — VERSION RAPIDE v5.27-r2 (page fixe sur notre domaine, hors du tableau). Fabriquée par plan/comptes-rapide-1011/construire_comptes_rapide.py :
+/* Les comptes — VERSION RAPIDE v5.28-r2 (page fixe sur notre domaine, hors du tableau). Fabriquée par plan/comptes-rapide-1011/construire_comptes_rapide.py :
    la page des comptes n'est PAS réécrite ; ce bloc remplace seulement son fil avec le tableau (google.script.run → envoi direct au tableau, avec le code d'Enzo gardé sur l'appareil)
    et montre tout de suite les derniers chiffres lus, en gris, pendant que le tableau est relu. Tant que les chiffres sont en gris, aucun ordre ne part. */
 (function(){
   var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', LIER = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec?x=rapide', FORM = 'https://script.google.com/macros/s/AKfycbwDgwfesj-aTaYtcUutatJAJhfrb3xmD4hkWKDnZTeQdh7ZHUVOKqjYkiuDy9Qbt8_N/exec?f=1', CLE_CODE = 'ba_comptes_code', NOM_CACHE = 'ba-comptes-donnees', CLE_SECOURS = 'ba_comptes_donnees';
-  var R = window.__RAPIDE__ = { version: 'v5.27-r2', code: '', perime: false, frais: false, echec: '', recu: 0, duree: 0, envois: 0, encadre: false };
+  var R = window.__RAPIDE__ = { version: 'v5.28-r2', code: '', perime: false, frais: false, echec: '', recu: 0, duree: 0, envois: 0, encadre: false };
   /* 0. Jamais à l'intérieur de la page de quelqu'un d'autre : dans un cadre posé par une autre adresse, la page ne lit pas le code, ne demande rien au tableau, n'envoie aucun ordre.
         (Un cadre posé par notre propre adresse reste permis : c'est notre essai en largeur de téléphone.) */
   var ENCADRE = false; try { ENCADRE = window.top !== window.self && window.top.location.origin !== window.location.origin; } catch (e) { ENCADRE = true; }
@@ -501,7 +513,7 @@ var QRBA = (function(){
 })();
 </script>
 <script>
-/* Les comptes v5.27 (09/11/2026 09 h 41 UTC) — fabriquée par plan/construire_comptes.py depuis MAQUETTE-COMPTES.md (9 pièces) + CATALOGUE-ALERTES.md.
+/* Les comptes v5.28 (11/11/2026 06 h 58 UTC) — fabriquée par plan/construire_comptes.py depuis MAQUETTE-COMPTES.md (9 pièces) + CATALOGUE-ALERTES.md.
    Page EN DIRECT : tout est relu dans le tableau à chaque ouverture (optimiserDonnees) ; un clic = un ordre écrit dans le tableau (optimiserOrdre),
    appliqué par le script Google Ads (xx h 19 : arrêter, rallumer, budget) ou le robot (xx h 43 : nouvelle pub, allumage, site). Annuler tant que ce n'est pas appliqué.
    Comptage (Enzo 29/10) : une demande = un appel OU un formulaire reçu au tableau. Chiffres d'un compte = toute la période dès que le relevé Google les fournit (D.periode = 'total'), sinon 30 jours, et la page le dit. */
@@ -712,7 +724,7 @@ function calculer(D){
 /* v5.1 (31/10, Enzo 5 h 48 : « elagueur → Élagueur », « tapissier → Autre : Tapissier décorateur ébéniste » n'étaient pas des changements de métier) : même métier si, sans accents ni majuscules ni « Autre : », les deux mots se valent ou l'un contient l'autre ; une fiche « Autre : … » ne déclenche jamais l'alerte (seul « A → B » écrit dans le tableau le fait). */
 function normMetier(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s*\(.*$/,'').replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim(); }
 function metierDifferent(a, b){ if (/^\s*autre\s*:/i.test(String(b||''))) return false; var x = normMetier(a), y = normMetier(b); if (!x || !y || x === y) return false; if (x.indexOf(y) >= 0 || y.indexOf(x) >= 0) return false; var fx = x.split(' ')[0], fy = y.split(' ')[0]; if (fx === fy || (fx.length > 4 && fy.length > 4 && fx.slice(0, 5) === fy.slice(0, 5))) return false; return true; }
-function periodeMot(x){ return (x.total ? 'depuis le début' : '30 derniers jours') + (x.releve ? ' · relevé Google '+hp(x.releve) : ''); }
+function periodeMot(x){ return (perChoisie() ? perMot() : (x.total ? 'depuis le début' : '30 derniers jours')) + (x.releve ? ' · relevé Google '+hp(x.releve) : ''); }
 function dBtn(b, prim){
   if (!b) return '';
   if (b.lien) return '<a class="b'+(prim ? ' prim' : '')+'" href="'+esc(b.lien)+'" target="_blank" rel="noopener">'+esc(b.texte)+'</a>'+(b.aide ? ' <small style="color:var(--gris)">'+esc(b.aide)+'</small>' : '')+(b.ouvrir ? ' <button type="button" class="b" data-ouvrir="pubs">'+esc(b.texte2||'Voir les pubs')+'</button>' : '');
@@ -725,11 +737,33 @@ function dProbleme(a, i, n, x, v){ var volet = (a.b && a.b.volet && v && v.type 
   return '<div class="pb '+a.c+'">'+(n > 1 ? '<span class="num">Problème '+(i+1)+' sur '+n+'</span>' : '')+'<span class="t">'+esc(a.t)+'</span>'+(a.b ? '<div class="bb">'+dBtn(a.b, true)+'</div><div class="res" data-res="pb-'+i+'"></div>' : '')+volet+'</div>'; }
 function nconv(v){ v = Number(v)||0; return Math.round(v) === v ? String(v) : (Math.round(v*10)/10).toString().replace('.', ','); }
 function moisLib(m){ var M = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'], i = Number(String(m||'').slice(5, 7)) - 1; return M[i] || String(m||''); }
-function ligneStat(lib, c, v){ return '<span class="st"><em>'+esc(lib)+'</em><b>'+eur(c)+'</b> · '+nconv(v)+' conv · '+(Number(v) ? eur(c/v)+'/conv' : '—')+'</span>'; }
+/* v5.28 (Enzo 11/11 05 h 31 : « par défaut… toute la période… directement sur la carte. Le coût conv, etc. Mais… la possibilité de voir ce qui se passe ce mois-ci, en général, lié sur toutes les campagnes et sur le mois dernier… que je puisse cliquer ») :
+   window.__PER__ = '' (depuis le début, TOUJOURS à l'ouverture) · 'mc' (ce mois-ci) · 'mp' (le mois dernier). Le choix change les gros chiffres de chaque carte (somme de TOUTES ses pubs), le total de tous les comptes,
+   le filtre « plus de 90 € la conversion » et le tri « du pire au moins pire ». Les gestes conseillés et la couleur des cartes restent jugés depuis le début. Sans D.mois (ancien tableau) : pas de choix, rien ne change. */
+function perChoisie(){ var p = window.__PER__; return (D && D.mois && (p === 'mc' || p === 'mp')) ? p : ''; }
+function perMot(){ var p = perChoisie(); return p === 'mc' ? 'ce mois-ci ('+moisLib(D.mois.courant)+')' : p === 'mp' ? 'le mois dernier ('+moisLib(D.mois.precedent)+')' : ((D && D.periode === 'total') ? 'depuis le début' : '30 derniers jours'); }
+function chiffresDe(x){ var p = perChoisie(); if (!p) return { cout: x.n.cout, conv: x.n.conv }; var c = 0, v = 0; (x.pubs||[]).forEach(function(q){ c += Number(p === 'mc' ? q.mc : q.mp)||0; v += Number(p === 'mc' ? q.mcv : q.mpv)||0; }); return { cout: c, conv: v }; }
+function cpdHtml(n){ var c = n.conv > 0 ? n.cout / n.conv : 0; return n.conv ? '<span class="cpd '+(c > SEUIL_ROUGE ? 'rouge' : c > SEUIL_OK ? 'orange' : 'vert')+'">'+eur(c)+' par conv</span>' : (n.cout > MIN_DEPENSE ? '<span class="cpd rouge">pas une seule conversion</span>' : '<span class="cpd gris">'+(n.cout ? '0 conv' : '0 € dépensé')+'</span>'); }
+function bandePer(M){
+  if (!(D && D.mois && M)) return '';
+  var p = perChoisie(), T = { cout: 0, conv: 0 }, nC = 0, H = { cout: 0, n: 0 }, listees = {}, orph = {};
+  /* v5.28 (Enzo 11/11 06 h 54 « surtout pas d'erreur dans les données ») : une carte compte les pubs qui existent chez Google (allumées ou en veille), comme l'écran de Google ; ce que des pubs SUPPRIMÉES ont dépensé n'y est pas.
+     Le bandeau le dit, en euros : depuis le début = total du compte chez Google (etat_total) moins la somme des cartes ; sur un mois = les lignes du relevé jour par jour dont la pub n'est plus listée. */
+  (D.campagnes||[]).forEach(function(k){ listees[k.compte_id+'|'+k.campagne_id] = 1; });
+  if (p) Object.keys(D.jours||{}).forEach(function(k){ if (listees[k]) return; var j = D.jours[k] || {}, cid = k.split('|')[0]; orph[cid] = (orph[cid]||0) + (Number(p === 'mc' ? j.mc_cout : j.mp_cout)||0); });
+  M.cartes.forEach(function(x){ if (x.archive) return; nC++; var n = chiffresDe(x); T.cout += n.cout; T.conv += n.conv;   /* les mêmes comptes que le compteur du menu (archivés à part) */
+    var h = 0, e = (D.etat_total||{})[x.cid];
+    if (p) h = orph[x.cid] || 0; else if (x.total && e && e.cout_total != null && e.cout_total !== '') h = (Number(String(e.cout_total).replace(/\s/g,'').replace(',','.'))||0) - x.n.cout;
+    if (h >= 1) { H.cout += h; H.n++; } });
+  var bt = function(k, lib){ return '<button type="button" class="'+(p === k ? 'on' : '')+'" data-per="'+k+'" aria-pressed="'+(p === k ? 'true' : 'false')+'">'+esc(lib)+'</button>'; };
+  return '<div class="per'+(p ? ' mois' : '')+'" id="per"><div class="seg" role="group" aria-label="Période des chiffres">'+bt('', M.total ? 'Depuis le début' : '30 derniers jours')+bt('mc', 'Ce mois-ci ('+moisLib(D.mois.courant)+')')+bt('mp', 'Le mois dernier ('+moisLib(D.mois.precedent)+')')+'</div>'
+    + '<div class="pert"><em>Tes '+nC+' compte'+(nC > 1 ? 's' : '')+' ensemble, toutes les pubs · '+esc(perMot())+'</em><b>'+eur(T.cout)+'</b> dépensés · <b>'+(T.conv >= 1000 ? eur(T.conv).replace(/\s€$/, '') : nconv(T.conv))+'</b> conv · '+cpdHtml(T)+(H.n ? '<small class="hors">Non comptés : '+eur(H.cout)+' de pubs supprimées chez Google ('+H.n+' compte'+(H.n > 1 ? 's' : '')+')</small>' : '')+'</div></div>';
+}
+function ligneStat(lib, c, v, on){ return '<span class="st'+(on ? ' on' : '')+'"><em>'+esc(lib)+'</em><b>'+eur(c)+'</b> · '+nconv(v)+' conv · '+(Number(v) ? eur(c/v)+'/conv' : '—')+'</span>'; }
 function dPub(x, p){
   /* v5.16 (Enzo 2/11 05 h 26) : 3 petites lignes — depuis le début · ce mois · mois dernier (coût, conv, coût/conv) ; sans D.mois (ancien tableau) : l'ancienne ligne */
   var stats = !!(D && D.mois);
-  var g = stats ? ligneStat(x.total ? 'Depuis le début' : '30 jours', p.cout, p.conv) + ligneStat('Ce mois ('+moisLib(D.mois.courant)+')', p.mc, p.mcv) + ligneStat('Mois dernier ('+moisLib(D.mois.precedent)+')', p.mp, p.mpv)
+  var g = stats ? ligneStat(x.total ? 'Depuis le début' : '30 jours', p.cout, p.conv) + ligneStat('Ce mois ('+moisLib(D.mois.courant)+')', p.mc, p.mcv, perChoisie() === 'mc') + ligneStat('Mois dernier ('+moisLib(D.mois.precedent)+')', p.mp, p.mpv, perChoisie() === 'mp')
     : (p.gCout != null && p.gCout !== '' ? '<b>Coût '+esc(p.gCout)+' €</b> · Conversions '+esc(p.gConv)+' · Coût/conv. '+esc(p.gCpc)+' €' : '<b>Coût '+nb2(p.cout)+' €</b> · Conversions '+nb2(p.conv)+' · Coût/conv. '+(p.conv ? nb2(p.cout/p.conv)+' €' : '—'));
   /* v5.9 : la ligne montre l'état que TU as demandé (p.onEff / p.budgetEff) ; le vrai état Google (p.on) est dit en mots quand il n'a pas encore suivi */
   var bEff = nb(p.budgetEff), bChg = p.budgetEff !== p.budget ? ' (avant '+nb(p.budget)+')' : '';
@@ -769,16 +803,15 @@ function dVolet(x, v){
 function statsCompte(x){
   if (!(D && D.mois) || !x.pubs || !x.pubs.length) return '';
   var S = { c:0, v:0, mc:0, mcv:0, mp:0, mpv:0 }; x.pubs.forEach(function(p){ S.c += Number(p.cout)||0; S.v += Number(p.conv)||0; S.mc += Number(p.mc)||0; S.mcv += Number(p.mcv)||0; S.mp += Number(p.mp)||0; S.mpv += Number(p.mpv)||0; });
-  return '<div class="stats"><em class="cap">Ses '+x.pubs.length+' pub'+(x.pubs.length>1?'s':'')+'</em>'+ligneStat(x.total ? 'Depuis le début' : '30 jours', S.c, S.v)+ligneStat('Ce mois ('+moisLib(D.mois.courant)+')', S.mc, S.mcv)+ligneStat('Mois dernier ('+moisLib(D.mois.precedent)+')', S.mp, S.mpv)+'</div>';
+  return '<div class="stats"><em class="cap">Ses '+x.pubs.length+' pub'+(x.pubs.length>1?'s':'')+'</em>'+ligneStat(x.total ? 'Depuis le début' : '30 jours', S.c, S.v)+ligneStat('Ce mois ('+moisLib(D.mois.courant)+')', S.mc, S.mcv, perChoisie() === 'mc')+ligneStat('Mois dernier ('+moisLib(D.mois.precedent)+')', S.mp, S.mpv, perChoisie() === 'mp')+'</div>';
 }
 function ligneDe(x){
   var h = '';
   var etat = x.archive ? '<b>archivé</b>'+(x.n.on ? ' · <b>'+pubsMot(x.n.on)+' encore allumée'+(x.n.on>1?'s':'')+'</b>' : '') : (x.n.pubs ? '<b>'+pubsMot(x.n.on)+' allumée'+(x.n.on>1?'s':'')+'</b> sur '+x.n.pubs+' · <b>'+eur(x.n.budgetOn)+'</b> par jour'+(x.n.on ? '' : ' · en veille') : '<b>pas de pub</b>');
   /* v5.19 (Enzo 2/11 05 h 48) : l'en-tête ne montre que les conversions comptées par Google (celles des pubs listées) */
-  var cpcG = x.n.conv > 0 ? x.n.cout / x.n.conv : 0;
-  var cpdH = x.n.conv ? '<span class="cpd '+(cpcG > SEUIL_ROUGE ? 'rouge' : cpcG > SEUIL_OK ? 'orange' : 'vert')+'">'+eur(cpcG)+' par conv</span>' : (x.n.cout > MIN_DEPENSE ? '<span class="cpd rouge">pas une seule conversion</span>' : '<span class="cpd gris">'+(x.n.cout ? '0 conv' : '0 € dépensé')+'</span>');
+  var nP = chiffresDe(x), cpdH = cpdHtml(nP);   /* v5.28 : la période choisie en haut de la liste (depuis le début au départ) */
   h += '<div class="ligne"><i class="dot '+x.couleur+'"></i><div class="qui"><div class="nom"><a href="'+esc(lienCompte(x.c))+'" target="_blank" rel="noopener">'+esc(x.nom)+'</a><small>'+esc(x.sous)+'</small></div><div class="etat">'+etat+'</div></div>'
-     + '<div class="chiffres"><b>'+eur(x.n.cout)+'</b> dépensés · <b>'+nconv(x.n.conv)+'</b> conv<br>'+cpdH+'<small>'+esc(periodeMot(x))+'</small>'+statsCompte(x)+'</div></div>';
+     + '<div class="chiffres"><b>'+eur(nP.cout)+'</b> dépensés · <b>'+nconv(nP.conv)+'</b> conv<br>'+cpdH+'<small'+(perChoisie() ? ' class="pm"' : '')+'>'+esc(periodeMot(x))+'</small>'+statsCompte(x)+'</div></div>';
   return h;
 }
 /* v5.3 (Enzo 31/10 7 h 11 : « je cherche à optimiser les comptes de mes clients mais je ne trouve pas qui je dois allumer, éteindre, lancer ; regroupe tout ce qu'il faut optimiser ») :
@@ -870,14 +903,15 @@ function rendreCartes(){
   var h = '';
   var o = OPT.filter(function(o){ return o[0] === FILTRE; })[0];
   if (o) { var g = M.opt.optimiser || [], nG = g.filter(function(it){ return it.as.length; }).length; if (q) g = g.filter(function(it){ return (it.x.nom+' '+it.x.sous).toLowerCase().indexOf(q) >= 0; }); if (window.__OPT_SEUL__) g = g.filter(function(it){ return it.as.length; });
-    var cher = function(it){ var n = it.x.n; return n.conv > 0 ? (n.cout / n.conv) > SEUIL_ROUGE : n.cout > MIN_DEPENSE; }, nC = (M.opt.optimiser || []).filter(cher).length; if (window.__OPT_CHER__) g = g.filter(cher);
-    var pireCle = function(it){ var n = it.x.n, c = n.conv > 0 ? n.cout / n.conv : 0; return (n.cout >= MIN_DEPENSE && !n.conv) ? [0, -n.cout] : (n.cout >= MIN_DEPENSE ? [1, -c] : [2, -n.cout]); };   /* v5.26 (Enzo 7/11 14 h 18) : du pire au moins pire = € la conversion Google depuis le début */
-    var pireGrp = function(it){ var n = it.x.n, c = n.conv > 0 ? n.cout / n.conv : 0; if (n.cout >= MIN_DEPENSE && !n.conv) return ['sans', 'Dépensent et n’ont jamais eu une demande chez Google']; if (n.cout < MIN_DEPENSE) return ['tot', 'Trop tôt pour juger : moins de 150 € dépensés']; if (c > SEUIL_ROUGE) return ['rouge', 'Trop cher : plus de 90 € la demande']; if (c >= SEUIL_OK) return ['orange', 'À surveiller : entre 70 et 90 € la demande']; return ['vert', 'Ça marche : moins de 70 € la demande']; };
+    var motP = perChoisie() ? perMot() : 'depuis le début';
+    var cher = function(it){ var n = chiffresDe(it.x); return n.conv > 0 ? (n.cout / n.conv) > SEUIL_ROUGE : n.cout > MIN_DEPENSE; }, nC = (M.opt.optimiser || []).filter(cher).length; if (window.__OPT_CHER__) g = g.filter(cher);
+    var pireCle = function(it){ var n = chiffresDe(it.x), c = n.conv > 0 ? n.cout / n.conv : 0; return (n.cout >= MIN_DEPENSE && !n.conv) ? [0, -n.cout] : (n.cout >= MIN_DEPENSE ? [1, -c] : [2, -n.cout]); };   /* v5.26 (Enzo 7/11 14 h 18) : du pire au moins pire = € la conversion Google depuis le début */
+    var pireGrp = function(it){ var n = chiffresDe(it.x), c = n.conv > 0 ? n.cout / n.conv : 0; if (n.cout >= MIN_DEPENSE && !n.conv) return ['sans', perChoisie() ? 'Dépensent sans aucune demande chez Google '+perMot() : 'Dépensent et n’ont jamais eu une demande chez Google']; if (n.cout < MIN_DEPENSE) return ['tot', 'Trop tôt pour juger : moins de 150 € dépensés']; if (c > SEUIL_ROUGE) return ['rouge', 'Trop cher : plus de 90 € la demande']; if (c >= SEUIL_OK) return ['orange', 'À surveiller : entre 70 et 90 € la demande']; return ['vert', 'Ça marche : moins de 70 € la demande']; };
     if (window.__OPT_PIRE__) g = g.slice().sort(function(a, b){ var ka = pireCle(a), kb = pireCle(b); return (ka[0] - kb[0]) || (ka[1] - kb[1]) || String(a.x.nom).localeCompare(String(b.x.nom)); });   /* v5.25 : plus de 90 € la conversion depuis le début (chiffres Google de l'en-tête), ou dépense sans aucune conversion */
-    h = '<h2>À optimiser · toi <span>'+g.length+'</span></h2><p class="sous-liste">'+esc(o[3])+'</p><p class="sous-liste"><button type="button" class="b petit'+(window.__OPT_SEUL__ ? ' prim' : '')+'" data-opt-seul="1">'+(window.__OPT_SEUL__ ? 'Tous mes clients · '+M.opt.optimiser.length : 'Seulement ceux avec un geste conseillé · '+nG)+'</button> <button type="button" class="b petit'+(window.__OPT_CHER__ ? ' prim' : '')+'" data-opt-cher="1">'+(window.__OPT_CHER__ ? 'Tous mes clients · '+M.opt.optimiser.length : 'Plus de 90 € la conversion depuis le début · '+nC)+'</button> <button type="button" class="b petit'+(window.__OPT_PIRE__ ? ' prim' : '')+'" data-opt-pire="1">'+(window.__OPT_PIRE__ ? 'Tous mes clients · '+M.opt.optimiser.length : 'Du pire au moins pire · '+M.opt.optimiser.length)+'</button></p>'+(window.__OPT_PIRE__ ? '<p class="sous-liste">Le plus cher par demande chez Google en haut, le moins cher en bas, depuis le début. Même carte, mêmes boutons.</p>' : '')+(g.length ? (window.__OPT_PIRE__ ? (function(){ var prec = '', sh = ''; g.forEach(function(it, i){ var gr = pireGrp(it); if (gr[1] !== prec) { sh += '<h3 class="grp-pire '+gr[0]+'">'+esc(gr[1])+'</h3>'; prec = gr[1]; } sh += '<div class="pire"><div class="rang">'+(i+1)+'</div>'+carteOpt(it.x, it.as, it.autres)+'</div>'; }); return sh; })() : g.map(function(it){ return carteOpt(it.x, it.as, it.autres); }).join('')) : '<p class="vide">Personne ici.</p>'); document.getElementById('cartes').innerHTML = h; document.getElementById('attente').style.display = 'none'; return; }
+    h = bandePer(M)+'<h2>À optimiser · toi <span>'+g.length+'</span></h2><p class="sous-liste">'+esc(o[3])+'</p><p class="sous-liste"><button type="button" class="b petit'+(window.__OPT_SEUL__ ? ' prim' : '')+'" data-opt-seul="1">'+(window.__OPT_SEUL__ ? 'Tous mes clients · '+M.opt.optimiser.length : 'Seulement ceux avec un geste conseillé · '+nG)+'</button> <button type="button" class="b petit'+(window.__OPT_CHER__ ? ' prim' : '')+'" data-opt-cher="1">'+(window.__OPT_CHER__ ? 'Tous mes clients · '+M.opt.optimiser.length : 'Plus de 90 € la conversion '+motP+' · '+nC)+'</button> <button type="button" class="b petit'+(window.__OPT_PIRE__ ? ' prim' : '')+'" data-opt-pire="1">'+(window.__OPT_PIRE__ ? 'Tous mes clients · '+M.opt.optimiser.length : 'Du pire au moins pire · '+M.opt.optimiser.length)+'</button></p>'+(window.__OPT_PIRE__ ? '<p class="sous-liste">Le plus cher par demande chez Google en haut, le moins cher en bas, '+esc(motP)+'. Même carte, mêmes boutons.</p>' : '')+(g.length ? (window.__OPT_PIRE__ ? (function(){ var prec = '', sh = ''; g.forEach(function(it, i){ var gr = pireGrp(it); if (gr[1] !== prec) { sh += '<h3 class="grp-pire '+gr[0]+'">'+esc(gr[1])+'</h3>'; prec = gr[1]; } sh += '<div class="pire"><div class="rang">'+(i+1)+'</div>'+carteOpt(it.x, it.as, it.autres)+'</div>'; }); return sh; })() : g.map(function(it){ return carteOpt(it.x, it.as, it.autres); }).join('')) : '<p class="vide">Personne ici.</p>'); document.getElementById('cartes').innerHTML = h; document.getElementById('attente').style.display = 'none'; return; }
   if (q || FILTRE === 'tout') { FAM.filter(function(f){ return f[0] !== 'tout'; }).forEach(function(f){ var l = cs.filter(function(x){ return x.famille === f[0]; }); if (!l.length) return; h += '<h2>'+esc(f[1])+' <span>'+l.length+'</span></h2>'+vaguesHtml(l, f[0])+l.map(carte).join(''); }); if (!h) h = '<p class="vide">Personne ne s\'appelle comme ça.</p>'; }
   else { var f = FAM.filter(function(f){ return f[0] === FILTRE; })[0], l = cs.filter(function(x){ return f && f[3] === 'regler' ? x.familles.indexOf(FILTRE) >= 0 : x.famille === FILTRE; }); h = '<h2>'+esc(f ? f[1] : '')+' <span>'+l.length+'</span></h2>'+(l.length ? vaguesHtml(l, FILTRE)+l.map(carte).join('') : '<p class="vide">Personne dans cette famille.</p>'); }
-  document.getElementById('cartes').innerHTML = h; document.getElementById('attente').style.display = 'none';
+  document.getElementById('cartes').innerHTML = bandePer(M)+h; document.getElementById('attente').style.display = 'none';
 }
 function rendreTout(){ rendrePanier(); var M = calculer(D); if (!FILTRE) { FILTRE = 'optimiser'; } rendreMenu(M); rendreCartes(); }
 function redessiner(cid){ var old = document.getElementById('c-'+cid); if (!old) { rendreTout(); return; } var M = calculer(D), x = M.cartes.filter(function(c){ return c.cid === cid; })[0]; if (!x) { rendreTout(); return; } if (FILTRE === 'optimiser' && old.classList.contains('opt')) { old.outerHTML = carteOpt(x, x.pbs.filter(function(a){ return gesteDe(a); })); } else old.outerHTML = carte(x); rendreMenu(M); }
@@ -1109,6 +1143,7 @@ document.addEventListener('change', function(e){
 document.addEventListener('click', function(e){
   var t = e.target.closest('button'); if (!t) return;
   var fam = t.getAttribute('data-fam'); if (fam) { FILTRE = fam; var M = calculer(D); rendreMenu(M); rendreCartes(); window.scrollTo(0, 0); return; }
+  if (t.hasAttribute('data-per')) { window.__PER__ = t.getAttribute('data-per') || ''; rendreCartes(); return; }   /* v5.28 */
   if (t.hasAttribute('data-opt-seul')) { window.__OPT_SEUL__ = !window.__OPT_SEUL__; rendreCartes(); window.scrollTo(0, 0); return; }
   if (t.hasAttribute('data-opt-pire')) { window.__OPT_PIRE__ = !window.__OPT_PIRE__; if (window.__OPT_PIRE__) { window.__OPT_SEUL__ = false; window.__OPT_CHER__ = false; } rendreCartes(); window.scrollTo(0, 0); return; }   /* v5.26 */
   if (t.hasAttribute('data-opt-cher')) { window.__OPT_CHER__ = !window.__OPT_CHER__; if (window.__OPT_CHER__) { window.__OPT_SEUL__ = false; window.__OPT_PIRE__ = false; } rendreCartes(); window.scrollTo(0, 0); return; }

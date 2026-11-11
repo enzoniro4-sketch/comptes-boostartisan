@@ -1,1 +1,1 @@
-v5.27-r2 · fabriquée le 10/11/2026 13 h 38 UTC · page source sha256 36a70453ba3ceebc · index.html sha256 5191a5318c25274a
+v5.28-r2 · fabriquée le 11/11/2026 07 h 00 UTC · page source sha256 61b38ddc6c7d600c · index.html sha256 e888450b89248e3e
