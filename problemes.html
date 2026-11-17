@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
-<meta name="ba-version" content="p2-1711">
+<meta name="ba-version" content="p3-1711">
 <link rel="icon" type="image/png" href="icone-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Problèmes et argent</title>
@@ -185,7 +185,7 @@ window.__PROBLEMES__ = function (D) {
   function attente(f) { return f.attente_n != null ? f.attente_n : f.items.length; }
 
   /* ---- en-tête ---- */
-  document.getElementById('lu-texte').textContent = typo(D.lu_texte);
+  document.getElementById('lu-texte').textContent = typo(window.__LU_TEXTE__(D));   /* à l'heure de l'appareil, pas de Paris */
   document.getElementById('menu-comptes').href = D.comptes_url;
   (function () {
     var s = document.getElementById('lu-age');
@@ -579,15 +579,22 @@ window.__PROBLEMES__ = function (D) {
     return { lu_quand: vieux, lu_texte: (maintenantParis && String(maintenantParis).slice(0, 10) === vieux.slice(0, 10) ? 'aujourd’hui' : 'le ' + jm(vieux)) + ' à ' + vieux.slice(11, 13) + ' h ' + vieux.slice(14, 16), lu_age_min: age,
       source: 'Relu dans ton tableau à chaque ouverture. Rien n’est repris de la mémoire.', comptes_url: './', familles: F, argent: A, paiement: P };
   }
+  /* l'heure de la lecture, dite à l'heure de l'APPAREIL (Enzo n'est pas à l'heure de Paris : le tableau, si) */
+  function luTexte(D, maintenantMs) {
+    var now = maintenantMs || Date.now(), lu = new Date((D.recu_ms || now) - (D.lu_age_min || 0) * 60000), auj = new Date(now);
+    var meme = lu.getFullYear() === auj.getFullYear() && lu.getMonth() === auj.getMonth() && lu.getDate() === auj.getDate();
+    return (meme ? 'aujourd’hui' : 'le ' + lu.getDate() + '/' + (lu.getMonth() + 1)) + ' à ' + ('0' + lu.getHours()).slice(-2) + ' h ' + ('0' + lu.getMinutes()).slice(-2);
+  }
+  racine.__LU_TEXTE__ = luTexte;
   racine.__CALCULER__ = calculer;
-  if (typeof module !== 'undefined' && module.exports) module.exports = { calculer: calculer };
+  if (typeof module !== 'undefined' && module.exports) module.exports = { calculer: calculer, luTexte: luTexte };
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
 <script>
 (function () {
   'use strict';
   var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', CLE = 'ba_comptes_code', CACHE = 'ba_problemes_p2', SAUT = 'ba_problemes_saut', PARTS = ['google', 'argent', 'nouveaux', 'messages', 'jour'];
-  var R = window.__PROBLEMES_ETAT__ = { version: 'p2-1711', etat: 'depart', envois: 0, lectures: 0 };
+  var R = window.__PROBLEMES_ETAT__ = { version: 'p3-1711', etat: 'depart', envois: 0, lectures: 0 };
   var att = document.getElementById('attente'), msg = document.getElementById('attente-msg'), lien = document.getElementById('attente-lien'), encore = document.getElementById('attente-encore');
   function dire(etat, t, avecLien, avecEncore) { R.etat = etat; att.style.display = 'flex'; msg.textContent = t; lien.hidden = !avecLien; lien.style.display = avecLien ? 'inline-block' : 'none'; encore.hidden = !avecEncore; encore.style.display = avecEncore ? 'inline-block' : 'none'; }
   function lire(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
@@ -628,7 +635,7 @@ window.__PROBLEMES__ = function (D) {
       ecrire(CACHE, JSON.stringify(D));
       if (!montre) { cache = D; montrer(D); if (montre) { R.etat = 'affiche_frais'; etat('À jour.'); } enCours = false; bouton.disabled = false; return; }
       if (pareil) { affiche.lu_age_min = D.lu_age_min; affiche.recu_ms = D.recu_ms; cache = D;
-        try { document.getElementById('lu-texte').textContent = D.lu_texte; var a = document.getElementById('lu-age'); a.className = ''; a.textContent = ''; } catch (e2) { }
+        try { document.getElementById('lu-texte').textContent = window.__LU_TEXTE__(affiche); var a = document.getElementById('lu-age'); a.className = ''; a.textContent = ''; } catch (e2) { }
         R.etat = 'affiche_frais'; etat('À jour. Rien n’a changé.'); enCours = false; bouton.disabled = false; return; }
       try { sessionStorage.setItem(SAUT, String(Date.now())); } catch (e) { }
       R.etat = 'recharge'; location.reload();
