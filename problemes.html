@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
-<meta name="ba-version" content="p8-1711">
+<meta name="ba-version" content="p9-1711">
 <link rel="icon" type="image/png" href="icone-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Problèmes et argent</title>
@@ -407,7 +407,14 @@ window.__PROBLEMES__ = function (D) {
   function etapeIdentite(x) {
     var p = sansAccent(x.preuve), r = sansAccent(x.preuve_regle);
     var ms = x.mail_le && (!x.depuis || String(x.mail_le) >= String(x.depuis)) ? sansAccent(x.mail_sujet) : '', fin = !!ms && x.mail_fin === true;
-    if (x.etat !== 'regle') return (ms && !fin && RE_REFUS.test(ms)) ? { e: 'refuse', le: x.mail_le } : { e: RE_REFUS.test(p) ? 'refuse' : 'attend', le: x.depuis };
+    if (x.etat !== 'regle') {
+      if (ms && !fin && RE_REFUS.test(ms)) return { e: 'refuse', le: x.mail_le };
+      if (RE_REFUS.test(p)) return { e: 'refuse', le: x.depuis };
+      /* (p9) la tâche est ouverte (la page du compte demande les papiers) ALORS QUE le dernier e-mail de Google disait « examen » ou « terminé » : on dit les deux faits, on ne tranche pas */
+      if (fin && RE_EXAMEN.test(ms)) return { e: 'encore_examen', le: x.mail_le };
+      if (fin && RE_VALIDE.test(ms)) return { e: 'encore_valide', le: x.mail_le };
+      return { e: 'attend', le: x.depuis };
+    }
     if (x.preuve_regle === undefined) return { e: 'regle', le: x.regle_le };                 /* tableau d'avant vt : la preuve n'est pas rendue */
     if (fin && RE_EXAMEN.test(ms)) return { e: 'examen', le: x.mail_le };                    /* Google l'a écrit, et n'a rien écrit depuis */
     if (fin && RE_VALIDE.test(ms)) return { e: 'valide', le: x.mail_le };
@@ -462,8 +469,9 @@ window.__PROBLEMES__ = function (D) {
           }
           if (!client(cid)) return;
           bloque[cid] = 'identite';
-          att.push({ k: cid, c: n, d: e === 'attend' ? jm(x.depuis) : j, rang: e === 'refuse' ? 0 : e === 'attend' ? 1 : 2, tri: x.depuis || '',
-            m: e === 'refuse' ? 'Google a refusé ses papiers. Il doit recommencer.' : e === 'examen' ? 'Ses papiers sont envoyés. Google les examine depuis le ' + j + '.' : e === 'envoye' ? 'Ses papiers sont envoyés depuis le ' + j + '. Google n’a pas encore répondu.' : ('Google attend ses papiers. ' + pub(cid)).trim() });
+          var encore = e === 'encore_examen' || e === 'encore_valide';
+          att.push({ k: cid, c: n, d: e === 'attend' || encore ? jm(x.depuis) : j, rang: e === 'refuse' ? 0 : e === 'attend' || encore ? 1 : 2, tri: x.depuis || '',
+            m: e === 'refuse' ? 'Google a refusé ses papiers. Il doit recommencer.' : e === 'encore_examen' ? ('Google a dit le ' + j + ' qu’il examinait ses papiers. Mais son compte les demande encore. ' + pub(cid)).trim() : e === 'encore_valide' ? ('Google a dit le ' + j + ' que c’était validé. Mais son compte demande encore ses papiers. ' + pub(cid)).trim() : e === 'examen' ? 'Ses papiers sont envoyés. Google les examine depuis le ' + j + '.' : e === 'envoye' ? 'Ses papiers sont envoyés depuis le ' + j + '. Google n’a pas encore répondu.' : ('Google attend ses papiers. ' + pub(cid)).trim() });
         });
       });
       att.sort(function (a, b) { return a.rang - b.rang || (a.tri < b.tri ? -1 : a.tri > b.tri ? 1 : 0); });
@@ -643,7 +651,7 @@ window.__PROBLEMES__ = function (D) {
   'use strict';
   var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', CLE = 'ba_comptes_code', CACHE = 'ba_problemes_p2', SAUT = 'ba_problemes_saut', PARTS = ['google', 'argent', 'nouveaux', 'messages', 'jour'], VIEUX_MIN = 5, LIMITE_MS = 30000, LIMITE_TOUT_MS = 20000,
       RETARD = 'Une partie de ton tableau a traîné : pour elle, ce sont les chiffres d’avant.';
-  var R = window.__PROBLEMES_ETAT__ = { version: 'p8-1711', etat: 'depart', envois: 0, lectures: 0, copie: '', retard: [] };
+  var R = window.__PROBLEMES_ETAT__ = { version: 'p9-1711', etat: 'depart', envois: 0, lectures: 0, copie: '', retard: [] };
   var att = document.getElementById('attente'), msg = document.getElementById('attente-msg'), lien = document.getElementById('attente-lien'), encore = document.getElementById('attente-encore');
   function dire(etat, t, avecLien, avecEncore) { R.etat = etat; att.style.display = 'flex'; msg.textContent = t; lien.hidden = !avecLien; lien.style.display = avecLien ? 'inline-block' : 'none'; encore.hidden = !avecEncore; encore.style.display = avecEncore ? 'inline-block' : 'none'; }
   function lire(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
