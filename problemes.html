@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
+<meta name="ba-version" content="p2-1711">
+<link rel="icon" type="image/png" href="icone-192.png">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Problèmes et argent</title>
+<style>
+/* Une colonne étroite, blanche, lue au pouce. Le menu en haut, une famille par ligne, le détail au toucher. */
+:root {
+  color-scheme: light;
+  --fond: #ffffff;
+  --encre: #15191e;
+  --doux: #5a6370;
+  --trait: #e3e6ea;
+  --creux: #f4f6f8;
+  --menu: #17324d;
+  --rouge: #c0341f;
+  --orange: #b4690a;
+  --gris: #7b838d;
+  --vert: #1c7a4c;
+  --texte: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--fond); color: var(--encre); font-family: var(--texte); font-size: 17px; line-height: 1.4; }
+.page { max-width: 620px; margin: 0 auto; padding: 0 16px 56px; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; }
+:focus-visible { outline: 3px solid #2f6fd0; outline-offset: 2px; border-radius: 6px; }
+
+.haut { position: sticky; top: 0; z-index: 5; background: var(--fond); margin: 0 -16px; padding: 12px 16px 0; border-bottom: 1px solid var(--trait); }
+.marque { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--doux); font-weight: 600; }
+.menu { display: flex; gap: 4px; margin-top: 6px; }
+.menu > * { flex: 1 1 0; text-align: center; padding: 12px 4px 11px; font-size: 17px; font-weight: 600; color: var(--doux); border-bottom: 3px solid transparent; text-decoration: none; white-space: nowrap; }
+.menu > .ici { color: var(--menu); border-bottom-color: var(--menu); }
+
+.lu { margin: 14px 0 0; font-size: 14px; color: var(--doux); }
+.lu b { color: var(--encre); font-weight: 600; }
+.lu .vieux { display: block; margin-top: 4px; color: var(--rouge); font-weight: 600; }
+.maj { margin: 10px 0 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.maj button { padding: 10px 16px; border: 1px solid var(--menu); border-radius: 8px; font-weight: 600; color: var(--menu); background: var(--fond); }
+.maj button:disabled { color: var(--gris); border-color: var(--trait); cursor: default; }
+.maj span { font-size: 14px; color: var(--doux); }
+.maj span.rouge { color: var(--rouge); font-weight: 600; }
+
+.grand { margin: 16px 0 2px; font-size: 27px; line-height: 1.15; font-weight: 700; letter-spacing: -.01em; text-wrap: balance; }
+.sous { margin: 0; color: var(--doux); font-size: 16px; }
+
+.tri { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 6px; }
+.tri button { padding: 8px 13px; border: 1px solid var(--trait); border-radius: 999px; font-size: 15px; font-weight: 600; color: var(--doux); background: var(--fond); }
+.tri button[aria-pressed="true"] { background: var(--menu); border-color: var(--menu); color: #fff; }
+
+.familles { list-style: none; margin: 8px 0 0; padding: 0; border-top: 1px solid var(--trait); }
+.familles > li { border-bottom: 1px solid var(--trait); }
+.fam { display: grid; grid-template-columns: 10px 1fr auto 18px; gap: 12px; align-items: center; width: 100%; padding: 15px 0; }
+.pastille { width: 10px; height: 38px; border-radius: 3px; background: var(--gris); }
+.rouge .pastille { background: var(--rouge); } .orange .pastille { background: var(--orange); } .vert .pastille { background: var(--vert); }
+.fam .nom { font-weight: 600; font-size: 17px; line-height: 1.25; }
+.fam .regle { display: block; margin-top: 2px; font-size: 14px; font-weight: 400; color: var(--vert); }
+.fam .regle.rien { color: var(--doux); }
+.fam .combien { text-align: right; font-variant-numeric: tabular-nums; }
+.fam .combien b { display: block; font-size: 26px; line-height: 1; font-weight: 700; }
+.fam .combien span { font-size: 12px; color: var(--doux); }
+.fleche { width: 10px; height: 10px; border-right: 2px solid var(--doux); border-bottom: 2px solid var(--doux); transform: rotate(45deg); justify-self: center; transition: transform .15s; }
+.fam[aria-expanded="true"] .fleche { transform: rotate(-135deg); }
+.corps { padding: 0 0 16px 22px; }
+.corps .quoi { margin: 0 0 10px; }
+.geste { margin: 0 0 12px; padding: 10px 12px; background: var(--creux); border-radius: 8px; }
+.geste b { display: block; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--doux); font-weight: 600; margin-bottom: 2px; }
+.lignes { list-style: none; margin: 0; padding: 0; }
+.lignes li { padding: 10px 0; border-top: 1px solid var(--trait); }
+.lignes .qui { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.lignes .client { font-weight: 600; }
+.lignes .date { font-size: 14px; color: var(--doux); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.lignes .manque { margin: 2px 0 0; color: #2c333b; font-size: 16px; }
+.plus { margin-top: 6px; padding: 11px 14px; width: 100%; text-align: center; border: 1px solid var(--trait); border-radius: 8px; font-weight: 600; color: var(--menu); }
+.autres { margin: 14px 0 0; padding: 13px 14px; width: 100%; text-align: center; border: 1px solid var(--trait); border-radius: 8px; font-weight: 600; color: var(--menu); }
+
+.bloc { margin: 26px 0 0; }
+.bloc h2 { margin: 0 0 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--doux); font-weight: 600; }
+.tuiles { display: grid; gap: 10px; margin-top: 16px; }
+.tuile { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 13px 14px; background: var(--creux); border-radius: 10px; }
+.tuile .t { font-weight: 600; } .tuile .s { display: block; font-size: 14px; font-weight: 400; color: var(--doux); }
+.tuile .v { font-size: 24px; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.barres { display: grid; gap: 9px; }
+.barre { display: grid; grid-template-columns: 96px 1fr; gap: 10px; align-items: center; font-size: 15px; }
+.barre .piste { position: relative; height: 30px; background: var(--creux); border-radius: 6px; overflow: hidden; }
+.barre .plein { position: absolute; inset: 0 auto 0 0; background: var(--menu); border-radius: 6px; min-width: 2px; }
+.barre .plein.partiel { background: repeating-linear-gradient(135deg, var(--menu) 0 7px, #46627f 7px 14px); }
+.barre .val { position: absolute; top: 50%; transform: translateY(-50%); padding: 0 8px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.barre .val.dedans { right: auto; color: #fff; left: 0; } .barre .val.dehors { color: var(--encre); }
+.barre small { color: var(--doux); font-size: 12px; display: block; }
+.note { margin: 8px 0 0; font-size: 14px; color: var(--doux); }
+.prev { padding: 14px; border: 2px solid var(--menu); border-radius: 10px; }
+.prev b { display: block; font-size: 26px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.liste { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.liste li { padding-left: 14px; position: relative; }
+.liste li::before { content: ""; position: absolute; left: 0; top: .62em; width: 6px; height: 6px; border-radius: 50%; background: var(--doux); }
+.danger { padding: 14px; border-left: 5px solid var(--rouge); background: #fbf1ef; border-radius: 0 10px 10px 0; }
+.danger .liste li::before { background: var(--rouge); }
+.sur .liste li::before { background: var(--vert); } .pas .liste li::before { background: var(--orange); }
+.pied { margin-top: 34px; padding-top: 14px; border-top: 1px solid var(--trait); font-size: 14px; color: var(--doux); }
+.compteurs { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 4px; }
+.compteurs span { padding: 7px 12px; border-radius: 999px; background: var(--creux); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.compteurs .adire { background: #fbf1ef; color: var(--rouge); }
+.bandeau { margin: 12px 0 0; padding: 10px 12px; border-left: 5px solid var(--orange); background: #fdf6ea; border-radius: 0 8px 8px 0; font-size: 15px; }
+.tete { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; margin-top: 20px; padding: 14px 0 12px; border-top: 2px solid var(--encre); font-size: 19px; font-weight: 700; }
+.tete .fleche { flex: none; margin-right: 4px; }
+.tete[aria-expanded="true"] .fleche { transform: rotate(-135deg); }
+.pay { list-style: none; margin: 0; padding: 0; }
+.pay > li { padding: 12px 0 13px; border-top: 1px solid var(--trait); }
+.pay .client { font-weight: 600; }
+.pay .fait { margin: 2px 0 9px; font-size: 15px; color: var(--doux); }
+.choix { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.choix button { padding: 12px 6px; border: 1.5px solid #cfd5dc; border-radius: 9px; text-align: center; font-weight: 600; color: #3b444e; background: var(--fond); }
+.choix button[aria-pressed="true"] { background: var(--menu); border-color: var(--menu); color: #fff; }
+.suivi { margin: 6px 0 0; min-height: 18px; font-size: 13px; color: var(--doux); }
+.suivi.ok { color: var(--vert); font-weight: 600; } .suivi.ko { color: var(--rouge); font-weight: 600; } .suivi.adire { color: var(--rouge); }
+@media (max-width: 430px) { .menu > * { font-size: 15px; padding-left: 2px; padding-right: 2px; } }
+[hidden] { display: none !important; }
+@media (min-width: 560px) { .tuiles { grid-template-columns: repeat(3, 1fr); } .tuile { flex-direction: column; align-items: flex-start; gap: 4px; } }
+@media (prefers-reduced-motion: reduce) { .fleche { transition: none; } }
+</style>
+</head>
+<body>
+<div id="attente" style="position:fixed;inset:0;z-index:99;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;font:17px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;color:#1d1d1f"><p id="attente-msg" style="max-width:420px;margin:0 0 18px">Je lis ton tableau…</p><a id="attente-lien" href="./" hidden style="display:none;background:#0071e3;color:#fff;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:10px">Ouvrir « Les comptes »</a><button type="button" id="attente-encore" hidden style="display:none;background:#0071e3;color:#fff;border:0;font:inherit;font-weight:600;padding:12px 20px;border-radius:10px;cursor:pointer">Réessayer</button></div>
+<div class="page">
+  <header class="haut">
+    <div class="marque">BoostArtisan</div>
+    <nav class="menu" aria-label="Menu">
+      <button type="button" id="menu-problemes" data-vue="problemes" class="ici">Problèmes</button>
+      <button type="button" id="menu-argent" data-vue="argent">Argent</button>
+      <button type="button" id="menu-forfaits" data-vue="forfaits">Forfaits</button>
+      <a id="menu-comptes" href="#" rel="noopener">Comptes ↗</a>
+    </nav>
+  </header>
+  <p class="lu">Lu dans ton tableau <b id="lu-texte"></b>.<span id="lu-age"></span></p>
+  <p class="maj"><button type="button" id="maj-bouton">Mettre à jour</button><span id="maj-etat" role="status" aria-live="polite"></span></p>
+
+  <main id="vue-problemes">
+    <h1 class="grand" id="p-grand"></h1>
+    <p class="sous" id="p-sous"></p>
+    <div class="tri" id="tri" role="group" aria-label="Qui doit agir"></div>
+    <ol class="familles" id="familles"></ol>
+    <button type="button" class="autres" id="autres" hidden></button>
+  </main>
+
+  <main id="vue-argent" hidden>
+    <h1 class="grand" id="a-verdict"></h1>
+    <p class="sous" id="a-suite"></p>
+    <div class="tuiles" id="a-tuiles"></div>
+    <section class="bloc"><h2 id="a-titre-groupes">Qui va payer</h2><ul class="familles" id="a-groupes"></ul><p class="note" id="a-groupes-note"></p></section>
+    <section class="bloc"><h2>Ce qui est rentré</h2><div class="barres" id="a-rentre"></div><p class="note" id="a-rentre-note"></p></section>
+    <section class="bloc"><h2>Ce qui s'accumule</h2><div class="barres" id="a-demandes"></div><p class="note" id="a-demandes-note"></p></section>
+    <section class="bloc"><h2>Le prochain paiement</h2><div class="prev"><b id="a-prev"></b><span id="a-prev-texte"></span></div><ul class="liste" id="a-calendrier" style="margin-top:12px"></ul></section>
+    <section class="bloc"><h2>Les forfaits</h2><ul class="liste" id="a-forfaits"></ul></section>
+    <section class="bloc"><h2>Le vrai danger</h2><div class="danger"><ul class="liste" id="a-danger"></ul></div></section>
+    <section class="bloc"><h2>Nouveaux clients vendus</h2><div class="barres" id="a-ventes"></div><p class="note" id="a-ventes-note"></p></section>
+    <section class="bloc sur"><h2>Ce qui est sûr</h2><ul class="liste" id="a-sur"></ul></section>
+    <section class="bloc pas"><h2>Ce qui n'est pas sûr</h2><ul class="liste" id="a-pas"></ul></section>
+    <section class="bloc"><h2>Ce qui me ferait changer d'avis</h2><ul class="liste" id="a-changerait"></ul></section>
+  </main>
+
+  <main id="vue-forfaits" hidden>
+    <h1 class="grand" id="f-titre"></h1>
+    <p class="sous" id="f-sous"></p>
+    <p class="bandeau" id="f-bandeau" hidden>Ici, tes choix ne se gardent pas. Dis-les-moi dans le chat.</p>
+    <div class="compteurs" id="f-compteurs" aria-live="polite"></div>
+    <div id="f-groupes"></div>
+    <p class="note" id="f-fin" style="margin-top:18px"></p>
+  </main>
+
+  <p class="pied" id="pied"></p>
+</div>
+<script>
+window.__PROBLEMES__ = function (D) {
+  'use strict';
+  var VISIBLES = 5, FAMILLES_VISIBLES = 5;
+  function typo(t) { return String(t).replace(/(\d) h (\d)/g, '$1\u00a0h\u00a0$2').replace(/(\d) (?=\d{3}(\D|$))/g, '$1\u202f').replace(/ (€|%|:|\?|»)/g, '\u00a0$1').replace(/« /g, '«\u00a0'); }
+  function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = typo(txt); return e; }
+  function nb(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+  function attente(f) { return f.attente_n != null ? f.attente_n : f.items.length; }
+
+  /* ---- en-tête ---- */
+  document.getElementById('lu-texte').textContent = typo(D.lu_texte);
+  document.getElementById('menu-comptes').href = D.comptes_url;
+  (function () {
+    var s = document.getElementById('lu-age');
+    function age() { var m = (D.lu_age_min || 0) + (Date.now() - (D.recu_ms || Date.now())) / 60000, h = Math.floor(m / 60);
+      if (m >= 120) { s.className = 'vieux'; s.textContent = 'Ces chiffres ont ' + (h >= 48 ? Math.floor(h / 24) + ' jours' : h + ' heures') + '. Appuie sur « Mettre à jour ».'; } else { s.className = ''; s.textContent = ''; } }
+    age(); setInterval(age, 60000);
+  })();
+  document.getElementById('pied').textContent = typo(D.source);
+
+  /* ---- problèmes ---- */
+  var cles = {}, total = 0, regles = 0;
+  D.familles.forEach(function (f) { total += attente(f); if (f.regles != null) regles += f.regles; f.items.forEach(function (i) { if (i.k) cles[i.k] = 1; }); });
+  var nClients = Object.keys(cles).length;
+  document.getElementById('p-grand').textContent = nb(total) + ' problèmes en attente.';
+  document.getElementById('p-sous').textContent = typo('Chez ' + nClients + ' clients. ' + nb(regles) + ' sont déjà réglés.');
+
+  var ACTIONS = [['tout', 'Tout'], ['toi', 'Toi'], ['claude', 'Claude'], ['argent', 'Argent']];
+  var filtre = 'tout', toutVoir = false;
+  var tri = document.getElementById('tri');
+  ACTIONS.forEach(function (a) {
+    var n = a[0] === 'tout' ? D.familles.length : D.familles.filter(function (f) { return f.action === a[0]; }).length;
+    var b = el('button', '', a[1] + ' · ' + n); b.type = 'button'; b.id = 'tri-' + a[0]; b.setAttribute('aria-pressed', a[0] === filtre ? 'true' : 'false');
+    b.addEventListener('click', function () { filtre = a[0]; toutVoir = filtre !== 'tout' ? true : toutVoir; Array.prototype.forEach.call(tri.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); montrer(); });
+    tri.appendChild(b);
+  });
+
+  var liste = document.getElementById('familles'), boutonAutres = document.getElementById('autres');
+  D.familles.forEach(function (f, rang) {
+    var li = el('li', f.couleur); li.dataset.action = f.action; li.dataset.rang = rang; li.id = 'fam-' + f.id;
+    var b = el('button', 'fam'); b.type = 'button'; b.setAttribute('aria-expanded', 'false'); b.setAttribute('aria-controls', 'corps-' + f.id);
+    b.appendChild(el('span', 'pastille'));
+    var nom = el('span', 'nom', f.nom);
+    nom.appendChild(el('span', f.regles != null ? 'regle' : 'regle rien', f.regles != null ? nb(f.regles) + ' ' + f.regles_texte : 'en attente seulement'));
+    b.appendChild(nom);
+    var c = el('span', 'combien'); c.appendChild(el('b', '', nb(attente(f)))); c.appendChild(el('span', '', f.unite)); b.appendChild(c);
+    b.appendChild(el('span', 'fleche'));
+    var corps = el('div', 'corps'); corps.id = 'corps-' + f.id; corps.hidden = true;
+    corps.appendChild(el('p', 'quoi', f.quoi));
+    var g = el('p', 'geste'); g.appendChild(el('b', '', f.action === 'claude' ? 'Ce que je fais' : 'Le geste')); g.appendChild(document.createTextNode(f.geste)); corps.appendChild(g);
+    if (f.items.length) {
+      var ul = el('ul', 'lignes');
+      f.items.forEach(function (i, n) {
+        var l = el('li'); if (n >= VISIBLES) l.hidden = true;
+        var q = el('div', 'qui'); q.appendChild(el('span', 'client', i.c));
+        if (i.d) q.appendChild(el('span', 'date', /€$/.test(i.d) ? i.d : (/^\d+$/.test(i.d) ? i.d + ' message' + (i.d === '1' ? '' : 's') : 'depuis le ' + i.d)));
+        l.appendChild(q); l.appendChild(el('p', 'manque', i.m)); ul.appendChild(l);
+      });
+      corps.appendChild(ul);
+      if (f.items.length > VISIBLES) {
+        var p = el('button', 'plus', 'Voir les ' + (f.items.length - VISIBLES) + ' autres'); p.type = 'button';
+        p.addEventListener('click', function () { Array.prototype.forEach.call(ul.children, function (x) { x.hidden = false; }); p.hidden = true; });
+        corps.appendChild(p);
+      }
+    }
+    b.addEventListener('click', function () { var o = b.getAttribute('aria-expanded') === 'true'; b.setAttribute('aria-expanded', o ? 'false' : 'true'); corps.hidden = o; });
+    li.appendChild(b); li.appendChild(corps); liste.appendChild(li);
+  });
+  boutonAutres.addEventListener('click', function () { toutVoir = true; montrer(); });
+  function montrer() {
+    var vus = 0, caches = 0;
+    Array.prototype.forEach.call(liste.children, function (li) {
+      var bon = filtre === 'tout' || li.dataset.action === filtre;
+      var voir = bon && (toutVoir || vus < FAMILLES_VISIBLES);
+      if (bon && !voir) caches++;
+      if (voir) vus++;
+      li.hidden = !voir;
+    });
+    boutonAutres.hidden = caches === 0;
+    boutonAutres.textContent = 'Voir les ' + caches + ' autres familles';
+  }
+  montrer();
+
+  /* ---- argent ---- */
+  var A = D.argent;
+  document.getElementById('a-verdict').textContent = typo(A.verdict);
+  document.getElementById('a-suite').textContent = typo(A.verdict_suite);
+  if (A.titre_groupes) document.getElementById('a-titre-groupes').textContent = typo(A.titre_groupes);
+  A.tuiles.forEach(function (t) {
+    var d = el('div', 'tuile'), g = el('span', 't', t.t); g.appendChild(el('span', 's', t.s)); d.appendChild(g); d.appendChild(el('span', 'v', t.v));
+    document.getElementById('a-tuiles').appendChild(d);
+  });
+  (A.groupes || []).forEach(function (g) {
+    var li = el('li', g.couleur); li.id = 'grp-' + g.id;
+    var b = el('button', 'fam'); b.type = 'button'; b.setAttribute('aria-expanded', 'false'); b.setAttribute('aria-controls', 'gcorps-' + g.id);
+    b.appendChild(el('span', 'pastille'));
+    var nom = el('span', 'nom', g.nom); nom.appendChild(el('span', 'regle rien', g.sous)); b.appendChild(nom);
+    var c = el('span', 'combien'); c.appendChild(el('b', '', nb(g.eur) + ' €')); c.appendChild(el('span', '', g.unite)); b.appendChild(c);
+    b.appendChild(el('span', 'fleche'));
+    var corps = el('div', 'corps'); corps.id = 'gcorps-' + g.id; corps.hidden = true;
+    corps.appendChild(el('p', 'quoi', g.quoi));
+    var ul = el('ul', 'lignes');
+    g.items.forEach(function (i) {
+      var l = el('li'), q = el('div', 'qui'); q.appendChild(el('span', 'client', i.c)); if (i.d) q.appendChild(el('span', 'date', i.d));
+      l.appendChild(q); l.appendChild(el('p', 'manque', i.m)); ul.appendChild(l);
+    });
+    corps.appendChild(ul);
+    b.addEventListener('click', function () { var o = b.getAttribute('aria-expanded') === 'true'; b.setAttribute('aria-expanded', o ? 'false' : 'true'); corps.hidden = o; });
+    li.appendChild(b); li.appendChild(corps); document.getElementById('a-groupes').appendChild(li);
+  });
+  document.getElementById('a-groupes-note').textContent = typo(A.groupes_note || '');
+  function barres(id, lignes, champ, suffixe) {
+    if (!lignes || !lignes.length) { var vide = document.getElementById(id); while (vide && vide.tagName !== 'SECTION') vide = vide.parentNode; if (vide) vide.hidden = true; return; }
+    var max = Math.max.apply(null, lignes.map(function (x) { return x[champ]; })), cible = document.getElementById(id);
+    lignes.forEach(function (x) {
+      var r = el('div', 'barre'), nom = el('span', '', x.mois); if (x.note) nom.appendChild(el('small', '', x.note)); r.appendChild(nom);
+      var piste = el('div', 'piste'), part = Math.max(1, Math.round(x[champ] / max * 100));
+      var plein = el('div', 'plein' + (x.note ? ' partiel' : '')); plein.style.width = part + '%'; piste.appendChild(plein);
+      var v = el('span', 'val ' + (part >= 38 ? 'dedans' : 'dehors'), nb(x[champ]) + suffixe); if (part < 38) v.style.left = part + '%';
+      piste.appendChild(v); r.appendChild(piste); cible.appendChild(r);
+    });
+  }
+  barres('a-rentre', A.rentre, 'eur', ' €'); document.getElementById('a-rentre-note').textContent = typo(A.rentre_note);
+  barres('a-demandes', A.demandes, 'n', ' demandes'); document.getElementById('a-demandes-note').textContent = typo(A.demandes_note);
+  barres('a-ventes', A.ventes, 'n', ''); document.getElementById('a-ventes-note').textContent = typo(A.ventes_note);
+  document.getElementById('a-prev').textContent = nb(A.prevision.bas) + ' à ' + nb(A.prevision.haut) + ' €';
+  document.getElementById('a-prev-texte').textContent = typo(A.prevision.texte);
+  function puces(id, T) { T.forEach(function (t) { document.getElementById(id).appendChild(el('li', '', t)); }); }
+  puces('a-calendrier', A.calendrier); puces('a-forfaits', A.forfaits); puces('a-danger', A.danger); puces('a-sur', A.sur); puces('a-pas', A.pas_sur); puces('a-changerait', A.changerait);
+
+  /* ---- forfaits : qui paie comment ---- */
+  var P = D.paiement, choix = {}, suivi = {}, lignesPay = {}, db = null, dbPret = false, enAttente = {};
+  document.getElementById('f-titre').textContent = typo(P.titre);
+  document.getElementById('f-sous').textContent = typo(P.sous);
+  document.getElementById('f-fin').textContent = typo(P.fin);
+  function effectif(c) { return choix[c.k] || c.p; }
+  function compter() {
+    var n = { '': 0, f: 0, d: 0 }; P.clients.forEach(function (c) { n[effectif(c)]++; });
+    var z = document.getElementById('f-compteurs'); z.textContent = '';
+    z.appendChild(el('span', '', 'Forfait · ' + n.f)); z.appendChild(el('span', '', 'À la demande · ' + n.d));
+    if (n['']) z.appendChild(el('span', 'adire', 'À me dire · ' + n['']));
+  }
+  function peindre(c) {
+    var L = lignesPay[c.k], e = effectif(c), s = suivi[c.k];
+    L.bF.setAttribute('aria-pressed', e === 'f' ? 'true' : 'false'); L.bD.setAttribute('aria-pressed', e === 'd' ? 'true' : 'false');
+    var txt = '', cls = 'suivi';
+    if (s === 'envoi') txt = 'J’écris…';
+    else if (s === 'ko') { txt = 'Pas noté. Touche encore.'; cls += ' ko'; }
+    else if (s === 'local') { txt = 'Pas gardé : dis-le dans le chat.'; cls += ' ko'; }
+    else if (choix[c.k]) { txt = '✔ Noté : ' + (choix[c.k] === 'f' ? 'forfait' : 'à la demande'); cls += ' ok'; }
+    else if (c.p) txt = 'D’après ton tableau';
+    else { txt = 'À me dire'; cls += ' adire'; }
+    L.note.className = cls; L.note.textContent = txt;
+  }
+  function ecrire(c, m, avant) {
+    if (!dbPret) { enAttente[c.k] = [c, m, avant]; return; }
+    if (!db) { suivi[c.k] = 'local'; peindre(c); return; }
+    var p; try { p = db.doc('modes/' + c.k).set({ m: m, c: c.c, t: new Date().toISOString() }); } catch (e) { p = Promise.reject(e); }
+    Promise.resolve(p).then(function () { if (choix[c.k] === m) { suivi[c.k] = ''; peindre(c); } },
+      function () { if (choix[c.k] !== m) return; if (avant) choix[c.k] = avant; else delete choix[c.k]; suivi[c.k] = 'ko'; peindre(c); compter(); });
+  }
+  function choisir(c, m) { if (choix[c.k] === m && suivi[c.k] !== 'ko') return; var avant = choix[c.k]; choix[c.k] = m; suivi[c.k] = 'envoi'; peindre(c); compter(); ecrire(c, m, avant); }
+  [['', 'À me dire', true], ['f', 'Forfait', false], ['d', 'À la demande', false]].forEach(function (g) {
+    var lot = P.clients.filter(function (c) { return c.p === g[0]; }); if (!lot.length) return;
+    var id = 'pay-' + (g[0] || 'adire'), tete = el('button', 'tete'); tete.type = 'button'; tete.id = 'tete-' + (g[0] || 'adire'); tete.setAttribute('aria-expanded', g[2] ? 'true' : 'false'); tete.setAttribute('aria-controls', id);
+    tete.appendChild(el('span', '', g[1] + ' · ' + lot.length)); tete.appendChild(el('span', 'fleche'));
+    var ul = el('ul', 'pay'); ul.id = id; ul.hidden = !g[2];
+    lot.forEach(function (c) {
+      var li = el('li'); li.id = 'c-' + c.k; li.appendChild(el('div', 'client', c.c)); li.appendChild(el('p', 'fait', c.f));
+      var z = el('div', 'choix'), bF = el('button', '', 'Forfait'), bD = el('button', '', 'À la demande'); bF.type = 'button'; bD.type = 'button';
+      bF.addEventListener('click', function () { choisir(c, 'f'); }); bD.addEventListener('click', function () { choisir(c, 'd'); });
+      z.appendChild(bF); z.appendChild(bD); li.appendChild(z);
+      var note = el('p', 'suivi'); li.appendChild(note); lignesPay[c.k] = { bF: bF, bD: bD, note: note }; ul.appendChild(li); peindre(c);
+    });
+    tete.addEventListener('click', function () { var o = tete.getAttribute('aria-expanded') === 'true'; tete.setAttribute('aria-expanded', o ? 'false' : 'true'); ul.hidden = o; });
+    var z2 = document.getElementById('f-groupes'); z2.appendChild(tete); z2.appendChild(ul);
+  });
+  compter();
+  (function () {
+    function pret(base) {
+      db = base || null; dbPret = true;
+      if (!db) document.getElementById('f-bandeau').hidden = false;
+      else { try { db.collection('modes').onSnapshot(function (s) {
+        (s && s.docs || []).forEach(function (d) { var v = (d.data && d.data()) || {}, k = String(d.id); if (!lignesPay[k] || suivi[k] === 'envoi') return; if (v.m === 'f' || v.m === 'd') { choix[k] = v.m; if (suivi[k] !== 'ko') suivi[k] = ''; } });
+        P.clients.forEach(peindre); compter(); }, function () { }); } catch (e) { } }
+      Object.keys(enAttente).forEach(function (k) { var a = enAttente[k]; delete enAttente[k]; ecrire(a[0], a[1], a[2]); });
+    }
+    try { if (window.claude && claude.use) claude.use('db').then(pret, function () { pret(null); }); else pret(null); } catch (e) { pret(null); }
+  })();
+
+  /* ---- menu ---- */
+  var VUES = ['problemes', 'argent', 'forfaits'];
+  function aller(v, sansHash) {
+    if (VUES.indexOf(v) < 0) v = 'problemes';
+    VUES.forEach(function (x) { document.getElementById('vue-' + x).hidden = x !== v; document.getElementById('menu-' + x).classList.toggle('ici', x === v); });
+    if (!sansHash) { try { history.replaceState(null, '', '#' + v); } catch (e) { try { location.hash = v; } catch (e2) { } } }
+    window.scrollTo(0, 0);
+  }
+  VUES.forEach(function (x) { document.getElementById('menu-' + x).addEventListener('click', function () { aller(x); }); });
+  window.addEventListener('hashchange', function () { aller(location.hash.slice(1), true); });
+  aller(location.hash.slice(1) || 'problemes', true);
+};
+</script>
+<script>
+/* regles.js — 17/11/2026 (ch. 55, p2). LE PROGRAMME FIXE qui range les problèmes : il remplace donnees.json écrit à la main.
+   Entrée : S = { google, argent, nouveaux, messages, jour } = les morceaux rendus par le tableau (vue 'problemes', vq), chacun { quand, d }.
+   Sortie : D = { lu_quand, lu_texte, lu_age_min, source, comptes_url, familles, argent, paiement } = ce que la page sait afficher (gabarit du 15/11).
+   Aucune donnée ici : que des règles. Une phrase = un sujet, 15 mots au plus, jamais un mot du tableau. */
+(function (racine) {
+  'use strict';
+  var MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+  function maj(t) { return t.charAt(0).toUpperCase() + t.slice(1); }
+  function de(mois) { return (/^[aeiouyéèêh]/i.test(mois) ? 'd’' : 'de ') + mois; }
+  function jm(s) { var m = /^(\d{4})-(\d\d)-(\d\d)/.exec(String(s || '')); return m ? (+m[3]) + '/' + (+m[2]) : ''; }
+  function nb(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+  function eur(n) { return nb(n) + ' €'; }
+  function pl(n, un, plusieurs) { return nb(n) + ' ' + (n > 1 ? plusieurs : un); }
+  function essai(cid) { return /^000-000-/.test(String(cid || '')); }
+  function minutes(q) { var m = /^(\d{4})-(\d\d)-(\d\d)[ T](\d\d):(\d\d)/.exec(String(q || '')); return m ? Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5]) / 60000 : null; }
+  function somme(L, ch) { return L.reduce(function (s, x) { return s + (x[ch] || 0); }, 0); }
+
+  function calculer(S, maintenantParis) {
+    var G = S.google.d, AR = S.argent.d, NV = S.nouveaux.d, ME = S.messages.d, JO = S.jour.d;
+    var NOM = {}, PARTI = {}, MODE = {}, E = G.etat || {};
+    (G.clients || []).forEach(function (c) { NOM[c.cid] = c.nom; MODE[c.cid] = String(c.mode || '').toLowerCase(); if (/archiv|fermé|ferme|parti/i.test(c.statut)) PARTI[c.cid] = 1; });
+    function client(cid) { return !!cid && NOM[cid] !== undefined && !PARTI[cid] && !essai(cid); }
+    var AUTRE = {}; (AR.par_client || []).forEach(function (x) { if (x.cid && x.nom) AUTRE[x.cid] = x.nom; });
+    function nom(cid, autre) { return NOM[cid] || autre || AUTRE[cid] || (E[cid] && E[cid].nom) || cid; }
+    var CID = {}; Object.keys(NOM).forEach(function (c) { CID[String(NOM[c]).toLowerCase()] = c; });
+
+    /* ---- les problèmes Google : identité, paiement, annonces ---- */
+    function google(types) {
+      var items = [], regles = 0;
+      Object.keys((G.pg && G.pg.comptes) || {}).forEach(function (cid) {
+        var un = null;
+        (G.pg.comptes[cid] || []).forEach(function (x) {
+          var rang = types.indexOf(x.type); if (rang < 0) return;
+          if (x.etat === 'regle') { regles++; return; }
+          if (!client(cid)) return;
+          if (!un) un = { cid: cid, type: x.type, rang: rang, depuis: x.depuis, nom: nom(cid, x.nom) };
+          else { if (rang < un.rang) { un.rang = rang; un.type = x.type; } if (x.depuis && (!un.depuis || x.depuis < un.depuis)) un.depuis = x.depuis; }
+        });
+        if (un) items.push(un);
+      });
+      items.sort(function (a, b) { return a.depuis < b.depuis ? -1 : a.depuis > b.depuis ? 1 : 0; });
+      return { items: items, regles: regles };
+    }
+    function pub(cid) { var e = E[cid]; if (!e) return ''; return e.imp_hier > 0 ? 'Sa pub tourne encore.' : 'Sa pub est arrêtée.'; }
+    var bloque = {};   /* clients dont Google bloque ou menace la pub */
+    var gi = google(['identite']), gp = google(['suspendu', 'paiement']), ga = google(['annonces']);
+    var fIdentite = gi.items.map(function (i) { bloque[i.cid] = 'identite'; return { k: i.cid, c: i.nom, d: jm(i.depuis), m: ('Google attend ses papiers. ' + pub(i.cid)).trim() }; });
+    var fPaiement = gp.items.map(function (i) { bloque[i.cid] = bloque[i.cid] || 'paiement'; return { k: i.cid, c: i.nom, d: jm(i.depuis), m: ((i.type === 'suspendu' ? 'Google a suspendu son compte. ' : 'Sa carte ne passe plus chez Google. ') + pub(i.cid)).trim() }; });
+    var fAnnonces = ga.items.map(function (i) { return { k: i.cid, c: i.nom, d: jm(i.depuis), m: 'Des annonces sont refusées. Sa pub tourne quand même.' }; });
+
+    /* ---- pas encore lancés ---- */
+    var lances = {}, dansLancer = {}, enReglage = {}, fLancer = [];
+    function etapeDit(x) {
+      var l = String(x.libelle || '');
+      if (x.etape === 'bloque') return 'Le robot est bloqué sur sa fiche. C’est pour moi.';
+      if (x.etape === 'dexem_ads') return 'Ses appels ne sont pas encore comptés par Google.';
+      if (x.etape === 'formulaire') return 'Il n’a pas encore rempli son formulaire.';
+      if (x.etape === 'carte') return 'Il manque sa carte chez Google.';
+      if (/création/i.test(l)) return 'Ses pubs sont en création.';
+      if (/éteintes/i.test(l)) return 'Ses pubs sont prêtes, mais éteintes.';
+      if (/il manque/i.test(l)) return 'Ses pubs tournent. Il reste un réglage à finir.';
+      return 'Sa mise en place n’est pas finie.';
+    }
+    var fSite = [], vuSite = {};
+    function site(k, qui, dit) { var cle = String(qui).toLowerCase() + '|' + dit; if (vuSite[cle]) return; vuSite[cle] = 1; fSite.push({ k: k, c: qui, d: '', m: dit }); }
+    (NV.liste || []).forEach(function (x) {
+      var k = x.cid || x.siret || x.nom; if (!k) return;
+      if (x.etape === 'ok' || essai(x.cid)) return;
+      if (x.cid && (PARTI[x.cid] || bloque[x.cid])) return;                       /* parti, ou déjà rangé chez Google */
+      if (x.etape === 'dexem_ads' && /beckert/i.test(x.nom)) return;              /* Atelier Beckert : jamais de suivi d'appels (règle d'Enzo) */
+      if (lances[k]) return; lances[k] = 1;
+      var tourne = !!(x.cid && E[x.cid] && E[x.cid].imp_7j > 0);                  /* sa pub s'est affichée cette semaine : il est lancé */
+      if (x.etape === 'dexem_ads' || (tourne && x.etape === 'bloque') || (tourne && x.etape === 'pubs' && /il manque/i.test(String(x.libelle)))) { enReglage[k] = 1; site(k, x.nom, etapeDit(x)); return; }
+      if (tourne && x.etape === 'pubs') return;
+      dansLancer[k] = 1; fLancer.push({ k: k, c: x.nom, d: jm(x.recu_le), m: etapeDit(x), tri: x.recu_le || '' });
+    });
+
+    /* ---- les lignes du jour : zéro demande, pub qui ne s'affiche plus, site, contrôles ---- */
+    var fZero = [], fVeille = [];
+    (JO.lignes || []).forEach(function (l) {
+      var q = String(l.quoi || ''), cid = l.cid;
+      if (l.famille === 'client') {
+        if (!cid || !client(cid)) return;
+        var e = E[cid];
+        if (/aucun lead depuis 7 jours/i.test(q)) fZero.push({ k: cid, c: nom(cid, l.client), d: e && e.cout_7j ? eur(e.cout_7j) : '', m: e && e.cout_7j ? eur(e.cout_7j) + ' dépensés en 7 jours, zéro demande.' : 'Sa pub tourne, zéro demande en 7 jours.' });
+        else if (/n.affiche plus/i.test(q)) { if (!bloque[cid] && !dansLancer[cid]) fVeille.push({ k: cid, c: nom(cid, l.client), d: '', m: 'Sa pub ne s’affiche plus. Je cherche pourquoi.' }); }
+        else if (/carte bancaire/i.test(q)) { if (!bloque[cid] && !dansLancer[cid]) { dansLancer[cid] = 1; fLancer.push({ k: cid, c: nom(cid, l.client), d: '', m: 'Sa pub n’a jamais démarré. Sa carte est à vérifier.', tri: '' }); } }
+        else if (/mise en place incomplète/i.test(q)) { if (!bloque[cid] && !dansLancer[cid] && !enReglage[cid]) site(cid, nom(cid, l.client), 'Sa mise en place n’est pas finie.'); }
+        return;
+      }
+      var qui = '', dit = '';
+      if (l.famille === 'crible') { cid = cid || CID[String(l.client || '').toLowerCase()] || ''; qui = cid ? nom(cid, l.client) : String(l.client || ''); dit = /formulaire/i.test(q) ? 'Son site n’a pas de formulaire.' : /numéro|téléphone/i.test(q) ? 'Le numéro de son site est à vérifier.' : 'Un défaut sur son site. Je regarde.'; }
+      else if (l.famille === 'controle' && cid) { qui = nom(cid, String(l.client || '').replace(/^.*?—\s*/, '')); dit = /formulaire/i.test(q) ? 'Son site n’a pas de formulaire.' : /site_ok|panne/i.test(q) ? 'Son site est peut-être en panne. Je vérifie.' : /payer|fact/i.test(q) ? 'Son relevé est à vérifier.' : 'Un contrôle du matin est rouge chez lui.'; }
+      if (!qui || (cid && !client(cid))) return;
+      site(cid || qui, qui, dit);
+    });
+    fLancer.sort(function (a, b) { return a.tri < b.tri ? -1 : a.tri > b.tri ? 1 : 0; }); fLancer.forEach(function (x) { delete x.tri; });
+
+    /* ---- l'argent : relevés pas payés ---- */
+    var moisA = String(AR.mois || '').slice(0, 7), an = +moisA.slice(0, 4), mo = +moisA.slice(5, 7);
+    var moisNom = MOIS[mo - 1] || '', moisSuivant = MOIS[mo % 12] || '', moisAvantNum = mo === 1 ? 12 : mo - 1, moisAvant = MOIS[moisAvantNum - 1] || '';
+    var cleAvant = (mo === 1 ? an - 1 : an) + '-' + (moisAvantNum < 10 ? '0' : '') + moisAvantNum;
+    var fArgent = [], duTotal = 0, sansRappel = 0, payesAvant = 0, payesAvantEur = 0, RENTRE = {};
+    (AR.factures || []).forEach(function (f) {
+      var st = String(f.statut || '').toLowerCase();
+      if (essai(f.cid)) return;
+      if (/^[àa] payer/.test(st)) { duTotal += f.montant; if (!f.relances) sansRappel++;
+        fArgent.push({ k: f.cid, c: nom(f.cid), d: eur(f.montant), m: (f.relances ? pl(f.relances, 'rappel envoyé', 'rappels envoyés') : 'Aucun rappel envoyé') + '.' + (jm(f.a_payer_le) ? ' À payer depuis le ' + jm(f.a_payer_le) + '.' : ''), tri: f.montant }); }
+      else if (/^pay/.test(st)) { if (String(f.mois).slice(0, 7) === cleAvant) { payesAvant++; payesAvantEur += f.montant; } var cm = String(f.paye_le || '').slice(0, 7); if (/^\d{4}-\d\d$/.test(cm)) RENTRE[cm] = (RENTRE[cm] || 0) + f.montant; }
+    });
+    fArgent.sort(function (a, b) { return b.tri - a.tri; }); fArgent.forEach(function (x) { delete x.tri; });
+
+    /* ---- les messages des clients ---- */
+    var OUVERT = { nouvelle: 1, en_cours: 1, a_trancher: 1 }, SUJET = { site: 'son site', acces_google: 'payer Google lui-même', paiement: 'un paiement', numero: 'son numéro', zone: 'sa zone', budget: 'son budget', logo: 'son logo', photo: 'ses photos' };
+    var parClient = {}, mOuverts = 0, mRegles = 0;
+    (ME.liste || []).forEach(function (m) {
+      if (essai(m.cid) || m.statut === 'doublon') return;
+      if (!OUVERT[m.statut]) { mRegles++; return; }
+      mOuverts++; var k = m.cid || m.nom, p = parClient[k] = parClient[k] || { k: k, c: nom(m.cid, m.nom), n: 0, vieux: '', types: {} };
+      p.n++; if (m.recu_le && (!p.vieux || m.recu_le < p.vieux)) p.vieux = m.recu_le; p.types[m.type] = (p.types[m.type] || 0) + 1;
+    });
+    var fMessages = Object.keys(parClient).map(function (k) { var p = parClient[k], t = Object.keys(p.types).sort(function (a, b) { return p.types[b] - p.types[a]; })[0];
+      return { k: p.k, c: p.c, d: String(p.n), m: (jm(p.vieux) ? 'Il attend depuis le ' + jm(p.vieux) + '.' : 'Il attend une réponse.') + (SUJET[t] ? ' Sujet : ' + SUJET[t] + '.' : ''), tri: p.n }; });
+    fMessages.sort(function (a, b) { return b.tri - a.tri; }); fMessages.forEach(function (x) { delete x.tri; });
+
+    /* ---- les familles, dans l'ordre de la page ---- */
+    var notes = (JO.celine && JO.celine.sans_reponse) || 0, notesJours = Math.floor(((JO.celine && JO.celine.plus_vieux_h) || 0) / 24);
+    var F = [
+      { id: 'identite', nom: 'Google veut vérifier le client', action: 'toi', couleur: 'rouge', unite: 'clients', quoi: 'Google a arrêté leur pub. Il attend les papiers et le visage du client.', geste: 'Le client doit le faire lui-même. Je l’invite, puis tu l’appelles.', regles: gi.regles, regles_texte: 'identités déjà validées par Google', items: fIdentite },
+      { id: 'paiement', nom: 'Google n’arrive pas à les faire payer', action: 'toi', couleur: 'rouge', unite: 'clients', quoi: 'Leur carte ne passe plus chez Google. Leur pub s’arrête, ou va s’arrêter.', geste: 'Le client remet sa carte chez Google. Tu l’appelles, carte en main.', regles: gp.regles, regles_texte: 'paiements Google déjà réglés', items: fPaiement },
+      { id: 'lancer', nom: 'Clients pas encore lancés', action: 'toi', couleur: 'rouge', unite: 'clients', quoi: 'Ils ont signé. Leur pub ne tourne pas encore.', geste: 'Chaque ligne dit ce qui manque.', regles: (NV.nb && NV.nb.ok) || 0, regles_texte: 'clients lancés depuis 45 jours', items: fLancer },
+      { id: 'argent', nom: 'Ils te doivent de l’argent', action: 'argent', couleur: 'rouge', unite: 'relevés', quoi: pl(fArgent.length, 'relevé n’est pas payé', 'relevés ne sont pas payés') + '. Total : ' + eur(duTotal) + '.', geste: sansRappel ? 'Relancer chacun. ' + pl(sansRappel, 'n’a reçu', 'n’ont reçu') + ' aucun rappel.' : 'Relancer chacun. Tous ont reçu un rappel.', regles: payesAvant, regles_texte: 'relevés ' + de(moisAvant) + ' payés, pour ' + eur(payesAvantEur), attente_n: fArgent.length, items: fArgent },
+      { id: 'messages', nom: 'Messages de clients sans réponse', action: 'toi', couleur: 'orange', unite: 'messages', quoi: pl(mOuverts, 'message attend', 'messages attendent') + ' dans leur espace. ' + (fMessages.length > 1 ? 'Ils viennent de ' + fMessages.length + ' clients.' : 'Il vient d’un client.'), geste: 'Tu décides pour les zones et les budgets. Je fais le reste.', regles: mRegles, regles_texte: 'messages déjà traités', attente_n: mOuverts, items: fMessages },
+      { id: 'zero', nom: 'Pub allumée, zéro demande depuis 7 jours', action: 'claude', couleur: 'orange', unite: 'clients', quoi: 'Leur pub tourne et ne ramène rien. Ils vont se plaindre, ou partir.', geste: 'Je regarde leurs recherches. Je te propose un changement par client.', regles: null, regles_texte: '', items: fZero },
+      { id: 'site', nom: 'Site ou réglage cassé', action: 'claude', couleur: 'orange', unite: 'clients', quoi: 'Un défaut chez nous. Le client perd des demandes sans le savoir.', geste: 'C’est pour moi. Écris « répare » et je le fais.', regles: null, regles_texte: '', items: fSite },
+      { id: 'veille', nom: 'Pub arrêtée, cause à trouver', action: 'claude', couleur: 'orange', unite: 'clients', quoi: 'Leur pub ne s’affiche plus. Aucune demande ne rentre pour eux.', geste: 'Je cherche la cause. Je te dis quoi faire.', regles: null, regles_texte: '', items: fVeille },
+      { id: 'celine', nom: 'Céline attend ta réponse', action: 'toi', couleur: 'orange', unite: 'notes', quoi: pl(notes, 'note de sa page est', 'notes de sa page sont') + ' sans réponse. La plus vieille a ' + pl(notesJours, 'jour', 'jours') + '.', geste: 'Tu réponds dans sa page, ou tu me dictes.', regles: null, regles_texte: '', attente_n: notes, items: [] },
+      { id: 'annonces', nom: 'Annonces refusées par Google', action: 'claude', couleur: 'gris', unite: 'comptes', quoi: pl(fAnnonces.length, 'compte a', 'comptes ont') + ' quelques annonces refusées. Leur pub tourne quand même.', geste: 'C’est pour moi. Rien d’urgent.', regles: ga.regles, regles_texte: 'refus déjà corrigés', items: fAnnonces }
+    ].filter(function (f) { return (f.attente_n != null ? f.attente_n : f.items.length) > 0 || (f.regles || 0) > 0; });
+
+    /* ---- l'argent du mois : seulement les clients à la demande ---- */
+    var jour = maintenantParis ? +String(maintenantParis).slice(8, 10) : 1, joursMois = new Date(an, mo, 0).getDate() || 30;
+    var PC = (AR.par_client || []).filter(function (x) { return client(x.cid); });
+    var aLaDemande = PC.filter(function (x) { return x.mode === 'lead'; }), autres = PC.filter(function (x) { return x.mode !== 'lead'; });
+    var enCours = somme(aLaDemande, 'montant'), demandesMois = somme(aLaDemande, 'facturees');
+    function finDeMois(L) { return Math.round(L.reduce(function (s, x) { return s + (bloque[x.cid] ? x.montant : x.montant / Math.max(1, jour) * joursMois); }, 0) / 50) * 50; }   /* un client bloqué par Google ne grossit plus */
+    var projection = Math.max(finDeMois(aLaDemande), Math.round(enCours / 50) * 50);
+    function doit(x) { return x.retard > 0 || x.a_encaisser > 0; }
+    var G0 = aLaDemande.filter(function (x) { return !doit(x) && x.encaisse_total > 0; }), G1 = aLaDemande.filter(doit), G2 = aLaDemande.filter(function (x) { return !doit(x) && !(x.encaisse_total > 0); });
+    function groupe(id, couleur, titre, unite, quoi, L, dit) {
+      var T = L.filter(function (x) { return x.montant > 0 || bloque[x.cid]; }).sort(function (a, b) { return b.montant - a.montant; });
+      return { id: id, couleur: couleur, nom: titre, sous: pl(T.length, 'client', 'clients'), eur: somme(T, 'montant'), unite: unite, quoi: quoi,
+        items: T.map(function (x) { return { c: nom(x.cid, x.nom), d: pl(x.facturees, 'demande', 'demandes'), m: dit(x) + (bloque[x.cid] ? ' Google bloque sa pub.' : '') }; }) };
+    }
+    var groupes = [
+      groupe('surs', 'vert', 'Ils paient chaque relevé', 'presque sûrs', 'Ils ont payé tous leurs relevés jusqu’ici.', G0, function (x) { return 'A déjà payé ' + eur(x.encaisse_total) + ' en tout.'; }),
+      groupe('doivent', 'rouge', 'Ils te doivent déjà de l’argent', 'pas sûrs', 'Leur dernier relevé n’est pas payé.', G1, function (x) { return 'Doit encore ' + eur(Math.max(x.retard, x.a_encaisser)) + '.'; }),
+      groupe('nouveaux', 'gris', 'Nouveaux, jamais facturés', 'pas sûrs', 'Ils n’ont encore jamais payé de relevé.', G2, function () { return 'Premier relevé à venir.'; })
+    ].filter(function (g) { return g.items.length; });
+    var dangers = aLaDemande.filter(function (x) { return bloque[x.cid] && (x.avant_montant > 0 || x.montant > 0); }).sort(function (a, b) { return (b.avant_montant + b.montant) - (a.avant_montant + a.montant); });
+    function parMois(T, champ) { return Object.keys(T).sort().slice(champ === 'eur' ? -3 : -4).map(function (k) { var o = { mois: maj(MOIS[+k.slice(5, 7) - 1] || k) }; o[champ] = Math.round(T[k]); if (k === moisA) o.note = 'en cours'; return o; }); }
+    var VENTES = {}; (AR.ventes || []).forEach(function (v) { var k = String(v.jour).slice(0, 7); if (/^\d{4}-\d\d$/.test(k)) VENTES[k] = (VENTES[k] || 0) + 1; });
+    var avantDem = somme(aLaDemande, 'avant_facturees'), recu = (AR.argent && AR.argent.encaisse_mois) || { nb: 0, montant: 0 };
+    var A = {
+      titre_groupes: 'Qui va payer le 1er ' + moisSuivant,
+      verdict: 'Ton relevé du 1er ' + moisSuivant + ' en est à ' + eur(enCours) + '.',
+      verdict_suite: 'À ce rythme : environ ' + eur(projection) + ' facturés. Tes bons payeurs seuls : ' + eur(Math.min(finDeMois(G0), projection)) + '.',
+      tuiles: [
+        { t: 'Reçu en ' + moisNom, v: eur(recu.montant), s: pl(recu.nb, 'relevé payé', 'relevés payés') },
+        { t: 'On te doit', v: eur(duTotal), s: pl(fArgent.length, 'relevé en attente', 'relevés en attente') },
+        { t: 'En cours ce mois', v: eur(enCours), s: pl(demandesMois, 'demande à facturer', 'demandes à facturer') }
+      ],
+      groupes: groupes, groupes_total: enCours,
+      groupes_note: 'Total en cours : ' + eur(enCours) + '. Pas dans ce relevé : ' + pl(autres.length, 'client', 'clients') + ' au forfait ou sans relevé.',
+      rentre: parMois(RENTRE, 'eur'), rentre_note: 'Relevés payés par tes clients, selon le jour du paiement.',
+      demandes: avantDem || demandesMois ? [{ mois: 'Période d’avant', n: avantDem }, { mois: maj(moisNom), n: demandesMois, note: 'en cours' }] : [], demandes_note: 'Demandes à facturer, clients à la demande seulement.',
+      prevision: { bas: Math.min(finDeMois(G0), projection), haut: projection, texte: 'Le bas : tes bons payeurs seuls. Le haut : tous tes clients, au rythme du mois.' },
+      calendrier: ['Tes relevés partent le 1er ' + moisSuivant + '.', 'Tes clients ont 48 heures pour contester.', 'Le prélèvement part le 3, à 10 h.'],
+      forfaits: [pl(autres.length, 'client n’a', 'clients n’ont') + ' pas de relevé : forfait, ou rien à payer.', 'Pour changer un client, dis-le-moi dans le chat.'],
+      danger: dangers.length ? ['Google bloque ' + pl(dangers.length, 'client qui paie', 'clients qui paient') + '.', (dangers.length > 3 ? 'Les plus gros : ' : dangers.length > 1 ? 'Ce sont : ' : 'C’est ') + dangers.slice(0, 3).map(function (x) { return nom(x.cid, x.nom); }).join(', ') + '.', 'Tant que leur pub est arrêtée, ils n’ont plus de demandes à payer.'] : ['Aucun client qui paie n’est bloqué par Google.'],
+      ventes: parMois(VENTES, 'n'), ventes_note: 'Ventes notées dans ton tableau, par mois.',
+      sur: [pl(demandesMois, 'demande à facturer', 'demandes à facturer') + ' depuis le 1er ' + moisNom + '.', 'Reçu en ' + moisNom + ' : ' + eur(recu.montant) + '.', 'En retard : ' + eur(duTotal) + '.'],
+      pas_sur: ['La fin du mois : je suppose que les demandes continuent pareil.', 'Les clients en retard : je ne sais pas s’ils paieront.'],
+      changerait: ['Si Google bloque d’autres clients.', 'Si un client en retard ne paie pas.']
+    };
+
+    /* ---- qui paie comment ---- */
+    var FAIT = {}; (AR.par_client || []).forEach(function (x) { FAIT[x.cid] = String(x.mode || '').toLowerCase(); });
+    var P = { titre: 'Qui paie comment ?', sous: 'Lu dans ton tableau, à l’instant.', fin: 'Pour changer un client, dis-le-moi dans le chat.',
+      clients: (G.clients || []).filter(function (c) { return client(c.cid); }).map(function (c) { var m = MODE[c.cid], fait = FAIT[c.cid] || '', v = m || fait;
+        return { k: c.cid, c: c.nom, p: v === 'lead' ? 'd' : (v === 'forfait' || v === 'aucun') ? 'f' : '',
+          f: m === 'lead' ? 'Ton tableau dit : à la demande.' : m === 'forfait' ? 'Ton tableau dit : au forfait.' : m === 'aucun' ? 'Ton tableau dit : pas de relevé.' : fait === 'lead' ? 'Case vide : ton tableau le compte à la demande.' : fait ? 'Case vide : ton tableau ne lui envoie pas de relevé.' : 'Ton tableau ne dit rien.' }; })
+        .sort(function (a, b) { return a.c.toLowerCase() < b.c.toLowerCase() ? -1 : 1; }) };
+
+    /* ---- l'heure de la lecture = le morceau le plus vieux ---- */
+    var Q = [S.google.quand, S.argent.quand, S.nouveaux.quand, S.messages.quand, S.jour.quand].filter(Boolean).sort(), vieux = Q[0] || '';
+    var age = maintenantParis && minutes(vieux) !== null && minutes(maintenantParis) !== null ? Math.max(0, minutes(maintenantParis) - minutes(vieux)) : 0;
+    return { lu_quand: vieux, lu_texte: (maintenantParis && String(maintenantParis).slice(0, 10) === vieux.slice(0, 10) ? 'aujourd’hui' : 'le ' + jm(vieux)) + ' à ' + vieux.slice(11, 13) + ' h ' + vieux.slice(14, 16), lu_age_min: age,
+      source: 'Relu dans ton tableau à chaque ouverture. Rien n’est repris de la mémoire.', comptes_url: './', familles: F, argent: A, paiement: P };
+  }
+  racine.__CALCULER__ = calculer;
+  if (typeof module !== 'undefined' && module.exports) module.exports = { calculer: calculer };
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script>
+(function () {
+  'use strict';
+  var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', CLE = 'ba_comptes_code', CACHE = 'ba_problemes_p2', SAUT = 'ba_problemes_saut', PARTS = ['google', 'argent', 'nouveaux', 'messages', 'jour'];
+  var R = window.__PROBLEMES_ETAT__ = { version: 'p2-1711', etat: 'depart', envois: 0, lectures: 0 };
+  var att = document.getElementById('attente'), msg = document.getElementById('attente-msg'), lien = document.getElementById('attente-lien'), encore = document.getElementById('attente-encore');
+  function dire(etat, t, avecLien, avecEncore) { R.etat = etat; att.style.display = 'flex'; msg.textContent = t; lien.hidden = !avecLien; lien.style.display = avecLien ? 'inline-block' : 'none'; encore.hidden = !avecEncore; encore.style.display = avecEncore ? 'inline-block' : 'none'; }
+  function lire(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+  function ecrire(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { } }
+  function paris() { try { return new Date().toLocaleString('sv-SE', { timeZone: 'Europe/Paris' }).slice(0, 16); } catch (e) { return ''; } }
+  function fond(D) { return JSON.stringify([D.familles, D.argent, D.paiement]); }
+  try { ecrire('ba_problemes_photo', null); } catch (e) { }
+  encore.addEventListener('click', function () { location.reload(); });
+  var encadre = false; try { encadre = window.top !== window.self; } catch (e) { encadre = true; }
+  if (encadre) { dire('encadre', 'Cette page ne s’ouvre pas dans une autre page.', false); return; }
+  var code = lire(CLE);
+  if (!/^[0-9a-f]{8,64}$/.test(code)) { ecrire(CACHE, null); dire('pas_relie', 'Cet appareil n’est pas encore relié à ton tableau. Ouvre « Les comptes », relie-le, puis reviens ici.', true); return; }
+  var cache = null; try { cache = JSON.parse(lire(CACHE) || 'null'); } catch (e) { cache = null; }
+  if (!(cache && cache.familles && cache.argent && cache.paiement)) cache = null;
+  var montre = false, enCours = false, derniere = 0, bouton = document.getElementById('maj-bouton'), ligne = document.getElementById('maj-etat');
+  function etat(t, rouge) { ligne.textContent = t; ligne.className = rouge ? 'rouge' : ''; }
+  var affiche = null;
+  function montrer(D) { try { window.__PROBLEMES__(D); affiche = D; montre = true; att.style.display = 'none'; R.etat = 'affiche'; } catch (e) { dire('casse', 'La page n’a pas pu s’afficher. Dis-le à Claude.', false, true); } }
+  function envoyer(part, frais) {
+    R.envois++;
+    return fetch(TABLEAU, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'optimiser_donnees', vue: 'problemes', part: part, frais: frais ? 1 : 0, code: code }), redirect: 'follow', cache: 'no-store', credentials: 'omit' })
+      .then(function (r) { if (!r.ok) throw new Error('le tableau a répondu ' + r.status); return r.text(); })
+      .then(function (t) { var o; try { o = JSON.parse(t); } catch (e) { throw new Error('réponse illisible'); }
+        if (!o || o.ok !== true) throw new Error(String((o && o.erreur) || 'réponse illisible'));
+        if (o.part !== part || !o.d) throw new Error('pas_pret');
+        return o; });
+  }
+  function relire(frais) {
+    if (enCours) return; enCours = true; bouton.disabled = true; R.lectures++;
+    var t0 = Date.now(), recus = 0;
+    function compte() { var s = Math.round((Date.now() - t0) / 1000), t = 'Je relis ton tableau… ' + s + ' s (' + recus + ' sur ' + PARTS.length + ')'; if (montre) etat(t); else msg.textContent = t; }
+    compte(); var tic = setInterval(compte, 1000);
+    Promise.all(PARTS.map(function (p) { return envoyer(p, frais).then(function (o) { recus++; return o; }); })).then(function (L) {
+      clearInterval(tic);
+      var S = {}; L.forEach(function (o) { S[o.part] = { quand: o.quand, d: o.d }; });
+      var D = window.__CALCULER__(S, paris()); D.recu_ms = Date.now(); derniere = Date.now();
+      var pareil = !!cache && fond(cache) === fond(D);
+      ecrire(CACHE, JSON.stringify(D));
+      if (!montre) { cache = D; montrer(D); if (montre) { R.etat = 'affiche_frais'; etat('À jour.'); } enCours = false; bouton.disabled = false; return; }
+      if (pareil) { affiche.lu_age_min = D.lu_age_min; affiche.recu_ms = D.recu_ms; cache = D;
+        try { document.getElementById('lu-texte').textContent = D.lu_texte; var a = document.getElementById('lu-age'); a.className = ''; a.textContent = ''; } catch (e2) { }
+        R.etat = 'affiche_frais'; etat('À jour. Rien n’a changé.'); enCours = false; bouton.disabled = false; return; }
+      try { sessionStorage.setItem(SAUT, String(Date.now())); } catch (e) { }
+      R.etat = 'recharge'; location.reload();
+    }).catch(function (e) {
+      clearInterval(tic); enCours = false; bouton.disabled = false;
+      var er = String((e && e.message) || e);
+      if (/accès réservé/.test(er)) { ecrire(CACHE, null); dire('refuse', 'Ton tableau ne reconnaît plus cet appareil. Ouvre « Les comptes » et relie-le de nouveau.', true); return; }
+      if (/pas_pret|morceau inconnu/.test(er)) { if (!montre) dire('pas_pret', 'La page arrive : ton tableau n’est pas encore mis à jour.', false, true); else { etat('Ton tableau n’est pas encore mis à jour.', true); R.etat = 'affiche_garde_panne'; } return; }
+      if (!montre) dire('panne', 'Ton tableau n’a pas répondu. Réessaie dans un instant.', false, true);
+      else { etat('Ton tableau n’a pas répondu. Ce sont les chiffres d’avant.', true); R.etat = 'affiche_garde_panne'; }
+    });
+  }
+  bouton.addEventListener('click', function () { relire(true); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && montre && !enCours && Date.now() - derniere > 10 * 60000) relire(false); });
+  var saut = 0; try { saut = +sessionStorage.getItem(SAUT) || 0; sessionStorage.removeItem(SAUT); } catch (e) { }
+  if (cache) { montrer(cache); if (!montre) return; R.etat = 'affiche_garde';
+    if (Date.now() - saut < 60000) { derniere = Date.now(); R.etat = 'affiche_frais'; etat('À jour.'); return; } }
+  else dire('lecture', 'Je lis ton tableau…', false);
+  relire(false);
+})();
+</script>
+</body>
+</html>
