@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
-<meta name="ba-version" content="p5-1711">
+<meta name="ba-version" content="p6-1711">
 <link rel="icon" type="image/png" href="icone-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Problèmes et argent</title>
@@ -396,7 +396,20 @@ window.__PROBLEMES__ = function (D) {
   function minutes(q) { var m = /^(\d{4})-(\d\d)-(\d\d)[ T](\d\d):(\d\d)/.exec(String(q || '')); return m ? Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5]) / 60000 : null; }
   function somme(L, ch) { return L.reduce(function (s, x) { return s + (x[ch] || 0); }, 0); }
 
-  function calculer(S, maintenantParis) {
+  function sansAccent(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+  /* l'étape VRAIE de la validation d'identité, lue dans la preuve que le tableau a notée (sujet de l'e-mail de Google, page du compte lue) — jamais devinée */
+  function etapeIdentite(x) {
+    var p = sansAccent(x.preuve), r = sansAccent(x.preuve_regle);
+    if (x.etat !== 'regle') return /echou|echec|pas abouti|n.a(vons)? pas pu|impossible de valider|refus|rejet|failed|could not|couldn.t|unable/.test(p) ? 'refuse' : 'attend';
+    if (x.preuve_regle === undefined) return 'regle';                                  /* tableau d'avant vt : la preuve n'est pas rendue */
+    if (/en cours d.examen|examen en cours|under review|being reviewed|is being verified/.test(r)) return 'examen';
+    if (/vous avez termine|validation (de l.annonceur )?(effectuee|reussie|terminee|validee)|identite (validee|verifiee|confirmee)|verified|verification (is )?complete|approved/.test(r)) return 'valide';
+    if (/sans bandeau/.test(r)) return 'plus_rien';                                    /* la page de son compte ne demande plus rien */
+    if (/merci d.avoir|avoir effectue/.test(r)) return 'envoye';                       /* écran « merci » : papiers envoyés, pas encore de réponse */
+    return x.regle_par === 'celine' || x.regle_par === 'coche' ? 'note' : 'regle';
+  }
+
+  function calculer(S, maintenantParis, decalMin) {
     var G = S.google.d, AR = S.argent.d, NV = S.nouveaux.d, ME = S.messages.d, JO = S.jour.d;
     var NOM = {}, PARTI = {}, MODE = {}, E = G.etat || {};
     (G.clients || []).forEach(function (c) { NOM[c.cid] = c.nom; MODE[c.cid] = String(c.mode || '').toLowerCase(); if (/archiv|fermé|ferme|parti/i.test(c.statut)) PARTI[c.cid] = 1; });
@@ -423,9 +436,33 @@ window.__PROBLEMES__ = function (D) {
       return { items: items, regles: regles };
     }
     function pub(cid) { var e = E[cid]; if (!e) return ''; return e.imp_hier > 0 ? 'Sa pub tourne encore.' : 'Sa pub est arrêtée.'; }
+    function joursDepuis(q) { var a = minutes(maintenantParis), b = minutes(q); return a === null || b === null ? 0 : (a - b) / 1440; }
+    function heure(q) { var m = minutes(q); if (m === null) return ''; var t = new Date((m + (decalMin || 0)) * 60000); return ('0' + t.getUTCHours()).slice(-2) + ' h ' + ('0' + t.getUTCMinutes()).slice(-2); }   /* heure de Paris → heure de l'appareil */
+    function identites() {
+      var att = [], fini = [], regles = 0;
+      Object.keys((G.pg && G.pg.comptes) || {}).forEach(function (cid) {
+        (G.pg.comptes[cid] || []).forEach(function (x) {
+          if (x.type !== 'identite') return;
+          var e = etapeIdentite(x), n = nom(cid, x.nom), j = jm(x.regle_le);
+          if (e === 'valide' || e === 'plus_rien' || e === 'note' || e === 'regle') {
+            regles++;
+            if (client(cid) && e !== 'regle' && j && joursDepuis(x.regle_le) <= 7) fini.push({ c: n, d: j, m: e === 'valide' ? 'Google a validé son identité le ' + j + '.' : e === 'plus_rien' ? 'Google ne demande plus rien sur son compte depuis le ' + j + '.' : 'Noté fait le ' + j + '. Google ne l’a pas confirmé.', tri: x.regle_le });
+            return;
+          }
+          if (!client(cid)) return;
+          bloque[cid] = 'identite';
+          att.push({ k: cid, c: n, d: e === 'examen' || e === 'envoye' ? j : jm(x.depuis), rang: e === 'refuse' ? 0 : e === 'attend' ? 1 : 2, tri: x.depuis || '',
+            m: e === 'refuse' ? 'Google a refusé ses papiers. Il doit recommencer.' : e === 'examen' ? 'Ses papiers sont envoyés. Google les examine depuis le ' + j + '.' : e === 'envoye' ? 'Ses papiers sont envoyés depuis le ' + j + '. Google n’a pas encore répondu.' : ('Google attend ses papiers. ' + pub(cid)).trim() });
+        });
+      });
+      att.sort(function (a, b) { return a.rang - b.rang || (a.tri < b.tri ? -1 : a.tri > b.tri ? 1 : 0); });
+      fini.sort(function (a, b) { return a.tri < b.tri ? 1 : -1; });
+      att.concat(fini).forEach(function (x) { delete x.rang; delete x.tri; });
+      return { items: att.concat(fini), attente: att.length, regles: regles };
+    }
     var bloque = {};   /* clients dont Google bloque ou menace la pub */
-    var gi = google(['identite']), gp = google(['suspendu', 'paiement']), ga = google(['annonces']);
-    var fIdentite = gi.items.map(function (i) { bloque[i.cid] = 'identite'; return { k: i.cid, c: i.nom, d: jm(i.depuis), m: ('Google attend ses papiers. ' + pub(i.cid)).trim() }; });
+    var gi = identites(), gp = google(['suspendu', 'paiement']), ga = google(['annonces']);
+    var fIdentite = gi.items, luMails = G.pg && G.pg.lu && G.pg.lu.mails_le ? heure(G.pg.lu.mails_le) : '';
     var fPaiement = gp.items.map(function (i) { bloque[i.cid] = bloque[i.cid] || 'paiement'; return { k: i.cid, c: i.nom, d: jm(i.depuis), m: ((i.type === 'suspendu' ? 'Google a suspendu son compte. ' : 'Sa carte ne passe plus chez Google. ') + pub(i.cid)).trim() }; });
     var fAnnonces = ga.items.map(function (i) { return { k: i.cid, c: i.nom, d: jm(i.depuis), m: 'Des annonces sont refusées. Sa pub tourne quand même.' }; });
 
@@ -507,7 +544,7 @@ window.__PROBLEMES__ = function (D) {
     /* ---- les familles, dans l'ordre de la page ---- */
     var notes = (JO.celine && JO.celine.sans_reponse) || 0, notesJours = Math.floor(((JO.celine && JO.celine.plus_vieux_h) || 0) / 24);
     var F = [
-      { id: 'identite', nom: 'Google veut vérifier le client', action: 'toi', couleur: 'rouge', unite: 'clients', quoi: 'Google a arrêté leur pub. Il attend les papiers et le visage du client.', geste: 'Le client doit le faire lui-même. Je l’invite, puis tu l’appelles.', regles: gi.regles || null, regles_texte: 'identités déjà validées par Google', items: fIdentite },
+      { id: 'identite', nom: 'Google veut vérifier le client', action: 'toi', couleur: 'rouge', unite: 'clients', quoi: 'Chaque ligne dit où en est Google, à la date notée.' + (luMails ? ' Ses e-mails sont lus jusqu’à ' + luMails + '.' : ''), geste: 'Le client fait ses papiers lui-même. Quand Google examine, on attend.', regles: gi.regles || null, regles_texte: 'clients à qui Google ne demande plus rien', attente_n: gi.attente, items: fIdentite },
       { id: 'paiement', nom: 'Google n’arrive pas à les faire payer', action: 'toi', couleur: 'rouge', unite: 'clients', quoi: 'Leur carte ne passe plus chez Google. Leur pub s’arrête, ou va s’arrêter.', geste: 'Le client remet sa carte chez Google. Tu l’appelles, carte en main.', regles: gp.regles || null, regles_texte: 'paiements Google déjà réglés', items: fPaiement },
       { id: 'lancer', nom: 'Clients pas encore lancés', action: 'toi', couleur: 'rouge', unite: 'clients', quoi: 'Ils ont signé. Leur pub ne tourne pas encore.', geste: 'Chaque ligne dit ce qui manque.', regles: (NV.nb && NV.nb.ok) || null, regles_texte: 'clients lancés depuis 45 jours', items: fLancer },
       { id: 'argent', nom: 'Ils te doivent de l’argent', action: 'argent', couleur: 'rouge', unite: 'relevés', quoi: pl(fArgent.length, 'relevé n’est pas payé', 'relevés ne sont pas payés') + '. Total : ' + eur(duTotal) + '.', geste: sansRappel ? 'Relancer chacun. ' + pl(sansRappel, 'n’a reçu', 'n’ont reçu') + ' aucun rappel.' : 'Relancer chacun. Tous ont reçu un rappel.', regles: payesAvant || null, regles_texte: 'relevés ' + de(moisAvant) + ' payés, pour ' + eur(payesAvantEur), attente_n: fArgent.length, items: fArgent },
@@ -594,7 +631,7 @@ window.__PROBLEMES__ = function (D) {
 (function () {
   'use strict';
   var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', CLE = 'ba_comptes_code', CACHE = 'ba_problemes_p2', SAUT = 'ba_problemes_saut', PARTS = ['google', 'argent', 'nouveaux', 'messages', 'jour'], VIEUX_MIN = 5;
-  var R = window.__PROBLEMES_ETAT__ = { version: 'p5-1711', etat: 'depart', envois: 0, lectures: 0, copie: '' };
+  var R = window.__PROBLEMES_ETAT__ = { version: 'p6-1711', etat: 'depart', envois: 0, lectures: 0, copie: '' };
   var att = document.getElementById('attente'), msg = document.getElementById('attente-msg'), lien = document.getElementById('attente-lien'), encore = document.getElementById('attente-encore');
   function dire(etat, t, avecLien, avecEncore) { R.etat = etat; att.style.display = 'flex'; msg.textContent = t; lien.hidden = !avecLien; lien.style.display = avecLien ? 'inline-block' : 'none'; encore.hidden = !avecEncore; encore.style.display = avecEncore ? 'inline-block' : 'none'; }
   function lire(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
@@ -621,7 +658,8 @@ window.__PROBLEMES__ = function (D) {
         return o; });
   }
   function envoyer(part, frais) { return poster({ part: part, frais: frais ? 1 : 0 }).then(function (o) { if (o.part !== part || !o.d) throw new Error('pas_pret'); return o; }); }
-  function calculer(S) { var D = window.__CALCULER__(S, paris()); D.recu_ms = Date.now(); return D; }
+  function decal() { var p = /^(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/.exec(paris()), n = new Date(); return p ? Math.round((Date.UTC(n.getFullYear(), n.getMonth(), n.getDate(), n.getHours(), n.getMinutes()) - Date.UTC(+p[1], p[2] - 1, +p[3], +p[4], +p[5])) / 60000) : 0; }   /* minutes entre l'heure de l'appareil et celle de Paris */
+  function calculer(S) { var D = window.__CALCULER__(S, paris(), decal()); D.recu_ms = Date.now(); return D; }
   /* affiche D : la première fois sans recharger ; ensuite, si rien n'a changé, remet l'heure ; sinon garde et recharge une fois */
   function poser(D) {
     var pareil = !!cache && fond(cache) === fond(D);
