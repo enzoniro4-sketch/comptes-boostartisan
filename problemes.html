@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
-<meta name="ba-version" content="p6-1711">
+<meta name="ba-version" content="p7-1711">
 <link rel="icon" type="image/png" href="icone-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Problèmes et argent</title>
@@ -445,8 +445,9 @@ window.__PROBLEMES__ = function (D) {
           if (x.type !== 'identite') return;
           var e = etapeIdentite(x), n = nom(cid, x.nom), j = jm(x.regle_le);
           if (e === 'valide' || e === 'plus_rien' || e === 'note' || e === 'regle') {
+            if (!client(cid)) return;   /* (p7) un compte archivé ou inconnu n'est pas « un client à qui Google ne demande plus rien » */
             regles++;
-            if (client(cid) && e !== 'regle' && j && joursDepuis(x.regle_le) <= 7) fini.push({ c: n, d: j, m: e === 'valide' ? 'Google a validé son identité le ' + j + '.' : e === 'plus_rien' ? 'Google ne demande plus rien sur son compte depuis le ' + j + '.' : 'Noté fait le ' + j + '. Google ne l’a pas confirmé.', tri: x.regle_le });
+            if (e !== 'regle' && j && joursDepuis(x.regle_le) <= 7) fini.push({ c: n, d: j, m: e === 'valide' ? 'Google a validé son identité le ' + j + '.' : e === 'plus_rien' ? 'Google ne demande plus rien sur son compte depuis le ' + j + '.' : 'Noté fait le ' + j + '. Google ne l’a pas confirmé.', tri: x.regle_le });
             return;
           }
           if (!client(cid)) return;
@@ -630,8 +631,9 @@ window.__PROBLEMES__ = function (D) {
 <script>
 (function () {
   'use strict';
-  var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', CLE = 'ba_comptes_code', CACHE = 'ba_problemes_p2', SAUT = 'ba_problemes_saut', PARTS = ['google', 'argent', 'nouveaux', 'messages', 'jour'], VIEUX_MIN = 5;
-  var R = window.__PROBLEMES_ETAT__ = { version: 'p6-1711', etat: 'depart', envois: 0, lectures: 0, copie: '' };
+  var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', CLE = 'ba_comptes_code', CACHE = 'ba_problemes_p2', SAUT = 'ba_problemes_saut', PARTS = ['google', 'argent', 'nouveaux', 'messages', 'jour'], VIEUX_MIN = 5, LIMITE_MS = 30000, LIMITE_TOUT_MS = 20000,
+      RETARD = 'Une partie de ton tableau a traîné : pour elle, ce sont les chiffres d’avant.';
+  var R = window.__PROBLEMES_ETAT__ = { version: 'p7-1711', etat: 'depart', envois: 0, lectures: 0, copie: '', retard: [] };
   var att = document.getElementById('attente'), msg = document.getElementById('attente-msg'), lien = document.getElementById('attente-lien'), encore = document.getElementById('attente-encore');
   function dire(etat, t, avecLien, avecEncore) { R.etat = etat; att.style.display = 'flex'; msg.textContent = t; lien.hidden = !avecLien; lien.style.display = avecLien ? 'inline-block' : 'none'; encore.hidden = !avecEncore; encore.style.display = avecEncore ? 'inline-block' : 'none'; }
   function lire(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
@@ -649,29 +651,34 @@ window.__PROBLEMES__ = function (D) {
   var montre = false, enCours = false, derniere = 0, affiche = null, bouton = document.getElementById('maj-bouton'), ligne = document.getElementById('maj-etat');
   function etat(t, rouge) { ligne.textContent = t; ligne.className = rouge ? 'rouge' : ''; }
   function montrer(D) { try { window.__PROBLEMES__(D); affiche = D; montre = true; att.style.display = 'none'; R.etat = 'affiche'; } catch (e) { dire('casse', 'La page n’a pas pu s’afficher. Dis-le à Claude.', false, true); } }
-  function poster(corps) {
+  /* une demande au tableau, avec une limite de temps : passé « limite », on n'attend plus (erreur « trop_long ») */
+  function poster(corps, limite) {
     R.envois++; corps.action = 'optimiser_donnees'; corps.vue = 'problemes'; corps.code = code;
-    return fetch(TABLEAU, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(corps), redirect: 'follow', cache: 'no-store', credentials: 'omit' })
-      .then(function (r) { if (!r.ok) throw new Error('le tableau a répondu ' + r.status); return r.text(); })
-      .then(function (t) { var o; try { o = JSON.parse(t); } catch (e) { throw new Error('réponse illisible'); }
+    var ctl = null, min = null, opt = { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(corps), redirect: 'follow', cache: 'no-store', credentials: 'omit' };
+    try { ctl = new AbortController(); opt.signal = ctl.signal; } catch (e) { ctl = null; }
+    var trop = new Promise(function (oui, non) { min = setTimeout(function () { non(new Error('trop_long')); try { if (ctl) ctl.abort(); } catch (e) { } }, limite || LIMITE_MS); });
+    function fin() { clearTimeout(min); }
+    return Promise.race([fetch(TABLEAU, opt), trop])
+      .then(function (r) { if (!r.ok) throw new Error('le tableau a répondu ' + r.status); return Promise.race([r.text(), trop]); })
+      .then(function (t) { fin(); var o; try { o = JSON.parse(t); } catch (e) { throw new Error('réponse illisible'); }
         if (!o || o.ok !== true) throw new Error(String((o && o.erreur) || 'réponse illisible'));
-        return o; });
+        return o; }, function (e) { fin(); throw e; });
   }
   function envoyer(part, frais) { return poster({ part: part, frais: frais ? 1 : 0 }).then(function (o) { if (o.part !== part || !o.d) throw new Error('pas_pret'); return o; }); }
   function decal() { var p = /^(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/.exec(paris()), n = new Date(); return p ? Math.round((Date.UTC(n.getFullYear(), n.getMonth(), n.getDate(), n.getHours(), n.getMinutes()) - Date.UTC(+p[1], p[2] - 1, +p[3], +p[4], +p[5])) / 60000) : 0; }   /* minutes entre l'heure de l'appareil et celle de Paris */
   function calculer(S) { var D = window.__CALCULER__(S, paris(), decal()); D.recu_ms = Date.now(); return D; }
   /* affiche D : la première fois sans recharger ; ensuite, si rien n'a changé, remet l'heure ; sinon garde et recharge une fois */
-  function poser(D) {
+  function poser(D, partiel) {
     var pareil = !!cache && fond(cache) === fond(D);
     ecrire(CACHE, JSON.stringify(D)); derniere = Date.now();
     if (!montre) { cache = D; montrer(D); return montre ? 'montre' : 'casse'; }
     if (pareil) { affiche.lu_age_min = D.lu_age_min; affiche.recu_ms = D.recu_ms; cache = D;
       try { document.getElementById('lu-texte').textContent = window.__LU_TEXTE__(affiche); var a = document.getElementById('lu-age'); a.className = ''; a.textContent = ''; } catch (e2) { }
       return 'pareil'; }
-    try { sessionStorage.setItem(SAUT, String(Date.now())); } catch (e) { }
+    try { sessionStorage.setItem(SAUT, String(Date.now()) + (partiel ? '|p' : '')); } catch (e) { }
     R.etat = 'recharge'; location.reload(); return 'recharge';
   }
-  function fini(r) { if (r === 'recharge' || r === 'casse') return; R.etat = 'affiche_frais'; etat(r === 'pareil' ? 'À jour. Rien n’a changé.' : 'À jour.'); }
+  function fini(r, partiel) { if (r === 'recharge' || r === 'casse') return; if (partiel) { R.etat = 'affiche_partiel'; etat(RETARD, true); return; } R.etat = 'affiche_frais'; etat(r === 'pareil' ? 'À jour. Rien n’a changé.' : 'À jour.'); }
   function rate(e) {
     var er = String((e && e.message) || e);
     if (/accès réservé/.test(er)) { ecrire(CACHE, null); dire('refuse', 'Ton tableau ne reconnaît plus cet appareil. Ouvre « Les comptes » et relie-le de nouveau.', true); return; }
@@ -679,20 +686,30 @@ window.__PROBLEMES__ = function (D) {
     if (!montre) dire('panne', 'Ton tableau n’a pas répondu. Réessaie dans un instant.', false, true);
     else { etat('Ton tableau n’a pas répondu. Ce sont les chiffres d’avant.', true); R.etat = 'affiche_garde_panne'; }
   }
-  /* relit des morceaux (tous, ou seulement « liste ») ; « base » = les morceaux déjà en main ; frais = le tableau relit tout de suite */
+  /* relit des morceaux (tous, ou seulement « liste ») ; « base » = les morceaux déjà en main ; frais = le tableau relit tout de suite.
+     Un morceau en retard (limite de temps) ou en panne ne bloque plus la page : il est pris dans la copie gardée du tableau, et la page le dit. */
   function relire(frais, liste, base) {
-    if (enCours) return; enCours = true; bouton.disabled = true; R.lectures++;
-    liste = liste || PARTS; var S = {}, t0 = Date.now(), recus = 0; Object.keys(base || {}).forEach(function (k) { S[k] = base[k]; });
+    if (enCours) return; enCours = true; bouton.disabled = true; R.lectures++; R.retard = [];
+    liste = liste || PARTS; var S = {}, t0 = Date.now(), recus = 0, rates = [], grave = null; Object.keys(base || {}).forEach(function (k) { S[k] = base[k]; });
     function compte() { var t = 'Je relis ton tableau… ' + Math.round((Date.now() - t0) / 1000) + ' s (' + recus + ' sur ' + liste.length + ')'; if (montre) etat(t); else msg.textContent = t; }
     compte(); var tic = setInterval(compte, 1000);
-    Promise.all(liste.map(function (p) { return envoyer(p, frais).then(function (o) { recus++; S[p] = { quand: o.quand, d: o.d }; }); })).then(function () {
-      clearInterval(tic); enCours = false; bouton.disabled = false; fini(poser(calculer(S)));
-    }).catch(function (e) { clearInterval(tic); enCours = false; bouton.disabled = false; rate(e); });
+    function libre() { clearInterval(tic); enCours = false; bouton.disabled = false; }
+    Promise.all(liste.map(function (p) { return envoyer(p, frais).then(function (o) { recus++; S[p] = { quand: o.quand, d: o.d }; compte(); },
+      function (e) { if (/accès réservé|morceau inconnu|pas_pret/.test(String((e && e.message) || e))) grave = grave || e; rates.push(p); }); })).then(function () {
+      if (grave) { libre(); rate(grave); return; }
+      if (!rates.length) { libre(); fini(poser(calculer(S))); return; }
+      return poster({ part: 'tout' }, LIMITE_TOUT_MS).then(function (o) {
+        var P = (o && o.part === 'tout' && o.parts) || {};
+        rates.forEach(function (p) { if (!S[p] && P[p] && P[p].d) S[p] = { quand: P[p].quand, d: P[p].d }; });
+        if (PARTS.some(function (p) { return !S[p]; })) throw new Error('incomplet');
+        R.retard = rates.slice(); libre(); fini(poser(calculer(S), true), true);
+      });
+    }).catch(function (e) { libre(); rate(e); });
   }
   /* la copie prête du tableau : une seule demande, rien n'est relu là-bas ; la page s'affiche tout de suite, puis relit si la copie est vieille */
   function copie() {
     if (montre) etat('Je regarde si ça a bougé…');
-    poster({ part: 'tout' }).then(function (o) {
+    poster({ part: 'tout' }, LIMITE_TOUT_MS).then(function (o) {
       if (o.part !== 'tout' || !o.parts) { R.copie = 'ancien'; relire(false); return; }           /* tableau d'avant : pas de copie prête */
       var P = o.parts, manque = PARTS.filter(function (p) { return !(P[p] && P[p].d); });
       if (manque.length) { R.copie = 'incomplete'; relire(false, manque, P); return; }               /* copie incomplète : lire ce qui manque */
@@ -704,9 +721,9 @@ window.__PROBLEMES__ = function (D) {
   }
   bouton.addEventListener('click', function () { relire(true); });
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && montre && !enCours && Date.now() - derniere > 10 * 60000) relire(true); });
-  var saut = 0; try { saut = +sessionStorage.getItem(SAUT) || 0; sessionStorage.removeItem(SAUT); } catch (e) { }
+  var saut = 0, sautPartiel = false; try { var sb = String(sessionStorage.getItem(SAUT) || ''); saut = parseInt(sb, 10) || 0; sautPartiel = /\|p$/.test(sb); sessionStorage.removeItem(SAUT); } catch (e) { }
   if (cache) { montrer(cache); if (!montre) return; R.etat = 'affiche_garde';
-    if (Date.now() - saut < 60000) { derniere = Date.now(); R.etat = 'affiche_frais'; etat('À jour.'); return; } }
+    if (Date.now() - saut < 60000) { derniere = Date.now(); if (sautPartiel) { R.etat = 'affiche_partiel'; etat(RETARD, true); } else { R.etat = 'affiche_frais'; etat('À jour.'); } return; } }
   else dire('lecture', 'Je lis ton tableau…', false);
   copie();
 })();
