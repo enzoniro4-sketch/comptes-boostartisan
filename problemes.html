@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
-<meta name="ba-version" content="p7-1711">
+<meta name="ba-version" content="p8-1711">
 <link rel="icon" type="image/png" href="icone-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Problèmes et argent</title>
@@ -397,16 +397,26 @@ window.__PROBLEMES__ = function (D) {
   function somme(L, ch) { return L.reduce(function (s, x) { return s + (x[ch] || 0); }, 0); }
 
   function sansAccent(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
-  /* l'étape VRAIE de la validation d'identité, lue dans la preuve que le tableau a notée (sujet de l'e-mail de Google, page du compte lue) — jamais devinée */
+  /* l'étape VRAIE de la validation d'identité, lue dans ce que le tableau a noté — jamais devinée. Rend { e: étape, le: date du fait }.
+     (p8, tableau vu) D'ABORD le dernier e-mail de Google sur l'identité du compte (mail_le, mail_sujet, mail_fin), s'il est de l'épisode en cours :
+     la tâche du tableau ne garde que la DERNIÈRE fermeture, et « page sans bandeau » relue après l'e-mail effaçait « Google examine » ou « Google a validé ».
+     ENSUITE la preuve gardée par la tâche (sujet d'e-mail, page du compte lue, coche). */
+  var RE_EXAMEN = /en cours d.examen|examen en cours|en revue|under review|in review|being reviewed|is being verified/,
+      RE_VALIDE = /vous avez termine|validation (de l.annonceur )?(effectuee|reussie|terminee|validee)|identite (validee|verifiee|confirmee)|verified|verification (is )?complete|approved/,
+      RE_REFUS = /echou|echec|pas abouti|n.a(vons)? pas pu|impossible de valider|refus|rejet|failed|could not|couldn.t|unable/, RE_MERCI = /merci d.avoir|avoir effectue/;
   function etapeIdentite(x) {
     var p = sansAccent(x.preuve), r = sansAccent(x.preuve_regle);
-    if (x.etat !== 'regle') return /echou|echec|pas abouti|n.a(vons)? pas pu|impossible de valider|refus|rejet|failed|could not|couldn.t|unable/.test(p) ? 'refuse' : 'attend';
-    if (x.preuve_regle === undefined) return 'regle';                                  /* tableau d'avant vt : la preuve n'est pas rendue */
-    if (/en cours d.examen|examen en cours|under review|being reviewed|is being verified/.test(r)) return 'examen';
-    if (/vous avez termine|validation (de l.annonceur )?(effectuee|reussie|terminee|validee)|identite (validee|verifiee|confirmee)|verified|verification (is )?complete|approved/.test(r)) return 'valide';
-    if (/sans bandeau/.test(r)) return 'plus_rien';                                    /* la page de son compte ne demande plus rien */
-    if (/merci d.avoir|avoir effectue/.test(r)) return 'envoye';                       /* écran « merci » : papiers envoyés, pas encore de réponse */
-    return x.regle_par === 'celine' || x.regle_par === 'coche' ? 'note' : 'regle';
+    var ms = x.mail_le && (!x.depuis || String(x.mail_le) >= String(x.depuis)) ? sansAccent(x.mail_sujet) : '', fin = !!ms && x.mail_fin === true;
+    if (x.etat !== 'regle') return (ms && !fin && RE_REFUS.test(ms)) ? { e: 'refuse', le: x.mail_le } : { e: RE_REFUS.test(p) ? 'refuse' : 'attend', le: x.depuis };
+    if (x.preuve_regle === undefined) return { e: 'regle', le: x.regle_le };                 /* tableau d'avant vt : la preuve n'est pas rendue */
+    if (fin && RE_EXAMEN.test(ms)) return { e: 'examen', le: x.mail_le };                    /* Google l'a écrit, et n'a rien écrit depuis */
+    if (fin && RE_VALIDE.test(ms)) return { e: 'valide', le: x.mail_le };
+    if (RE_EXAMEN.test(r)) return { e: 'examen', le: x.regle_le };
+    if (RE_VALIDE.test(r)) return { e: 'valide', le: x.regle_le };
+    if (/sans bandeau/.test(r)) return { e: 'plus_rien', le: x.regle_le };                   /* la page de son compte ne demande plus rien */
+    if (x.regle_par === 'capture' && /page du compte lue le/.test(r)) return { e: 'examen', le: x.regle_le };   /* la page du compte porte encore une ligne d'identité qui ferme la tâche : validation en cours chez Google */
+    if (RE_MERCI.test(r) || (fin && RE_MERCI.test(ms))) return { e: 'envoye', le: RE_MERCI.test(r) ? x.regle_le : x.mail_le };   /* écran « merci » : papiers envoyés, pas encore de réponse */
+    return { e: /^(c[eé]line|coche)$/i.test(String(x.regle_par || '')) ? 'note' : 'regle', le: x.regle_le };
   }
 
   function calculer(S, maintenantParis, decalMin) {
@@ -443,16 +453,16 @@ window.__PROBLEMES__ = function (D) {
       Object.keys((G.pg && G.pg.comptes) || {}).forEach(function (cid) {
         (G.pg.comptes[cid] || []).forEach(function (x) {
           if (x.type !== 'identite') return;
-          var e = etapeIdentite(x), n = nom(cid, x.nom), j = jm(x.regle_le);
+          var et = etapeIdentite(x), e = et.e, n = nom(cid, x.nom), j = jm(et.le);
           if (e === 'valide' || e === 'plus_rien' || e === 'note' || e === 'regle') {
             if (!client(cid)) return;   /* (p7) un compte archivé ou inconnu n'est pas « un client à qui Google ne demande plus rien » */
             regles++;
-            if (e !== 'regle' && j && joursDepuis(x.regle_le) <= 7) fini.push({ c: n, d: j, m: e === 'valide' ? 'Google a validé son identité le ' + j + '.' : e === 'plus_rien' ? 'Google ne demande plus rien sur son compte depuis le ' + j + '.' : 'Noté fait le ' + j + '. Google ne l’a pas confirmé.', tri: x.regle_le });
+            if (e !== 'regle' && j && joursDepuis(et.le) <= 7) fini.push({ c: n, d: j, m: e === 'valide' ? 'Google a validé son identité le ' + j + '.' : e === 'plus_rien' ? 'Google ne demande plus rien sur son compte depuis le ' + j + '.' : 'Noté fait le ' + j + '. Google ne l’a pas confirmé.', tri: et.le });
             return;
           }
           if (!client(cid)) return;
           bloque[cid] = 'identite';
-          att.push({ k: cid, c: n, d: e === 'examen' || e === 'envoye' ? j : jm(x.depuis), rang: e === 'refuse' ? 0 : e === 'attend' ? 1 : 2, tri: x.depuis || '',
+          att.push({ k: cid, c: n, d: e === 'attend' ? jm(x.depuis) : j, rang: e === 'refuse' ? 0 : e === 'attend' ? 1 : 2, tri: x.depuis || '',
             m: e === 'refuse' ? 'Google a refusé ses papiers. Il doit recommencer.' : e === 'examen' ? 'Ses papiers sont envoyés. Google les examine depuis le ' + j + '.' : e === 'envoye' ? 'Ses papiers sont envoyés depuis le ' + j + '. Google n’a pas encore répondu.' : ('Google attend ses papiers. ' + pub(cid)).trim() });
         });
       });
@@ -633,7 +643,7 @@ window.__PROBLEMES__ = function (D) {
   'use strict';
   var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', CLE = 'ba_comptes_code', CACHE = 'ba_problemes_p2', SAUT = 'ba_problemes_saut', PARTS = ['google', 'argent', 'nouveaux', 'messages', 'jour'], VIEUX_MIN = 5, LIMITE_MS = 30000, LIMITE_TOUT_MS = 20000,
       RETARD = 'Une partie de ton tableau a traîné : pour elle, ce sont les chiffres d’avant.';
-  var R = window.__PROBLEMES_ETAT__ = { version: 'p7-1711', etat: 'depart', envois: 0, lectures: 0, copie: '', retard: [] };
+  var R = window.__PROBLEMES_ETAT__ = { version: 'p8-1711', etat: 'depart', envois: 0, lectures: 0, copie: '', retard: [] };
   var att = document.getElementById('attente'), msg = document.getElementById('attente-msg'), lien = document.getElementById('attente-lien'), encore = document.getElementById('attente-encore');
   function dire(etat, t, avecLien, avecEncore) { R.etat = etat; att.style.display = 'flex'; msg.textContent = t; lien.hidden = !avecLien; lien.style.display = avecLien ? 'inline-block' : 'none'; encore.hidden = !avecEncore; encore.style.display = avecEncore ? 'inline-block' : 'none'; }
   function lire(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
