@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
-<meta name="ba-version" content="p4-1711">
+<meta name="ba-version" content="p5-1711">
 <link rel="icon" type="image/png" href="icone-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Problèmes et argent</title>
@@ -593,8 +593,8 @@ window.__PROBLEMES__ = function (D) {
 <script>
 (function () {
   'use strict';
-  var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', CLE = 'ba_comptes_code', CACHE = 'ba_problemes_p2', SAUT = 'ba_problemes_saut', PARTS = ['google', 'argent', 'nouveaux', 'messages', 'jour'];
-  var R = window.__PROBLEMES_ETAT__ = { version: 'p4-1711', etat: 'depart', envois: 0, lectures: 0 };
+  var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', CLE = 'ba_comptes_code', CACHE = 'ba_problemes_p2', SAUT = 'ba_problemes_saut', PARTS = ['google', 'argent', 'nouveaux', 'messages', 'jour'], VIEUX_MIN = 5;
+  var R = window.__PROBLEMES_ETAT__ = { version: 'p5-1711', etat: 'depart', envois: 0, lectures: 0, copie: '' };
   var att = document.getElementById('attente'), msg = document.getElementById('attente-msg'), lien = document.getElementById('attente-lien'), encore = document.getElementById('attente-encore');
   function dire(etat, t, avecLien, avecEncore) { R.etat = etat; att.style.display = 'flex'; msg.textContent = t; lien.hidden = !avecLien; lien.style.display = avecLien ? 'inline-block' : 'none'; encore.hidden = !avecEncore; encore.style.display = avecEncore ? 'inline-block' : 'none'; }
   function lire(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
@@ -609,52 +609,68 @@ window.__PROBLEMES__ = function (D) {
   if (!/^[0-9a-f]{8,64}$/.test(code)) { ecrire(CACHE, null); dire('pas_relie', 'Cet appareil n’est pas encore relié à ton tableau. Ouvre « Les comptes », relie-le, puis reviens ici.', true); return; }
   var cache = null; try { cache = JSON.parse(lire(CACHE) || 'null'); } catch (e) { cache = null; }
   if (!(cache && cache.familles && cache.argent && cache.paiement)) cache = null;
-  var montre = false, enCours = false, derniere = 0, bouton = document.getElementById('maj-bouton'), ligne = document.getElementById('maj-etat');
+  var montre = false, enCours = false, derniere = 0, affiche = null, bouton = document.getElementById('maj-bouton'), ligne = document.getElementById('maj-etat');
   function etat(t, rouge) { ligne.textContent = t; ligne.className = rouge ? 'rouge' : ''; }
-  var affiche = null;
   function montrer(D) { try { window.__PROBLEMES__(D); affiche = D; montre = true; att.style.display = 'none'; R.etat = 'affiche'; } catch (e) { dire('casse', 'La page n’a pas pu s’afficher. Dis-le à Claude.', false, true); } }
-  function envoyer(part, frais) {
-    R.envois++;
-    return fetch(TABLEAU, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'optimiser_donnees', vue: 'problemes', part: part, frais: frais ? 1 : 0, code: code }), redirect: 'follow', cache: 'no-store', credentials: 'omit' })
+  function poster(corps) {
+    R.envois++; corps.action = 'optimiser_donnees'; corps.vue = 'problemes'; corps.code = code;
+    return fetch(TABLEAU, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(corps), redirect: 'follow', cache: 'no-store', credentials: 'omit' })
       .then(function (r) { if (!r.ok) throw new Error('le tableau a répondu ' + r.status); return r.text(); })
       .then(function (t) { var o; try { o = JSON.parse(t); } catch (e) { throw new Error('réponse illisible'); }
         if (!o || o.ok !== true) throw new Error(String((o && o.erreur) || 'réponse illisible'));
-        if (o.part !== part || !o.d) throw new Error('pas_pret');
         return o; });
   }
-  function relire(frais) {
+  function envoyer(part, frais) { return poster({ part: part, frais: frais ? 1 : 0 }).then(function (o) { if (o.part !== part || !o.d) throw new Error('pas_pret'); return o; }); }
+  function calculer(S) { var D = window.__CALCULER__(S, paris()); D.recu_ms = Date.now(); return D; }
+  /* affiche D : la première fois sans recharger ; ensuite, si rien n'a changé, remet l'heure ; sinon garde et recharge une fois */
+  function poser(D) {
+    var pareil = !!cache && fond(cache) === fond(D);
+    ecrire(CACHE, JSON.stringify(D)); derniere = Date.now();
+    if (!montre) { cache = D; montrer(D); return montre ? 'montre' : 'casse'; }
+    if (pareil) { affiche.lu_age_min = D.lu_age_min; affiche.recu_ms = D.recu_ms; cache = D;
+      try { document.getElementById('lu-texte').textContent = window.__LU_TEXTE__(affiche); var a = document.getElementById('lu-age'); a.className = ''; a.textContent = ''; } catch (e2) { }
+      return 'pareil'; }
+    try { sessionStorage.setItem(SAUT, String(Date.now())); } catch (e) { }
+    R.etat = 'recharge'; location.reload(); return 'recharge';
+  }
+  function fini(r) { if (r === 'recharge' || r === 'casse') return; R.etat = 'affiche_frais'; etat(r === 'pareil' ? 'À jour. Rien n’a changé.' : 'À jour.'); }
+  function rate(e) {
+    var er = String((e && e.message) || e);
+    if (/accès réservé/.test(er)) { ecrire(CACHE, null); dire('refuse', 'Ton tableau ne reconnaît plus cet appareil. Ouvre « Les comptes » et relie-le de nouveau.', true); return; }
+    if (/pas_pret|morceau inconnu/.test(er)) { if (!montre) dire('pas_pret', 'La page arrive : ton tableau n’est pas encore mis à jour.', false, true); else { etat('Ton tableau n’est pas encore mis à jour.', true); R.etat = 'affiche_garde_panne'; } return; }
+    if (!montre) dire('panne', 'Ton tableau n’a pas répondu. Réessaie dans un instant.', false, true);
+    else { etat('Ton tableau n’a pas répondu. Ce sont les chiffres d’avant.', true); R.etat = 'affiche_garde_panne'; }
+  }
+  /* relit des morceaux (tous, ou seulement « liste ») ; « base » = les morceaux déjà en main ; frais = le tableau relit tout de suite */
+  function relire(frais, liste, base) {
     if (enCours) return; enCours = true; bouton.disabled = true; R.lectures++;
-    var t0 = Date.now(), recus = 0;
-    function compte() { var s = Math.round((Date.now() - t0) / 1000), t = 'Je relis ton tableau… ' + s + ' s (' + recus + ' sur ' + PARTS.length + ')'; if (montre) etat(t); else msg.textContent = t; }
+    liste = liste || PARTS; var S = {}, t0 = Date.now(), recus = 0; Object.keys(base || {}).forEach(function (k) { S[k] = base[k]; });
+    function compte() { var t = 'Je relis ton tableau… ' + Math.round((Date.now() - t0) / 1000) + ' s (' + recus + ' sur ' + liste.length + ')'; if (montre) etat(t); else msg.textContent = t; }
     compte(); var tic = setInterval(compte, 1000);
-    Promise.all(PARTS.map(function (p) { return envoyer(p, frais).then(function (o) { recus++; return o; }); })).then(function (L) {
-      clearInterval(tic);
-      var S = {}; L.forEach(function (o) { S[o.part] = { quand: o.quand, d: o.d }; });
-      var D = window.__CALCULER__(S, paris()); D.recu_ms = Date.now(); derniere = Date.now();
-      var pareil = !!cache && fond(cache) === fond(D);
-      ecrire(CACHE, JSON.stringify(D));
-      if (!montre) { cache = D; montrer(D); if (montre) { R.etat = 'affiche_frais'; etat('À jour.'); } enCours = false; bouton.disabled = false; return; }
-      if (pareil) { affiche.lu_age_min = D.lu_age_min; affiche.recu_ms = D.recu_ms; cache = D;
-        try { document.getElementById('lu-texte').textContent = window.__LU_TEXTE__(affiche); var a = document.getElementById('lu-age'); a.className = ''; a.textContent = ''; } catch (e2) { }
-        R.etat = 'affiche_frais'; etat('À jour. Rien n’a changé.'); enCours = false; bouton.disabled = false; return; }
-      try { sessionStorage.setItem(SAUT, String(Date.now())); } catch (e) { }
-      R.etat = 'recharge'; location.reload();
-    }).catch(function (e) {
-      clearInterval(tic); enCours = false; bouton.disabled = false;
-      var er = String((e && e.message) || e);
-      if (/accès réservé/.test(er)) { ecrire(CACHE, null); dire('refuse', 'Ton tableau ne reconnaît plus cet appareil. Ouvre « Les comptes » et relie-le de nouveau.', true); return; }
-      if (/pas_pret|morceau inconnu/.test(er)) { if (!montre) dire('pas_pret', 'La page arrive : ton tableau n’est pas encore mis à jour.', false, true); else { etat('Ton tableau n’est pas encore mis à jour.', true); R.etat = 'affiche_garde_panne'; } return; }
-      if (!montre) dire('panne', 'Ton tableau n’a pas répondu. Réessaie dans un instant.', false, true);
-      else { etat('Ton tableau n’a pas répondu. Ce sont les chiffres d’avant.', true); R.etat = 'affiche_garde_panne'; }
-    });
+    Promise.all(liste.map(function (p) { return envoyer(p, frais).then(function (o) { recus++; S[p] = { quand: o.quand, d: o.d }; }); })).then(function () {
+      clearInterval(tic); enCours = false; bouton.disabled = false; fini(poser(calculer(S)));
+    }).catch(function (e) { clearInterval(tic); enCours = false; bouton.disabled = false; rate(e); });
+  }
+  /* la copie prête du tableau : une seule demande, rien n'est relu là-bas ; la page s'affiche tout de suite, puis relit si la copie est vieille */
+  function copie() {
+    if (montre) etat('Je regarde si ça a bougé…');
+    poster({ part: 'tout' }).then(function (o) {
+      if (o.part !== 'tout' || !o.parts) { R.copie = 'ancien'; relire(false); return; }           /* tableau d'avant : pas de copie prête */
+      var P = o.parts, manque = PARTS.filter(function (p) { return !(P[p] && P[p].d); });
+      if (manque.length) { R.copie = 'incomplete'; relire(false, manque, P); return; }               /* copie incomplète : lire ce qui manque */
+      var D = calculer(P), vieux = D.lu_age_min > VIEUX_MIN; R.copie = vieux ? 'vieille' : 'fraiche';
+      if (!montre) { var r = poser(D); if (vieux && montre) { etat(''); relire(true); } else fini(r); }
+      else if (vieux) relire(true);                                                               /* la copie du tableau est vieille : on relit, un seul rechargement à la fin */
+      else fini(poser(D));
+    }).catch(function (e) { var er = String((e && e.message) || e); if (/morceau inconnu/.test(er)) { R.copie = 'ancien'; relire(false); } else rate(e); });
   }
   bouton.addEventListener('click', function () { relire(true); });
-  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && montre && !enCours && Date.now() - derniere > 10 * 60000) relire(false); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && montre && !enCours && Date.now() - derniere > 10 * 60000) relire(true); });
   var saut = 0; try { saut = +sessionStorage.getItem(SAUT) || 0; sessionStorage.removeItem(SAUT); } catch (e) { }
   if (cache) { montrer(cache); if (!montre) return; R.etat = 'affiche_garde';
     if (Date.now() - saut < 60000) { derniere = Date.now(); R.etat = 'affiche_frais'; etat('À jour.'); return; } }
   else dire('lecture', 'Je lis ton tableau…', false);
-  relire(false);
+  copie();
 })();
 </script>
 </body>
