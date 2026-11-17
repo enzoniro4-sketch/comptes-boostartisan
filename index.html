@@ -5,7 +5,7 @@
 <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#f5f5f7"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Comptes">
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" href="icone-192.png"><link rel="apple-touch-icon" href="icone-180.png">
-<meta name="ba-version" content="v5.28-r2">
+<meta name="ba-version" content="v5.29-r2">
 <style>/* --- version rapide : ce qui s'ajoute à la page (rien d'autre ne change) --- */
 #ba-etat{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;max-width:calc(100vw - 24px);background:#1d1d1f;color:#fff;padding:9px 16px;border-radius:999px;font-size:13px;line-height:1.35;z-index:60;box-shadow:0 4px 18px rgba(0,0,0,.22);text-align:center}
 #ba-etat.ko{background:#8e1b1b}
@@ -257,12 +257,12 @@ var QRBA = (function(){
   }
   return { matrice: matrice, svg: svg };
 })();
-/* Les comptes — VERSION RAPIDE v5.28-r2 (page fixe sur notre domaine, hors du tableau). Fabriquée par plan/comptes-rapide-1011/construire_comptes_rapide.py :
+/* Les comptes — VERSION RAPIDE v5.29-r2 (page fixe sur notre domaine, hors du tableau). Fabriquée par plan/comptes-rapide-1011/construire_comptes_rapide.py :
    la page des comptes n'est PAS réécrite ; ce bloc remplace seulement son fil avec le tableau (google.script.run → envoi direct au tableau, avec le code d'Enzo gardé sur l'appareil)
    et montre tout de suite les derniers chiffres lus, en gris, pendant que le tableau est relu. Tant que les chiffres sont en gris, aucun ordre ne part. */
 (function(){
   var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', LIER = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec?x=rapide', FORM = 'https://script.google.com/macros/s/AKfycbwDgwfesj-aTaYtcUutatJAJhfrb3xmD4hkWKDnZTeQdh7ZHUVOKqjYkiuDy9Qbt8_N/exec?f=1', CLE_CODE = 'ba_comptes_code', NOM_CACHE = 'ba-comptes-donnees', CLE_SECOURS = 'ba_comptes_donnees';
-  var R = window.__RAPIDE__ = { version: 'v5.28-r2', code: '', perime: false, frais: false, echec: '', recu: 0, duree: 0, envois: 0, encadre: false };
+  var R = window.__RAPIDE__ = { version: 'v5.29-r2', code: '', perime: false, frais: false, echec: '', recu: 0, duree: 0, envois: 0, encadre: false };
   /* 0. Jamais à l'intérieur de la page de quelqu'un d'autre : dans un cadre posé par une autre adresse, la page ne lit pas le code, ne demande rien au tableau, n'envoie aucun ordre.
         (Un cadre posé par notre propre adresse reste permis : c'est notre essai en largeur de téléphone.) */
   var ENCADRE = false; try { ENCADRE = window.top !== window.self && window.top.location.origin !== window.location.origin; } catch (e) { ENCADRE = true; }
@@ -513,7 +513,7 @@ var QRBA = (function(){
 })();
 </script>
 <script>
-/* Les comptes v5.28 (11/11/2026 06 h 58 UTC) — fabriquée par plan/construire_comptes.py depuis MAQUETTE-COMPTES.md (9 pièces) + CATALOGUE-ALERTES.md.
+/* Les comptes v5.29 (17/11/2026 07 h 33 UTC) — fabriquée par plan/construire_comptes.py depuis MAQUETTE-COMPTES.md (9 pièces) + CATALOGUE-ALERTES.md.
    Page EN DIRECT : tout est relu dans le tableau à chaque ouverture (optimiserDonnees) ; un clic = un ordre écrit dans le tableau (optimiserOrdre),
    appliqué par le script Google Ads (xx h 19 : arrêter, rallumer, budget) ou le robot (xx h 43 : nouvelle pub, allumage, site). Annuler tant que ce n'est pas appliqué.
    Comptage (Enzo 29/10) : une demande = un appel OU un formulaire reçu au tableau. Chiffres d'un compte = toute la période dès que le relevé Google les fournit (D.periode = 'total'), sinon 30 jours, et la page le dit. */
@@ -788,10 +788,12 @@ function dVoletPub(x, p, v){
 function dVolet(x, v){
   var id = 'm-'+x.cid.replace(/\D/g,''), nOn = x.n.onLibre;
   if (v.type === 'fiche') return ficheVolet(x, v);
-  if (v.type === 'nouvelle') { var bm = budgetMoisBase(x), val = v.val != null ? v.val : bm.mois, bj = jourDeMois(val);
-    return '<div class="volet"><b>Nouvelle campagne (un groupe de pub par service, mots exacts)</b><div class="montant">Budget par mois : <input class="champ" id="'+id+'" type="text" inputmode="decimal" value="'+esc(nb(val))+'" oninput="recalcMois(this)"> € · = <span class="rc">'+esc(nb(bj))+'</span> € par jour chez Google (÷ 30,4)</div>'
-    +'<p>'+esc(bm.source)+'. Le robot fabrique la campagne (une heure), puis l\'enchère (coût par demande visé 150 €, clic maxi 4 €, 3 € élagueurs) et l\'image de l\'accueil sont posées. Elle ne s\'allume que si Dexem est relié. Les anciennes pubs ne bougent pas : c\'est toi qui les arrêtes.</p>'
-    +'<div class="boutons"><button type="button" class="b prim" data-valider="nouvelle" data-champ="'+id+'">Lancer la nouvelle campagne · <span class="rc2">'+esc(nb(bj))+'</span> €/j</button><button type="button" class="b" data-fermer="compte">Annuler</button></div></div>'; }
+  if (v.type === 'nouvelle') {   /* v5.29 (17/11, Enzo : « 10 € par jour par campagne sur les 3 campagnes ») : 3 pubs a 10 € par jour chacune, pas de case ; le budget se change ensuite sur chaque pub */
+    return '<div class="volet"><b>Nouvelle campagne : 3 pubs à 10 € par jour chacune</b>'
+    +'<p>• Métier + ville : 10 € par jour<br>• Métier seul : 10 € par jour<br>• Tous les services : 10 € par jour</p>'
+    +'<p>30 € par jour en tout, soit 912 € par mois au plus chez Google (304 € par pub). Ensuite tu changes le budget de chaque pub avec son bouton « Budget ».</p>'
+    +'<p>Le robot fabrique les 3 pubs (une heure), puis l\'enchère (coût par demande visé 150 €, clic maxi 4 €, 3 € élagueurs) et l\'image de l\'accueil sont posées. Elles ne s\'allument que si Dexem est relié. Les anciennes pubs ne bougent pas : c\'est toi qui les arrêtes. Si une ancienne pub tourne encore à plus de 60 € par jour, les 3 nouvelles restent en veille tant que tu ne l\'as pas arrêtée ou baissée.</p>'
+    +'<div class="boutons"><button type="button" class="b prim" data-valider="nouvelle">Lancer les 3 pubs · 10 €/j chacune</button><button type="button" class="b" data-fermer="compte">Annuler</button></div></div>'; }
   if (v.type === 'budget') { var vb = v.val != null ? v.val : (x.n.budgetOn || x.budgetCompte || 30); return '<div class="volet"><b>Budget du compte</b><div class="montant">Total par jour, partagé entre '+pubsMot(nOn)+' allumée'+(nOn>1?'s':'')+' : <input class="champ" id="'+id+'" type="text" inputmode="decimal" value="'+esc(nb(vb))+'" oninput="recalc(this)"> €</div><p>Google applique à xx h 19.</p>'
     +'<div class="boutons"><button type="button" class="b prim" data-valider="budget" data-champ="'+id+'">Changer le budget · <span class="rc">'+esc(nb(vb))+'</span> €/j</button><button type="button" class="b" data-fermer="compte">Annuler</button></div></div>'; }
   if (v.type === 'arreter') return '<div class="volet"><b>Arrêter les '+pubsMot(nOn)+' allumée'+(nOn>1?'s':'')+' de '+esc(x.nom)+' ?</b><p>Google les coupe à xx h 19. Tu pourras les rallumer plus tard, pub par pub.</p><div class="boutons"><button type="button" class="b danger plein" data-valider="arreter">Oui, tout arrêter</button><button type="button" class="b" data-fermer="compte">Non</button></div></div>';
@@ -982,7 +984,7 @@ function panierCle(o){ return o.type + '|' + o.compte_id + '|' + String(o.campag
 function auPanier(type){ return PANIER_TYPES.test(String(type || '')); }
 function libellePanier(o, texte){ var c = o.campagne ? ' « ' + o.campagne + ' »' : '';
   if (o.type === 'eteindre') return 'Arrêter' + c; if (o.type === 'rallumer') return 'Rallumer' + c + (o.valeur ? ' · ' + nb(o.valeur) + ' €/j' : ''); if (o.type === 'budget') return 'Budget' + c + ' ' + nb(o.valeur) + ' €/j';
-  if (o.type === 'note') return 'Note : « ' + String(o.texte || '').slice(0, 60) + (String(o.texte || '').length > 60 ? '…' : '') + ' »'; if (o.type === 'nouvelle') return 'Nouvelle campagne · ' + nb(o.budget_mois || Math.round((o.budget || 30) * 30.4)) + ' € par mois';
+  if (o.type === 'note') return 'Note : « ' + String(o.texte || '').slice(0, 60) + (String(o.texte || '').length > 60 ? '…' : '') + ' »'; if (o.type === 'nouvelle') return 'Nouvelle campagne · 3 pubs à 10 € par jour chacune';
   if (o.type === 'refaire') return 'Lancer site + pub'; if (o.type === 'refaire_site') return 'Refaire le site'; if (o.type === 'fiche_express') return (o.pub === 'non' ? 'Créer la fiche + le site (' : 'Lancer site + pub (fiche ') + String(o.metier || '') + ', ' + String(o.cp || '') + ' / ' + String(o.rayon || '') + ' km)';
   if (o.type === 'activer') return 'Allumer'; if (o.type === 'archiver') return 'Archiver'; if (o.type === 'desarchiver') return 'Remettre actif'; if (o.type === 'bloquer_allumage') return 'Bloquer l\'allumage';
   if (VAGUE_TYPES[o.type]) return VAGUE_TYPES[o.type]; return texte || o.texte || o.type; }
@@ -1190,7 +1192,7 @@ async function valider(btn, cid, type){
     if (!/^\d{5}$/.test(chF.cp)) return montrer(res, 'ko', 'Code postal du centre : 5 chiffres : rien n\'a été écrit.'); var rayF = parseInt(chF.rayon, 10); if (!(rayF >= 5 && rayF <= 200)) return montrer(res, 'ko', 'Rayon entre 5 et 200 km : rien n\'a été écrit.');
     var sansPubF = vf.pub === 'non', budF = sansPubF ? 30 : montant(chF.budget); if (budF === null) return montrer(res, 'ko', 'Budget entre 1 et 500 € par pub : rien n\'a été écrit.');
     return lancer(btn, Object.assign({ type: 'fiche_express', pub: sansPubF ? 'non' : 'oui', siret: sirF, nom: chF.nom, metier: chF.metier, tel: chF.tel, domaine: chF.domaine, cp: chF.cp, ville: chF.ville, rayon: rayF, budget: budF, dexem_uuid: vf.dexem_uuid || '', texte: (sansPubF ? 'Créer la fiche + le site · ' : 'Lancer site + pub · ')+chF.metier+' · '+chF.cp+' / '+rayF+' km'+(sansPubF ? '' : ' · '+nb(budF)+' €/pub') }, base, { siret: sirF }), res, cid); }
-  if (type === 'nouvelle') { var m = montantMois(v.value); if (m === null) return montrer(res, 'ko', 'Budget entre 30 et 20 000 € par mois : rien n\'a été écrit.'); if (OUV.volet[cid]) OUV.volet[cid].val = m; var bjN = jourDeMois(m); return lancer(btn, Object.assign({ type: 'nouvelle', variante: 'services', budget: bjN, budget_mois: m, texte: 'Nouvelle campagne · '+nb(m)+' € par mois ('+nb(bjN)+' €/j)' }, base), res, cid); }   /* v5.27 : structure 0911 */
+  if (type === 'nouvelle') { var m = 912, bjN = 30; if (OUV.volet[cid]) OUV.volet[cid].val = m; return lancer(btn, Object.assign({ type: 'nouvelle', variante: 'services', budget: bjN, budget_mois: m, texte: 'Nouvelle campagne · 3 pubs à 10 €/j chacune' }, base), res, cid); }   /* v5.29 : 3 pubs a 10 € par jour chacune (30 € par jour, 912 € par mois), toujours ; v5.27 : structure 0911 */
   if (type === 'note') { var t = String(v.value||'').trim(); if (!t) return montrer(res, 'ko', 'La note est vide : rien n\'a été écrit.'); return lancer(btn, Object.assign({ type: 'note', texte: t.slice(0, 500) }, base), res, cid); }
   if (type === 'archiver') return lancer(btn, Object.assign({ type: 'archiver', texte: 'Archiver' }, base), res, cid);
   if (type === 'arreter') return macro(btn, Object.assign({ type: 'arreter_tout', texte: 'Arrêter toutes les pubs' }, base), res, x);
@@ -1210,7 +1212,7 @@ async function ordre(btn){
   return lancer(btn, o, res, cid);
 }
 function suite(o, j){
-  if (o.type === 'nouvelle') return 'le robot fabrique la nouvelle campagne ('+nb(o.budget_mois || Math.round((o.budget||30)*30.4))+' € par mois = '+nb(o.budget)+' €/j), prête vers '+(new Date().getHours()+1)+' h, enchère et image posées ensuite · ne s\'allume que si Dexem est relié';
+  if (o.type === 'nouvelle') return 'le robot fabrique les 3 nouvelles pubs (10 € par jour chacune, 30 € en tout), prêtes vers '+(new Date().getHours()+1)+' h, enchère et image posées ensuite · elles ne s\'allument que si Dexem est relié';
   if (o.type === 'eteindre') return 'Google coupe à xx h 19';
   if (o.type === 'rallumer') return 'Google rallume à xx h 19'+(j && /dexem/i.test(j.note||'') ? ' · '+j.note : '');
   if (o.type === 'budget') return 'Google applique à xx h 19';
