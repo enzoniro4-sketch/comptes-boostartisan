@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
-<meta name="ba-version" content="p10-1811">
+<meta name="ba-version" content="p11-1811">
 <link rel="icon" type="image/png" href="icone-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Problèmes et argent</title>
@@ -504,11 +504,13 @@ window.__PROBLEMES__ = function (D) {
     var robotVieux = WB && (robotAge === null || robotAge > (G.pg.lecteur.vieux_h || 2));
     var robotTexte = !WB ? '' : robotVieux ? ' Attention : le robot n’a pas relu Google depuis ' + (quandLu(robotLe) ? quandLu(robotLe).replace(/^à /, '') : 'longtemps') + '. Ces lignes sont peut-être vieilles.' : ' Le robot a relu Google ' + quandLu(robotLe) + '.';
     /* (p10) la vraie raison, lue dans la preuve que le tableau garde : carte refusée · argent dû, annonces coupées · argent dû, Google laisse encore tourner */
-    function raisonPaiement(i) { var p = sansAccent(i.x && i.x.preuve);
+    /* (p11) ce que Google DIT (« risque de suspension », « annonces coupées ») ne dit pas si la pub tourne : c'est le relevé du script (affichages d'hier, pub()) qui le dit.
+       Le 18/11 : Cottin, Couvreur 33 Anthony, France toiture 83 étaient « Google prévient qu'il va couper. Sa pub est arrêtée. » — deux phrases qui se contredisent. */
+    function raisonPaiement(i) { var p = sansAccent(i.x && i.x.preuve), e = E[i.cid], tourne = !!e && e.imp_hier > 0;
       if (i.type === 'suspendu') return 'Google a suspendu son compte. ';
-      if (/laisse tourner|risque de suspension/.test(p)) return 'Il doit de l’argent à Google. Google prévient qu’il va couper. ';
-      if (/solde impaye|annonces coupees|effectuez un paiement/.test(p)) return 'Il doit de l’argent à Google : ses annonces sont coupées. ';
-      return 'Sa carte ne passe plus chez Google. '; }
+      if (!/laisse tourner|risque de suspension|solde impaye|annonces coupees|effectuez un paiement/.test(p)) return 'Sa carte ne passe plus chez Google. ';
+      if (!e) return /laisse tourner|risque de suspension/.test(p) ? 'Il doit de l’argent à Google. Google prévient qu’il va couper. ' : 'Il doit de l’argent à Google : ses annonces sont coupées. ';   /* pas de relevé pour ce compte : le mot de Google */
+      return 'Il doit de l’argent à Google. ' + (tourne ? 'Google prévient qu’il va couper. ' : ''); }
     var fPaiement = gp.items.map(function (i) { bloque[i.cid] = bloque[i.cid] || 'paiement'; return { k: i.cid, c: i.nom, d: jm(i.depuis), m: (raisonPaiement(i) + pub(i.cid)).trim() + vieuxTexte(i.x) }; });
     var fAnnonces = ga.items.map(function (i) { return { k: i.cid, c: i.nom, d: jm(i.depuis), m: 'Des annonces sont refusées. Sa pub tourne quand même.' }; });
 
@@ -678,7 +680,7 @@ window.__PROBLEMES__ = function (D) {
   'use strict';
   var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', CLE = 'ba_comptes_code', CACHE = 'ba_problemes_p2', SAUT = 'ba_problemes_saut', PARTS = ['google', 'argent', 'nouveaux', 'messages', 'jour'], VIEUX_MIN = 5, LIMITE_MS = 30000, LIMITE_TOUT_MS = 20000,
       RETARD = 'Une partie de ton tableau a traîné : pour elle, ce sont les chiffres d’avant.';
-  var R = window.__PROBLEMES_ETAT__ = { version: 'p10-1811', etat: 'depart', envois: 0, lectures: 0, copie: '', retard: [] };
+  var R = window.__PROBLEMES_ETAT__ = { version: 'p11-1811', etat: 'depart', envois: 0, lectures: 0, copie: '', retard: [] };
   var att = document.getElementById('attente'), msg = document.getElementById('attente-msg'), lien = document.getElementById('attente-lien'), encore = document.getElementById('attente-encore');
   function dire(etat, t, avecLien, avecEncore) { R.etat = etat; att.style.display = 'flex'; msg.textContent = t; lien.hidden = !avecLien; lien.style.display = avecLien ? 'inline-block' : 'none'; encore.hidden = !avecEncore; encore.style.display = avecEncore ? 'inline-block' : 'none'; }
   function lire(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
