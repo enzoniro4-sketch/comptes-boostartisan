@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Les comptes</title>
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'self'; style-src 'unsafe-inline'; img-src 'self' data:; manifest-src 'self'; worker-src 'self'; connect-src https://script.google.com https://script.googleusercontent.com https://recherche-entreprises.api.gouv.fr; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'self'; style-src 'unsafe-inline'; img-src 'self' data:; manifest-src 'self'; worker-src 'self'; connect-src https://script.google.com https://script.googleusercontent.com https://recherche-entreprises.api.gouv.fr https://comptes.boost-artisan.com; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#f5f5f7"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Comptes">
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" href="icone-192.png"><link rel="apple-touch-icon" href="icone-180.png">
-<meta name="ba-version" content="v5.29-r2">
+<meta name="ba-version" content="v5.30-r3">
 <style>/* --- version rapide : ce qui s'ajoute à la page (rien d'autre ne change) --- */
 #ba-etat{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;max-width:calc(100vw - 24px);background:#1d1d1f;color:#fff;padding:9px 16px;border-radius:999px;font-size:13px;line-height:1.35;z-index:60;box-shadow:0 4px 18px rgba(0,0,0,.22);text-align:center}
 #ba-etat.ko{background:#8e1b1b}
@@ -128,6 +128,24 @@ main h2{font-size:13px;font-weight:600;color:var(--gris);margin:22px 0 8px}main 
 .volet p{margin:4px 0 0;font-size:14px;color:var(--gris2)}
 .volet.fiche .grille{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 12px;margin:8px 0}.volet.fiche label{display:block;font-size:13px;color:var(--gris)}.volet.fiche label input{display:block;width:100%;margin-top:3px;height:36px;border:1px solid var(--trait);border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:var(--txt);background:var(--blanc)}.volet.fiche .cands{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px}.volet.fiche .cands .b{min-height:32px;font-size:13px;text-align:left}.volet.fiche .aide{font-size:13px;color:var(--gris);margin:6px 0 0}
 @media (max-width:760px){.volet.fiche .grille{grid-template-columns:1fr 1fr}}
+.volet.prix .px-src{font-size:13px;color:var(--gris);margin:0 0 8px}.volet.prix.vieux .px-src strong{color:var(--rouge)}
+.px-verdict{border-radius:10px;padding:10px 12px;margin:8px 0;font-size:15px;line-height:1.45;border-left:5px solid var(--gris);background:var(--grisf)}.px-verdict strong{font-weight:700}
+.px-verdict.vert{border-left-color:var(--vert);background:var(--vertf)}.px-verdict.orange{border-left-color:var(--orange);background:var(--orangef)}.px-verdict.rouge{border-left-color:var(--rouge);background:var(--rougef)}
+.px-echelle,.px-mots{width:100%;border-collapse:collapse;margin:8px 0;font-size:14px;background:var(--blanc);border-radius:10px;overflow:hidden}
+.px-echelle th,.px-mots th{text-align:left;font-size:12px;font-weight:600;color:var(--gris);padding:6px 10px;border-bottom:1px solid var(--trait)}
+.px-echelle td,.px-mots td{padding:7px 10px;border-bottom:1px solid var(--trait);vertical-align:middle}.px-echelle tr:last-child td,.px-mots tr:last-child td{border-bottom:0}
+.px-echelle td:first-child{white-space:nowrap;width:1%}.px-echelle small{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:9px;font-size:11px;font-weight:600;background:var(--chip);color:var(--gris2)}
+.px-echelle tr.auj td{background:var(--bleuf)}.px-echelle tr.auj small{background:var(--bleu);color:#fff}.px-echelle tr.reco td{background:var(--vertf)}.px-echelle tr.reco small{background:var(--vert);color:#fff}
+.px-barre{display:inline-block;vertical-align:middle;width:55%;max-width:260px;height:10px;border-radius:5px;background:var(--chip);overflow:hidden;margin-right:8px}.px-barre i{display:block;height:100%;background:var(--bleu);border-radius:5px}.px-n{font-weight:600;white-space:nowrap}
+.px-h{margin:14px 0 4px;font-size:13px;font-weight:700;color:var(--gris)}
+.px-pub{background:var(--blanc);border-radius:10px;padding:8px 12px;margin:6px 0;font-size:14px;border-left:4px solid var(--trait)}.px-pub.muette{border-left-color:var(--rouge)}
+.px-pub b{display:block;margin:0 0 2px}.px-pub span{display:block;color:var(--gris2)}.px-pub strong{color:var(--rouge)}
+.px-mots td:nth-child(n+2),.px-mots th:nth-child(n+2){text-align:right}.px-mots td:nth-child(n+2){white-space:nowrap}.px-mots td:first-child{word-break:break-word}
+.px-mots tr.ok td.bas{color:var(--vert);font-weight:700}.px-mots tr.ko td.bas{color:var(--rouge);font-weight:700}
+.volet p.px-petit,.volet p.px-note{font-size:13px;color:var(--gris);margin:6px 0 0}
+.px-pt{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:middle;margin-right:2px}.px-pt.ok{background:var(--vert)}.px-pt.ko{background:var(--rouge)}
+@media (max-width:760px){.px-mots th,.px-mots td,.px-echelle th,.px-echelle td{padding:6px 6px}.px-mots{font-size:13px}.px-barre{width:40%}}
+.px-pub .px-bride{color:#b45309}
 .champ{height:40px;width:110px;border:1px solid var(--trait);border-radius:10px;padding:0 10px;font:inherit;font-size:16px;background:var(--blanc)}
 .champ.long{width:100%;height:auto;min-height:70px;padding:8px 10px;resize:vertical}
 .montant{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:15px}
@@ -257,12 +275,12 @@ var QRBA = (function(){
   }
   return { matrice: matrice, svg: svg };
 })();
-/* Les comptes — VERSION RAPIDE v5.29-r2 (page fixe sur notre domaine, hors du tableau). Fabriquée par plan/comptes-rapide-1011/construire_comptes_rapide.py :
+/* Les comptes — VERSION RAPIDE v5.30-r3 (page fixe sur notre domaine, hors du tableau). Fabriquée par plan/comptes-rapide-1011/construire_comptes_rapide.py :
    la page des comptes n'est PAS réécrite ; ce bloc remplace seulement son fil avec le tableau (google.script.run → envoi direct au tableau, avec le code d'Enzo gardé sur l'appareil)
    et montre tout de suite les derniers chiffres lus, en gris, pendant que le tableau est relu. Tant que les chiffres sont en gris, aucun ordre ne part. */
 (function(){
   var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', LIER = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec?x=rapide', FORM = 'https://script.google.com/macros/s/AKfycbwDgwfesj-aTaYtcUutatJAJhfrb3xmD4hkWKDnZTeQdh7ZHUVOKqjYkiuDy9Qbt8_N/exec?f=1', CLE_CODE = 'ba_comptes_code', NOM_CACHE = 'ba-comptes-donnees', CLE_SECOURS = 'ba_comptes_donnees';
-  var R = window.__RAPIDE__ = { version: 'v5.29-r2', code: '', perime: false, frais: false, echec: '', recu: 0, duree: 0, envois: 0, encadre: false };
+  var R = window.__RAPIDE__ = { version: 'v5.30-r3', code: '', perime: false, frais: false, echec: '', recu: 0, duree: 0, envois: 0, encadre: false };
   /* 0. Jamais à l'intérieur de la page de quelqu'un d'autre : dans un cadre posé par une autre adresse, la page ne lit pas le code, ne demande rien au tableau, n'envoie aucun ordre.
         (Un cadre posé par notre propre adresse reste permis : c'est notre essai en largeur de téléphone.) */
   var ENCADRE = false; try { ENCADRE = window.top !== window.self && window.top.location.origin !== window.location.origin; } catch (e) { ENCADRE = true; }
@@ -513,7 +531,7 @@ var QRBA = (function(){
 })();
 </script>
 <script>
-/* Les comptes v5.29 (17/11/2026 07 h 33 UTC) — fabriquée par plan/construire_comptes.py depuis MAQUETTE-COMPTES.md (9 pièces) + CATALOGUE-ALERTES.md.
+/* Les comptes v5.30 (18/11/2026 12 h 27 UTC) — fabriquée par plan/construire_comptes.py depuis MAQUETTE-COMPTES.md (9 pièces) + CATALOGUE-ALERTES.md.
    Page EN DIRECT : tout est relu dans le tableau à chaque ouverture (optimiserDonnees) ; un clic = un ordre écrit dans le tableau (optimiserOrdre),
    appliqué par le script Google Ads (xx h 19 : arrêter, rallumer, budget) ou le robot (xx h 43 : nouvelle pub, allumage, site). Annuler tant que ce n'est pas appliqué.
    Comptage (Enzo 29/10) : une demande = un appel OU un formulaire reçu au tableau. Chiffres d'un compte = toute la période dès que le relevé Google les fournit (D.periode = 'total'), sinon 30 jours, et la page le dit. */
@@ -785,9 +803,107 @@ function dVoletPub(x, p, v){
   return '<div class="volet" data-volet-pub="'+esc(p.kid)+'"><b>'+esc(lib)+'</b><div class="montant"><input class="champ" id="'+id+'" type="text" inputmode="decimal" value="'+esc(nb(val))+'" oninput="recalc(this)"> € par jour</div>'
     +'<div class="boutons"><button type="button" class="b prim" data-valider="'+v.type+'" data-kid="'+esc(p.kid)+'" data-champ="'+id+'">'+(v.type === 'rallumer' ? 'Rallumer' : 'Changer')+' · <span class="rc">'+esc(nb(val))+'</span> €/j</button><button type="button" class="b" data-fermer="'+esc(p.kid)+'">Annuler</button></div></div>';
 }
+/* ---------- v5.30 (18/11/2026, Enzo 08 h 38 UTC : « quand je clique sur un bouton, sur la carte de chacun de mes clients, je puisse voir le tableau… le pourcentage vis-à-vis du CPC max… l'enchère haute et l'enchère basse… à combien il est recommandé que je mette le CPC pour que ça diffuse ») : le prix du clic ---------- */
+/* Les prix viennent d'un fichier par client, lu chez Google (outil de planification) et rangé dans le site : prix/<empreinte du numéro de compte>.json. La page ne calcule que des parts ; elle n'invente aucun prix. */
+var PRIX_BASE = window.__PRIX_BASE__ || 'https://comptes.boost-artisan.com/prix/', PRIX_MEM = {}, PRIX_PAS = [2, 3, 4, 5, 6, 8, 10, 12, 15, 20], PRIX_VISE = 70, PRIX_VIEUX = 21;
+/* le nom du fichier ne dit ni le client ni son numéro, et ne se retrouve pas en essayant tous les numéros : 150 000 tours de calcul par essai (même calcul dans construire_prix.py) */
+async function prixNom(cid){ var e = new TextEncoder(), k = await crypto.subtle.importKey('raw', e.encode(String(cid).replace(/\D/g, '')), 'PBKDF2', false, ['deriveBits']);
+  var d = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: e.encode('boostartisan-prix-du-clic'), iterations: 150000, hash: 'SHA-256' }, k, 80);
+  return Array.prototype.map.call(new Uint8Array(d), function(b){ return ('0' + b.toString(16)).slice(-2); }).join(''); }
+async function chargerPrix(cid){
+  var v = OUV.volet[cid]; if (!v || v.type !== 'prix') return;
+  if (PRIX_MEM[cid]) v.prix = PRIX_MEM[cid];
+  else { try { var r = await Promise.race([fetch(PRIX_BASE + (await prixNom(cid)) + '.json', { cache: 'no-store' }), new Promise(function(_, ko){ setTimeout(function(){ ko(new Error('le site n\'a pas répondu en 15 s')); }, 15000); })]);
+      if (r.status === 404) v.prix = { absent: true }; else if (!r.ok) throw new Error('réponse ' + r.status); else { v.prix = await r.json(); if (!v.prix || !Array.isArray(v.prix.mots) || !Array.isArray(v.prix.pubs)) throw new Error('fichier illisible'); }
+      PRIX_MEM[cid] = v.prix; }
+    catch (e) { v.prix = { erreur: String(e && e.message || e) }; } }
+  if (OUV.volet[cid] === v) redessiner(cid);
+}
+function prixPct(r, t){ if (!t) return 0; var p = Math.round(100 * r / t); if (p === 100 && r < t) p = 99; if (p === 0 && r > 0) p = 1; return p; }
+function prixEuro(x){ x = Number(x) || 0; return (Math.round(x * 100) % 100 === 0 ? String(Math.round(x)) : nb2(x)) + ' €'; }
+/* part des recherches (et nombre de mots) qui passent pour un clic max donné ; plafondDe(mot) rend le clic max qui vaut pour ce mot (Infinity = pas de plafond) */
+function prixPart(mots, plafondDe){ var r = 0, t = 0, n = 0, s = 0; mots.forEach(function(m){ if (m[5]) return;   /* variante proche d'un mot déjà compté : mêmes recherches chez Google, comptées une fois */
+    var c = plafondDe(m); if (c !== c) return;   /* clic max pas lu pour ce mot : laissé de côté */
+    var q = Number(m[1]) || 0; t += q; s++; if (Number(m[2]) <= c + 1e-9) { r += q; n++; } }); return { pct: prixPct(r, t), mots: n, sur: s, rech: t }; }
+function prixCalcul(P){
+  var mots = P.mots || [], pubs = P.pubs || [], avecPoids = mots.some(function(m){ return Number(m[1]) > 0; });
+  if (!avecPoids) mots = mots.map(function(m){ return [m[0], 1, m[2], m[3], m[4], m[5]]; });   /* Google n'a donné aucun nombre de recherches : chaque mot compte pour un */
+  var plafonds = pubs.map(function(p){ return p.lu === false ? NaN : ((p.plafond === null || p.plafond === undefined) ? Infinity : Number(p.plafond)); });   /* NaN = clic max pas lu chez Google (réglage propre à la pub) */
+  var inconnus = plafonds.filter(function(c){ return c !== c; }).length;
+  var finis = plafonds.filter(function(c){ return isFinite(c); }), distincts = finis.filter(function(c, i){ return finis.indexOf(c) === i; }).sort(function(a, b){ return a - b; });
+  function plafondDuMot(m){ var ps = (m[4] || []), c = -1, lu = false; ps.forEach(function(i){ var q = plafonds[i]; if (q === undefined || q !== q) return; lu = true; if (q > c) c = q; }); if (!ps.length) return Infinity; return lu ? c : NaN; }   /* le mot passe si UNE de ses pubs peut payer ; un mot dont aucune pub n'a de clic max lu n'est pas jugé */
+  var echelle = PRIX_PAS.map(function(s){ var a = prixPart(mots, function(){ return s; }); return { s: s, pct: a.pct, mots: a.mots }; });
+  var actuel = finis.length ? prixPart(mots, plafondDuMot) : null;
+  var conseil = null; for (var i = 0; i < echelle.length; i++) { if (echelle[i].pct >= PRIX_VISE) { conseil = echelle[i].s; break; } }
+  var parPub = pubs.map(function(p, i){ var ms = mots.filter(function(m){ return (m[4] || []).indexOf(i) >= 0; }); return isFinite(plafonds[i]) ? prixPart(ms, function(){ return plafonds[i]; }) : { pct: null, mots: ms.length, sur: ms.length, rech: 0 }; });
+  return { mots: mots, echelle: echelle, actuel: actuel, distincts: distincts, conseil: conseil, parPub: parPub, sansPlafond: !finis.length, inconnus: inconnus, plafondDuMot: plafondDuMot, avecPoids: avecPoids, max: distincts.length ? distincts[distincts.length - 1] : null };
+}
+function prixDate(iso){ var t = new Date(iso); if (isNaN(t.getTime())) return { txt: '', vieux: false }; var j = Math.floor((Date.now() - t.getTime()) / 86400000); return { txt: 'le ' + t.getDate() + '/' + String(t.getMonth() + 1).padStart(2, '0') + ' à ' + t.getHours() + ' h ' + String(t.getMinutes()).padStart(2, '0'), vieux: j >= PRIX_VIEUX, jours: j }; }
+function prixVolet(x, v){
+  var P = v.prix, fermer = '<div class="boutons"><button type="button" class="b" data-fermer="compte">Fermer</button></div>';
+  if (!P) return '<div class="volet prix"><b>Prix du clic</b><p>Je lis les prix de ses mots…</p></div>';
+  if (P.erreur) return '<div class="volet prix" data-px-erreur="' + esc(P.erreur) + '"><b>Prix du clic</b><p>Les prix n\'ont pas pu être lus. Referme et rouvre ce bouton.</p>' + fermer + '</div>';
+  if (P.absent) return '<div class="volet prix"><b>Prix du clic</b><p>Pas encore de prix pour ce client. Souvent : aucune pub allumée le jour où les prix ont été lus.</p>' + fermer + '</div>';
+  var C = prixCalcul(P), d = prixDate(P.lu), h = '<div class="volet prix' + (d.vieux ? ' vieux' : '') + '"><b>Prix du clic</b>';
+  h += '<p class="px-src">Prix lus chez Google ' + esc(d.txt) + (P.lieux ? ' · zone regardée : ' + esc(P.lieux) : '') + (d.vieux ? ' · <strong>vieux de ' + d.jours + ' jours, à relire</strong>' : '') + '</p>';
+  var nPrix = C.mots.length, tot = Number(P.total) || 0, serv = (P.service === null || P.service === undefined) ? null : Number(P.service), unite = C.avecPoids ? 'recherches' : 'mots';
+  var compte = (tot ? 'Ses pubs allumées ont ' + nb(tot) + ' mot' + (tot > 1 ? 's' : '') + '. ' : '') + (serv !== null ? 'Google en laisse ' + nb(serv) + ' en service : les autres sont trop peu cherchés. ' : '');
+  if (!nPrix) { h += '<div class="px-verdict gris"><strong>Google ne donne aucun prix pour ses mots.</strong> Ils sont trop peu cherchés. Ici, le prix du clic ne peut pas se juger.</div>' + prixPubs(x, P, C) + '<p class="px-note">' + compte + 'Google ne donne un prix pour aucun.</p>' + fermer + '</div>'; return h; }
+  /* (1) le verdict */
+  var dit = function(p){ return '<strong>' + p + ' ' + unite + ' sur 100</strong>'; };
+  if (C.sansPlafond && C.inconnus) h += '<div class="px-verdict gris"><strong>Le clic max de ' + (P.pubs.length === 1 ? 'sa pub' : C.inconnus === P.pubs.length ? 'ses pubs' : 'une de ses pubs') + ' n\'a pas été lu.</strong> C\'est un réglage propre à la pub. Le tableau dit ce que chaque prix permet.</div>';
+  else if (C.sansPlafond) h += '<div class="px-verdict gris"><strong>Pas de clic max sur ses pubs.</strong> Google choisit seul le prix du clic. Le clic max ne peut pas bloquer.</div>';
+  else { var a = C.actuel.pct, coul = a >= PRIX_VISE ? 'vert' : a >= 40 ? 'orange' : 'rouge', plusieurs = C.distincts.length > 1, bas = C.distincts[0];
+    var conseilTxt = '';
+    if (coul !== 'vert') { if (C.conseil === null) conseilTxt = '<br>Même à ' + prixEuro(PRIX_PAS[PRIX_PAS.length - 1]) + ', elle ne pourrait sortir en haut que sur ' + dit(C.echelle[C.echelle.length - 1].pct) + '.';
+      else if (C.conseil > bas) { var pc = C.echelle.filter(function(e){ return e.s === C.conseil; })[0].pct; conseilTxt = '<br>Mets <strong>' + prixEuro(C.conseil) + '</strong>' + (plusieurs ? ' partout' : '') + ' : elle pourra sortir en haut sur ' + dit(pc) + '.'; } }
+    h += '<div class="px-verdict ' + coul + '"><strong>' + (coul === 'vert' ? 'Ton clic max a l\'air bon.' : coul === 'orange' ? 'Ton clic max est un peu bas.' : 'Ton clic max est trop bas.') + '</strong> '
+      + (plusieurs ? 'Avec tes clics max (' + C.distincts.map(prixEuro).join(' et ') + '), sa pub' : 'À ' + prixEuro(bas) + ', sa pub') + ' peut sortir en haut sur ' + dit(a) + '.' + (C.inconnus ? ' Une pub n\'est pas comptée : son clic max n\'a pas été lu.' : '') + conseilTxt + '</div>'; }
+  /* (2) l'échelle : si le clic max est à… */
+  var dernier = 0; C.echelle.forEach(function(e, i){ if (i === 0 || C.echelle[i - 1].pct < 100) dernier = i; });
+  if (C.max !== null) C.echelle.forEach(function(e, i){ if (e.s <= C.max && i > dernier) dernier = i; });
+  var reco = (!C.sansPlafond && C.conseil !== null && C.actuel.pct < PRIX_VISE && C.conseil > C.distincts[0]) ? C.conseil : null;
+  h += '<table class="px-echelle"><thead><tr><th>Si le clic max est à</th><th>sa pub peut sortir en haut sur</th></tr></thead><tbody>';
+  C.echelle.slice(0, dernier + 1).forEach(function(e){ var auj = C.distincts.indexOf(e.s) >= 0, rec = reco === e.s;
+    h += '<tr class="' + (auj ? 'auj' : '') + (rec ? ' reco' : '') + '"><td><strong>' + prixEuro(e.s) + '</strong>' + (auj ? ' <small>aujourd\'hui</small>' : '') + (rec ? ' <small>conseillé</small>' : '') + '</td><td><span class="px-barre"><i style="width:' + e.pct + '%"></i></span><span class="px-n">' + e.pct + ' sur 100</span></td></tr>'; });
+  h += '</tbody></table>';
+  if (C.max !== null) C.distincts.forEach(function(c){ if (PRIX_PAS.indexOf(c) < 0) { var pc2 = prixPart(C.mots, function(){ return c; }).pct; h += '<p class="px-petit">Son clic max de ' + prixEuro(c) + ' n\'est pas une ligne du tableau : il donne ' + pc2 + ' sur 100.</p>'; } });
+  h += '<p class="px-petit">« Peut sortir » ne veut pas dire « sortira » : la qualité de la pub compte aussi.</p>';
+  /* (3) ses pubs, avec ce que Google a vraiment fait */
+  h += prixPubs(x, P, C);
+  /* (4) les mots et leurs prix, repliés */
+  var ouvert = !!v.mots, tout = !!v.tout, liste = C.mots.slice().sort(function(m1, m2){ return (Number(m2[1]) || 0) - (Number(m1[1]) || 0) || (m1[0] < m2[0] ? -1 : 1); });
+  h += '<button type="button" class="b plus voir" data-px="mots">' + (ouvert ? 'Replier' : 'Voir') + ' ' + (nPrix > 1 ? 'les ' + nb(nPrix) + ' mots qui ont un prix' : 'le mot qui a un prix') + ' ' + (ouvert ? '▴' : '▾') + '</button>';
+  if (ouvert) { var vus = tout ? liste : liste.slice(0, 30);
+    h += '<p class="px-petit">Prix bas et prix haut : ce que les autres ont payé pour sortir en haut, d\'après Google.</p>';
+    if (!C.sansPlafond) h += '<p class="px-petit"><span class="px-pt ok"></span> prix bas vert : ton clic max est au-dessus du prix bas</p><p class="px-petit"><span class="px-pt ko"></span> prix bas rouge : ton clic max est en dessous</p>';
+    h += '<table class="px-mots"><thead><tr><th>Mot</th><th>Recherches par mois</th><th>Prix bas</th><th>Prix haut</th></tr></thead><tbody>'
+      + vus.map(function(m){ var plaf = C.sansPlafond ? Infinity : C.plafondDuMot(m), nc = plaf !== plaf, ok = !nc && Number(m[2]) <= plaf + 1e-9;
+          return '<tr class="' + (C.sansPlafond || nc ? '' : ok ? 'ok' : 'ko') + '"><td>' + esc(m[0]) + '</td><td>' + (C.avecPoids ? nb(m[1]) : '—') + '</td><td class="bas">' + nb2(m[2]) + ' €</td><td>' + nb2(m[3]) + ' €</td></tr>'; }).join('') + '</tbody></table>';
+    if (!tout && liste.length > 30) h += '<button type="button" class="b plus voir" data-px="tout">Voir les ' + nb(liste.length - 30) + ' autres mots ▾</button>'; }
+  /* (5) ce qui a été regardé */
+  h += '<p class="px-note">' + compte + 'Google donne un prix pour ' + nb(nPrix) + '. Les calculs comptent ' + (nPrix > 1 ? 'ces ' + nb(nPrix) + ' mots' : 'ce mot') + '. ' + (C.mots.some(function(m){ return m[5]; }) ? 'Deux mots qui veulent dire la même chose partagent les mêmes recherches : elles sont comptées une fois. ' : '') + '« Conseillé » est notre règle : 70 ' + unite + ' sur 100.</p>';
+  return h + fermer + '</div>';
+}
+/* le nom d'une pub porte le nom du client : il ne voyage pas dans le fichier public. La page le retrouve par le numero de la pub dans ses propres donnees (lues avec le code d'Enzo) ; sinon un libelle neutre. */
+function prixNomPub(x, p, i){ var n = ''; ((x && x.pubs) || []).forEach(function(q){ if (String(q.kid) === String(p.kid) && q.nom) n = q.nom; }); return n || (p.genre ? 'Pub « ' + p.genre + ' »' : 'Pub ' + (i + 1)); }
+function prixPubs(x, P, C){
+  var pubs = P.pubs || []; if (!pubs.length) return '';
+  var h = '<h4 class="px-h">Ses pubs allumées' + (P.jours ? ' · ' + esc(P.jours) : '') + '</h4>';
+  pubs.forEach(function(p, i){ var cp = C.parPub[i], impr = p.sortie ? 1 : 0, cpc = (p.cpc === null || p.cpc === undefined) ? null : Number(p.cpc), perdu = (p.perdu === null || p.perdu === undefined) ? null : Number(p.perdu);
+    var sans = (p.plafond === null || p.plafond === undefined), nm = Number(p.mots) || 0, ns = (p.service === null || p.service === undefined) ? null : Number(p.service);
+    h += '<div class="px-pub' + (impr ? '' : ' muette') + '"><b>' + esc(prixNomPub(x, p, i)) + '</b>'
+      + '<span>' + (p.lu === false ? 'clic max pas lu' : sans ? 'pas de clic max' : 'clic max ' + prixEuro(p.plafond)) + (cp && cp.pct !== null && cp.sur ? ' · peut sortir en haut sur ' + cp.pct + ' ' + (C.avecPoids ? 'recherches' : 'mots') + ' sur 100' : '') + '</span>'
+      + (nm ? '<span>' + nb(nm) + ' mot' + (nm > 1 ? 's' : '') + (ns !== null ? ', dont ' + nb(ns) + ' en service chez Google' : '') + '</span>' : '')
+      + '<span>' + (impr ? (cpc !== null ? 'sortie · ' + nb2(cpc) + ' € le clic en moyenne' : 'sortie, mais aucun clic') : '<strong>pas sortie une seule fois</strong>') + '</span>'
+      + (p.bride ? '<span class="px-bride"><strong>Google le dit : ce clic max la limite.</strong></span>' : '')
+      + (perdu !== null && impr ? '<span>Google : pas sortie ' + Math.round(perdu) + ' fois sur 100 (prix trop bas ou qualité de la pub)</span>' : '') + '</div>'; });
+  return h;
+}
 function dVolet(x, v){
   var id = 'm-'+x.cid.replace(/\D/g,''), nOn = x.n.onLibre;
   if (v.type === 'fiche') return ficheVolet(x, v);
+  if (v.type === 'prix') return prixVolet(x, v);   /* v5.30 */
   if (v.type === 'nouvelle') {   /* v5.29 (17/11, Enzo : « 10 € par jour par campagne sur les 3 campagnes ») : 3 pubs a 10 € par jour chacune, pas de case ; le budget se change ensuite sur chaque pub */
     return '<div class="volet"><b>Nouvelle campagne : 3 pubs à 10 € par jour chacune</b>'
     +'<p>• Métier + ville : 10 € par jour<br>• Métier seul : 10 € par jour<br>• Tous les services : 10 € par jour</p>'
@@ -840,6 +956,7 @@ function carteOpt(x, as, autres){
   h += '<div class="boutons">'
      + (sansFiche(x) ? '<button type="button" class="b" disabled title="pas de fiche dans le tableau">Nouvelle campagne</button> <small style="color:var(--gris)">Pas de fiche dans le tableau : il faut créer sa fiche et son site → <button type="button" class="lien" data-fam="site">Site à refaire</button></small>' : '<button type="button" class="b'+(v && v.type === 'nouvelle' ? ' prim' : '')+'" data-volet="nouvelle">Nouvelle campagne</button>')
      + '<button type="button" class="b'+(v && v.type === 'budget' ? ' prim' : '')+'" data-volet="budget"'+(x.n.onLibre ? '' : ' disabled title="aucune pub allumée"')+'>Budget</button>'
+     + '<button type="button" class="b'+(v && v.type === 'prix' ? ' prim' : '')+'" data-volet="prix">Prix du clic</button>'   /* v5.30 */
      + '<button type="button" class="b danger'+(v && v.type === 'arreter' ? ' plein' : '')+'" data-volet="arreter"'+(x.n.onLibre ? '' : ' disabled title="aucune pub allumée"')+'>Arrêter toutes les pubs</button>'
      + '<button type="button" class="b'+(v && v.type === 'note' ? ' prim' : '')+'" data-volet="note">Note</button>'
      + '</div>';
@@ -867,10 +984,11 @@ function carte(x){
   if (x.n.pubs) { h += '<button type="button" class="b plus voir" data-plier="pubs">'+(ouvP ? 'Replier' : 'Voir')+' '+(x.n.pubs > 1 ? 'les '+x.n.pubs+' pubs' : 'la pub')+' '+(ouvP ? '▴' : '▾')+'</button>';
     if (ouvP) { var on = x.pubs.filter(function(p){ return p.onEff; }), off = x.pubs.filter(function(p){ return !p.onEff; }); h += '<div class="pubs">'+(on.length ? '<h4>Allumées · '+on.length+'</h4>'+on.map(function(p){ return dPub(x, p); }).join('') : '')+(off.length ? '<h4>En veille · '+off.length+'</h4>'+off.map(function(p){ return dPub(x, p); }).join('') : '')+'</div>'; } }
   else h += '<button type="button" class="b plus voir" disabled>Pas encore de pub</button>';
-  /* (4) les 5 boutons, toujours les mêmes */
+  /* (4) les 6 boutons (v5.30 : + Prix du clic), toujours les mêmes */
   h += '<div class="boutons">'
      + (sansFiche(x) ? '<button type="button" class="b" disabled title="pas de fiche dans le tableau">Nouvelle campagne</button> <small style="color:var(--gris)">Pas de fiche dans le tableau : il faut créer sa fiche et son site → <button type="button" class="lien" data-fam="site">Site à refaire</button></small>' : '<button type="button" class="b'+(v && v.type === 'nouvelle' ? ' prim' : '')+'" data-volet="nouvelle">Nouvelle campagne</button>')
      + '<button type="button" class="b'+(v && v.type === 'budget' ? ' prim' : '')+'" data-volet="budget"'+(x.n.onLibre ? '' : ' disabled title="aucune pub allumée"')+'>Budget</button>'
+     + '<button type="button" class="b'+(v && v.type === 'prix' ? ' prim' : '')+'" data-volet="prix">Prix du clic</button>'   /* v5.30 */
      + '<button type="button" class="b danger'+(v && v.type === 'arreter' ? ' plein' : '')+'" data-volet="arreter"'+(x.n.onLibre ? '' : ' disabled title="aucune pub allumée"')+'>Arrêter toutes les pubs</button>'
      + '<button type="button" class="b'+(v && v.type === 'note' ? ' prim' : '')+'" data-volet="note">Note</button>'
      + (x.archive ? dBtn({ type:'desarchiver', siret:x.siret, compte_id:x.cid, nom:x.nom, avant:'archive', texte:'Remettre actif', cls:'gris' }) : '<button type="button" class="b gris'+(v && v.type === 'archiver' ? ' on' : '')+'" data-volet="archiver">Archiver</button>')
@@ -1160,7 +1278,8 @@ document.addEventListener('click', function(e){
   var c = t.closest('.carte'); if (!c) return; var cid = c.id.slice(2);
   var pl_ = t.getAttribute('data-plier'); if (pl_) { OUV[pl_][cid] = (pl_ === 'pubs' && c.classList.contains('opt') && !(cid in OUV.pubs)) ? false : !OUV[pl_][cid]; redessiner(cid); return; }
   if (t.getAttribute('data-ouvrir') === 'pubs') { OUV.pubs[cid] = true; redessiner(cid); return; }
-  var vol = t.getAttribute('data-volet'); if (vol) { var kid = t.getAttribute('data-kid'); var cle = kid ? cid+'|'+kid : cid; if (OUV.volet[cle] && OUV.volet[cle].type === vol) delete OUV.volet[cle]; else OUV.volet[cle] = { type: vol, val: null, pub: t.getAttribute('data-pub') || '' }; if (kid) OUV.pubs[cid] = true; if (t.closest('.pb')) OUV.pb[cid] = true; redessiner(cid); if (vol === 'fiche' && OUV.volet[cle]) chargerFiche(cid);
+  var px = t.getAttribute('data-px'); if (px) { var vP = OUV.volet[cid]; if (vP && vP.type === 'prix') { vP[px] = !vP[px]; redessiner(cid); } return; }   /* v5.30 : voir / replier les mots du volet « Prix du clic » */
+  var vol = t.getAttribute('data-volet'); if (vol) { var kid = t.getAttribute('data-kid'); var cle = kid ? cid+'|'+kid : cid; if (OUV.volet[cle] && OUV.volet[cle].type === vol) delete OUV.volet[cle]; else OUV.volet[cle] = { type: vol, val: null, pub: t.getAttribute('data-pub') || '' }; if (kid) OUV.pubs[cid] = true; if (t.closest('.pb')) OUV.pb[cid] = true; redessiner(cid); if (vol === 'fiche' && OUV.volet[cle]) chargerFiche(cid); if (vol === 'prix' && OUV.volet[cle]) chargerPrix(cid);
     /* v5.11 : le volet ouvert est amené sous les yeux */ var vEl = document.querySelector('#c-'+cid+' .volet'); if (vEl && OUV.volet[cle]) { try { vEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (eS) {} } if (!kid) { var inp = document.getElementById('m-'+cid.replace(/\D/g,'')); if (inp) { inp.focus(); try { inp.select(); } catch (er) {} } } return; }
   var fer = t.getAttribute('data-fermer'); if (fer) { delete OUV.volet[fer === 'compte' ? cid : cid+'|'+fer]; redessiner(cid); return; }
   var val = t.getAttribute('data-valider'); if (val) { valider(t, cid, val); return; }
