@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
-<meta name="ba-version" content="p11-1811">
+<meta name="ba-version" content="p12-1811">
 <link rel="icon" type="image/png" href="icone-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Problèmes et argent</title>
@@ -49,6 +49,15 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .grand { margin: 16px 0 2px; font-size: 27px; line-height: 1.15; font-weight: 700; letter-spacing: -.01em; text-wrap: balance; }
 .sous { margin: 0; color: var(--doux); font-size: 16px; }
 
+.cherche { margin: 16px 0 0; }
+.cherche label { display: block; font-size: 14px; font-weight: 600; color: var(--doux); margin: 0 0 4px; }
+.cherche input { width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1px solid var(--trait); border-radius: 10px; font: inherit; color: inherit; background: var(--fond); }
+.cherche input:focus { outline: 2px solid var(--menu); outline-offset: 1px; }
+.trouve { margin: 10px 0 0; }
+.trouve .combien { margin: 0 0 4px; font-size: 14px; color: var(--doux); }
+.trouve .rien { margin: 0; padding: 10px 12px; border-left: 5px solid var(--gris); background: #f4f5f6; border-radius: 0 8px 8px 0; }
+.trouve .manque b { font-weight: 600; }
+.trouve .manque.rouge b { color: var(--rouge); } .trouve .manque.orange b { color: var(--orange); }
 .tri { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 6px; }
 .tri button { padding: 8px 13px; border: 1px solid var(--trait); border-radius: 999px; font-size: 15px; font-weight: 600; color: var(--doux); background: var(--fond); }
 .tri button[aria-pressed="true"] { background: var(--menu); border-color: var(--menu); color: #fff; }
@@ -143,6 +152,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   <main id="vue-problemes">
     <h1 class="grand" id="p-grand"></h1>
     <p class="sous" id="p-sous"></p>
+    <div class="cherche"><label for="cherche">Chercher un client</label><input type="search" id="cherche" placeholder="Son nom, ou celui de son entreprise" autocomplete="off" spellcheck="false" enterkeyhint="search"></div>
+    <div class="trouve" id="trouve" role="status" aria-live="polite" hidden></div>
     <div class="tri" id="tri" role="group" aria-label="Qui doit agir"></div>
     <ol class="familles" id="familles"></ol>
     <button type="button" class="autres" id="autres" hidden></button>
@@ -257,6 +268,33 @@ window.__PROBLEMES__ = function (D) {
     boutonAutres.textContent = 'Voir les ' + caches + ' autres familles';
   }
   montrer();
+
+  /* ---- (p12) chercher un client : tous ses problèmes d'un coup, quelle que soit la famille (ouverte, fermée ou cachée) ---- */
+  var cherche = document.getElementById('cherche'), trouve = document.getElementById('trouve');
+  function nettoyer(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\s\u00a0\u202f]+/g, ' ').trim(); }
+  function chercher() {
+    var q = nettoyer(cherche.value);
+    while (trouve.firstChild) trouve.removeChild(trouve.firstChild);
+    if (q.length < 2) { trouve.hidden = true; tri.hidden = false; liste.hidden = false; montrer(); return; }
+    var par = {}, ordre = [];
+    D.familles.forEach(function (f) { f.items.forEach(function (i) {
+      if (nettoyer(i.c).indexOf(q) < 0) return;
+      var k = i.k || i.c; if (!par[k]) { par[k] = { c: i.c, l: [] }; ordre.push(k); }
+      par[k].l.push({ f: f.nom, m: i.m, couleur: f.couleur });
+    }); });
+    tri.hidden = true; liste.hidden = true; boutonAutres.hidden = true; trouve.hidden = false;
+    if (!ordre.length) { trouve.appendChild(el('p', 'rien', 'Aucun problème en attente à ce nom. Essaie le nom de son entreprise, ou un bout du nom.')); return; }
+    trouve.appendChild(el('p', 'combien', ordre.length > 1 ? ordre.length + ' clients trouvés.' : '1 client trouvé.'));
+    var ul = el('ul', 'lignes');
+    ordre.slice(0, 30).forEach(function (k) {
+      var li = el('li'), qd = el('div', 'qui'); qd.appendChild(el('span', 'client', par[k].c)); li.appendChild(qd);
+      par[k].l.forEach(function (x) { var p = el('p', 'manque ' + x.couleur); p.appendChild(el('b', '', x.f + ' : ')); p.appendChild(document.createTextNode(typo(x.m))); li.appendChild(p); });
+      ul.appendChild(li);
+    });
+    trouve.appendChild(ul);
+    if (ordre.length > 30) trouve.appendChild(el('p', 'combien', 'Je montre les 30 premiers. Écris plus de lettres.'));
+  }
+  cherche.addEventListener('input', chercher);
 
   /* ---- argent ---- */
   var A = D.argent;
@@ -443,6 +481,10 @@ window.__PROBLEMES__ = function (D) {
     var NOM = {}, PARTI = {}, MODE = {}, E = G.etat || {};
     (G.clients || []).forEach(function (c) { NOM[c.cid] = c.nom; MODE[c.cid] = String(c.mode || '').toLowerCase(); if (/archiv|fermé|ferme|parti/i.test(c.statut)) PARTI[c.cid] = 1; });
     function client(cid) { return !!cid && NOM[cid] !== undefined && !PARTI[cid] && !essai(cid); }
+    /* (p12, 18/11, Enzo : « Stany Duault… pourquoi ça me l'affiche pas ? ») LE NOM DE LA PERSONNE, quand le tableau le connaît (clients[].qui, tableau we) : posé à côté du nom du compte,
+       sur chaque ligne. Enzo cherchait « Stany Duault » ; la page ne disait que « Universel Habitat 49 ». */
+    var QUI = {}; (G.clients || []).forEach(function (c) { if (c.qui) QUI[c.cid] = String(c.qui); });
+    function avecQui(k, c) { var q = QUI[k]; return q && String(c).indexOf(q) < 0 ? c + ' · ' + q : c; }
     var AUTRE = {}; (AR.par_client || []).forEach(function (x) { if (x.cid && x.nom) AUTRE[x.cid] = x.nom; });
     function nom(cid, autre) { return NOM[cid] || autre || AUTRE[cid] || (E[cid] && E[cid].nom) || cid; }
     var CID = {}; Object.keys(NOM).forEach(function (c) { CID[String(NOM[c]).toLowerCase()] = c; });
@@ -512,7 +554,9 @@ window.__PROBLEMES__ = function (D) {
       if (!e) return /laisse tourner|risque de suspension/.test(p) ? 'Il doit de l’argent à Google. Google prévient qu’il va couper. ' : 'Il doit de l’argent à Google : ses annonces sont coupées. ';   /* pas de relevé pour ce compte : le mot de Google */
       return 'Il doit de l’argent à Google. ' + (tourne ? 'Google prévient qu’il va couper. ' : ''); }
     var fPaiement = gp.items.map(function (i) { bloque[i.cid] = bloque[i.cid] || 'paiement'; return { k: i.cid, c: i.nom, d: jm(i.depuis), m: (raisonPaiement(i) + pub(i.cid)).trim() + vieuxTexte(i.x) }; });
-    var fAnnonces = ga.items.map(function (i) { return { k: i.cid, c: i.nom, d: jm(i.depuis), m: 'Des annonces sont refusées. Sa pub tourne quand même.' }; });
+    /* (p12) etat[].ext_numero (tableau we) : c'est son NUMÉRO que Google refuse sur ses annonces (extension d'appel, numéro non validé) : dit en clair */
+    var nNumero = 0, fAnnonces = ga.items.map(function (i) { var num = !!(E[i.cid] && E[i.cid].ext_numero); if (num) nNumero++;
+      return { k: i.cid, c: i.nom, d: jm(i.depuis), m: num ? 'Google refuse son numéro de téléphone sur ses annonces : numéro non validé. Sa pub tourne quand même.' : 'Des annonces sont refusées. Sa pub tourne quand même.' }; });
 
     /* ---- pas encore lancés ---- */
     var lances = {}, dansLancer = {}, enReglage = {}, fLancer = [];
@@ -543,12 +587,23 @@ window.__PROBLEMES__ = function (D) {
 
     /* ---- les lignes du jour : zéro demande, pub qui ne s'affiche plus, site, contrôles ---- */
     var fZero = [], fVeille = [];
+    /* (p12) « ZÉRO DEMANDE » : DEPUIS QUEL JOUR, POUR COMBIEN (etat[].sans_depuis, sans_cout, sans_clics, sans_du : tableau we). La page disait « 64 € dépensés en 7 jours, zéro demande »
+       pour un client sans aucune demande depuis 33 jours et 408 € (Universel Habitat 49, 18/11). Sans ces champs (tableau d'avant, calcul en panne) : la phrase d'avant, sur 7 jours.
+       Le tableau ne garde que 2 mois de dépenses par jour : au-delà de 60 jours, la somme est dite « sur les 2 derniers mois ». */
+    function zeroDit(cid, n, e) {
+      var c7 = e && e.cout_7j ? e.cout_7j : 0, cs = e && e.sans_cout ? e.sans_cout : 0, clics = e && e.sans_clics ? e.sans_clics : 0, dern = e ? String(e.sans_depuis || '') : '', du = e ? String(e.sans_du || '') : '';
+      var auj = String(maintenantParis || '').slice(0, 10), bon = /^\d{4}-\d\d-\d\d$/, jours = bon.test(dern) && bon.test(auj) ? Math.round((Date.parse(auj + 'T00:00:00Z') - Date.parse(dern + 'T00:00:00Z')) / 864e5) : 0;
+      var cl = clics ? ', ' + pl(clics, 'clic', 'clics') : '';
+      if (jours >= 7 && cs > 0 && cs >= c7) return { k: cid, c: n, d: eur(cs), m: 'Zéro demande depuis le ' + jm(dern) + ' : ' + jours + ' jours, ' + eur(cs) + ' dépensés' + cl + (jours > 60 ? ' sur les 2 derniers mois' : '') + '.', tri: cs };
+      if (!dern && e && e.sans_du !== undefined && cs > 0 && cs >= c7) return { k: cid, c: n, d: eur(cs), m: 'Aucune demande dans ton tableau' + (bon.test(du) ? ' depuis au moins le ' + jm(du) : '') + ' : ' + eur(cs) + ' dépensés' + cl + '.', tri: cs };
+      return { k: cid, c: n, d: c7 ? eur(c7) : '', m: c7 ? eur(c7) + ' dépensés en 7 jours, zéro demande.' : 'Sa pub tourne, zéro demande en 7 jours.', tri: c7 };
+    }
     (JO.lignes || []).forEach(function (l) {
       var q = String(l.quoi || ''), cid = l.cid;
       if (l.famille === 'client') {
         if (!cid || !client(cid)) return;
         var e = E[cid];
-        if (/aucun lead depuis 7 jours/i.test(q)) fZero.push({ k: cid, c: nom(cid, l.client), d: e && e.cout_7j ? eur(e.cout_7j) : '', m: e && e.cout_7j ? eur(e.cout_7j) + ' dépensés en 7 jours, zéro demande.' : 'Sa pub tourne, zéro demande en 7 jours.' });
+        if (/aucun lead depuis 7 jours/i.test(q)) fZero.push(zeroDit(cid, nom(cid, l.client), e));
         else if (/n.affiche plus/i.test(q)) { if (!bloque[cid] && !dansLancer[cid]) fVeille.push({ k: cid, c: nom(cid, l.client), d: '', m: 'Sa pub ne s’affiche plus. Je cherche pourquoi.' }); }
         else if (/carte bancaire/i.test(q)) { if (!bloque[cid] && !dansLancer[cid]) { dansLancer[cid] = 1; fLancer.push({ k: cid, c: nom(cid, l.client), d: '', m: 'Sa pub n’a jamais démarré. Sa carte est à vérifier.', tri: '' }); } }
         else if (/mise en place incomplète/i.test(q)) { if (!bloque[cid] && !dansLancer[cid] && !enReglage[cid]) site(cid, nom(cid, l.client), 'Sa mise en place n’est pas finie.'); }
@@ -588,6 +643,7 @@ window.__PROBLEMES__ = function (D) {
     var fMessages = Object.keys(parClient).map(function (k) { var p = parClient[k], t = Object.keys(p.types).sort(function (a, b) { return p.types[b] - p.types[a]; })[0];
       return { k: p.k, c: p.c, d: String(p.n), m: (jm(p.vieux) ? 'Il attend depuis le ' + jm(p.vieux) + '.' : 'Il attend une réponse.') + (SUJET[t] ? ' Sujet : ' + SUJET[t] + '.' : ''), tri: p.n }; });
     fMessages.sort(function (a, b) { return b.tri - a.tri; }); fMessages.forEach(function (x) { delete x.tri; });
+    fZero.sort(function (a, b) { return b.tri - a.tri; }); fZero.forEach(function (x) { delete x.tri; });   /* (p12) le plus d'argent parti d'abord */
 
     /* ---- les familles, dans l'ordre de la page ---- */
     var notes = (JO.celine && JO.celine.sans_reponse) || 0, notesJours = Math.floor(((JO.celine && JO.celine.plus_vieux_h) || 0) / 24);
@@ -597,12 +653,14 @@ window.__PROBLEMES__ = function (D) {
       { id: 'lancer', nom: 'Clients pas encore lancés', action: 'toi', couleur: 'rouge', unite: 'clients', quoi: 'Ils ont signé. Leur pub ne tourne pas encore.', geste: 'Chaque ligne dit ce qui manque.', regles: (NV.nb && NV.nb.ok) || null, regles_texte: 'clients lancés depuis 45 jours', items: fLancer },
       { id: 'argent', nom: 'Ils te doivent de l’argent', action: 'argent', couleur: 'rouge', unite: 'relevés', quoi: pl(fArgent.length, 'relevé n’est pas payé', 'relevés ne sont pas payés') + '. Total : ' + eur(duTotal) + '.', geste: sansRappel ? 'Relancer chacun. ' + pl(sansRappel, 'n’a reçu', 'n’ont reçu') + ' aucun rappel.' : 'Relancer chacun. Tous ont reçu un rappel.', regles: payesAvant || null, regles_texte: 'relevés ' + de(moisAvant) + ' payés, pour ' + eur(payesAvantEur), attente_n: fArgent.length, items: fArgent },
       { id: 'messages', nom: 'Messages de clients sans réponse', action: 'toi', couleur: 'orange', unite: 'messages', quoi: pl(mOuverts, 'message attend', 'messages attendent') + ' dans leur espace. ' + (fMessages.length > 1 ? 'Ils viennent de ' + fMessages.length + ' clients.' : 'Il vient d’un client.'), geste: 'Tu décides pour les zones et les budgets. Je fais le reste.', regles: mRegles || null, regles_texte: 'messages déjà traités', attente_n: mOuverts, items: fMessages },
-      { id: 'zero', nom: 'Pub allumée, zéro demande depuis 7 jours', action: 'claude', couleur: 'orange', unite: 'clients', quoi: 'Leur pub tourne et ne ramène rien. Ils vont se plaindre, ou partir.', geste: 'Je regarde leurs recherches. Je te propose un changement par client.', regles: null, regles_texte: '', items: fZero },
+      { id: 'zero', nom: 'Pub allumée, zéro demande depuis 7 jours ou plus', action: 'claude', couleur: 'orange', unite: 'clients', quoi: 'Leur pub tourne et ne ramène rien. Ils vont se plaindre, ou partir. Chaque ligne dit depuis quel jour, et combien est parti.', geste: 'Je regarde leurs recherches. Je te propose un changement par client.', regles: null, regles_texte: '', items: fZero },
       { id: 'site', nom: 'Site ou réglage cassé', action: 'claude', couleur: 'orange', unite: 'clients', quoi: 'Un défaut chez nous. Le client perd des demandes sans le savoir.', geste: 'C’est pour moi. Écris « répare » et je le fais.', regles: null, regles_texte: '', items: fSite },
       { id: 'veille', nom: 'Pub arrêtée, cause à trouver', action: 'claude', couleur: 'orange', unite: 'clients', quoi: 'Leur pub ne s’affiche plus. Aucune demande ne rentre pour eux.', geste: 'Je cherche la cause. Je te dis quoi faire.', regles: null, regles_texte: '', items: fVeille },
       { id: 'celine', nom: 'Céline attend ta réponse', action: 'toi', couleur: 'orange', unite: 'notes', quoi: pl(notes, 'note de sa page est', 'notes de sa page sont') + ' sans réponse. La plus vieille a ' + pl(notesJours, 'jour', 'jours') + '.', geste: 'Tu réponds dans sa page, ou tu me dictes.', regles: null, regles_texte: '', attente_n: notes, items: [] },
-      { id: 'annonces', nom: 'Annonces refusées par Google', action: 'claude', couleur: 'gris', unite: 'comptes', quoi: pl(fAnnonces.length, 'compte a', 'comptes ont') + ' quelques annonces refusées. Leur pub tourne quand même.', geste: 'C’est pour moi. Rien d’urgent.', regles: ga.regles || null, regles_texte: 'refus déjà corrigés', items: fAnnonces }
+      { id: 'annonces', nom: 'Annonces refusées par Google', action: 'claude', couleur: 'gris', unite: 'comptes', quoi: pl(fAnnonces.length, 'compte a', 'comptes ont') + ' quelques annonces refusées. Leur pub tourne quand même.' + (nNumero ? ' Pour ' + nNumero + ', Google refuse le numéro de téléphone.' : ''), geste: 'C’est pour moi. Rien d’urgent.', regles: ga.regles || null, regles_texte: 'refus déjà corrigés', items: fAnnonces }
     ].filter(function (f) { return (f.attente_n != null ? f.attente_n : f.items.length) > 0 || (f.regles || 0) > 0; });
+
+    F.forEach(function (f) { f.items.forEach(function (x) { if (x.k) x.c = avecQui(x.k, x.c); }); });   /* (p12) le nom de la personne à côté du nom du compte */
 
     /* ---- l'argent du mois : seulement les clients à la demande ---- */
     var jour = maintenantParis ? +String(maintenantParis).slice(8, 10) : 1, joursMois = new Date(an, mo, 0).getDate() || 30;
@@ -654,7 +712,7 @@ window.__PROBLEMES__ = function (D) {
     var FAIT = {}; (AR.par_client || []).forEach(function (x) { FAIT[x.cid] = String(x.mode || '').toLowerCase(); });
     var P = { titre: 'Qui paie comment ?', sous: 'Lu dans ton tableau, à l’instant.', fin: 'Pour changer un client, dis-le-moi dans le chat.',
       clients: (G.clients || []).filter(function (c) { return client(c.cid); }).map(function (c) { var m = MODE[c.cid], fait = FAIT[c.cid] || '', v = m || fait;
-        return { k: c.cid, c: c.nom, p: v === 'lead' ? 'd' : (v === 'forfait' || v === 'aucun') ? 'f' : '',
+        return { k: c.cid, c: avecQui(c.cid, c.nom), p: v === 'lead' ? 'd' : (v === 'forfait' || v === 'aucun') ? 'f' : '',
           f: m === 'lead' ? 'Ton tableau dit : à la demande.' : m === 'forfait' ? 'Ton tableau dit : au forfait.' : m === 'aucun' ? 'Ton tableau dit : pas de relevé.' : fait === 'lead' ? 'Case vide : ton tableau le compte à la demande.' : fait ? 'Case vide : ton tableau ne lui envoie pas de relevé.' : 'Ton tableau ne dit rien.' }; })
         .sort(function (a, b) { return a.c.toLowerCase() < b.c.toLowerCase() ? -1 : 1; }) };
 
@@ -680,7 +738,7 @@ window.__PROBLEMES__ = function (D) {
   'use strict';
   var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', CLE = 'ba_comptes_code', CACHE = 'ba_problemes_p2', SAUT = 'ba_problemes_saut', PARTS = ['google', 'argent', 'nouveaux', 'messages', 'jour'], VIEUX_MIN = 5, LIMITE_MS = 30000, LIMITE_TOUT_MS = 20000,
       RETARD = 'Une partie de ton tableau a traîné : pour elle, ce sont les chiffres d’avant.';
-  var R = window.__PROBLEMES_ETAT__ = { version: 'p11-1811', etat: 'depart', envois: 0, lectures: 0, copie: '', retard: [] };
+  var R = window.__PROBLEMES_ETAT__ = { version: 'p12-1811', etat: 'depart', envois: 0, lectures: 0, copie: '', retard: [] };
   var att = document.getElementById('attente'), msg = document.getElementById('attente-msg'), lien = document.getElementById('attente-lien'), encore = document.getElementById('attente-encore');
   function dire(etat, t, avecLien, avecEncore) { R.etat = etat; att.style.display = 'flex'; msg.textContent = t; lien.hidden = !avecLien; lien.style.display = avecLien ? 'inline-block' : 'none'; encore.hidden = !avecEncore; encore.style.display = avecEncore ? 'inline-block' : 'none'; }
   function lire(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
