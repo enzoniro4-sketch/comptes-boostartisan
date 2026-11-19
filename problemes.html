@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
-<meta name="ba-version" content="p12-1811">
+<meta name="ba-version" content="p13-1911">
 <link rel="icon" type="image/png" href="icone-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Problèmes et argent</title>
@@ -45,6 +45,10 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .maj button:disabled { color: var(--gris); border-color: var(--trait); cursor: default; }
 .maj span { font-size: 14px; color: var(--doux); }
 .maj span.rouge { color: var(--rouge); font-weight: 600; }
+.controle { margin: 8px 0 0; font-size: 14px; color: var(--doux); }
+.controle.rouge { color: var(--rouge); font-weight: 600; }
+.controle-liste { margin: 6px 0 0; padding-left: 20px; font-size: 14px; color: var(--rouge); }
+.controle-liste li { margin: 3px 0; }
 
 .grand { margin: 16px 0 2px; font-size: 27px; line-height: 1.15; font-weight: 700; letter-spacing: -.01em; text-wrap: balance; }
 .sous { margin: 0; color: var(--doux); font-size: 16px; }
@@ -148,6 +152,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   </header>
   <p class="lu">Lu dans ton tableau <b id="lu-texte"></b>.<span id="lu-age"></span></p>
   <p class="maj"><button type="button" id="maj-bouton">Mettre à jour</button><span id="maj-etat" role="status" aria-live="polite"></span></p>
+  <p class="controle" id="controle" role="status" hidden></p>
+  <ul class="controle-liste" id="controle-liste" hidden></ul>
 
   <main id="vue-problemes">
     <h1 class="grand" id="p-grand"></h1>
@@ -205,6 +211,20 @@ window.__PROBLEMES__ = function (D) {
     age(); setInterval(age, 60000);
   })();
   document.getElementById('pied').textContent = typo(D.source);
+  /* (p13) le contrôle automatique : ce que le 2e programme a trouvé en relisant les faits du tableau ; un écart = rouge, écrit, jamais caché */
+  (function () {
+    var p = document.getElementById('controle'), u = document.getElementById('controle-liste'), c = D.controle;
+    if (!p || !u) return;
+    u.textContent = ''; u.hidden = true;
+    if (!c) { p.hidden = true; return; }
+    p.hidden = false;
+    if (c.ok) { p.className = 'controle'; p.textContent = typo('Contrôle automatique : ' + nb(c.vus) + ' clients vérifiés, 0 écart.'); return; }
+    p.className = 'controle rouge';
+    p.textContent = typo('Contrôle automatique : ' + c.nb + (c.nb > 1 ? ' écarts' : ' écart') + '. Cette page se trompe peut-être : dis-le à Claude.');
+    (c.ecarts || []).forEach(function (t) { u.appendChild(el('li', '', t)); });
+    if (c.nb > (c.ecarts || []).length) u.appendChild(el('li', '', 'Et ' + (c.nb - c.ecarts.length) + ' de plus.'));
+    u.hidden = false;
+  })();
 
   /* ---- problèmes ---- */
   var cles = {}, total = 0, regles = 0;
@@ -417,7 +437,7 @@ window.__PROBLEMES__ = function (D) {
 };
 </script>
 <script>
-/* regles.js — 17/11/2026 (ch. 55, p2). LE PROGRAMME FIXE qui range les problèmes : il remplace donnees.json écrit à la main.
+/* regles.js — 17/11/2026 (ch. 55, p2) ; p13 le 19/11/2026 : LES FAITS DÉCIDENT + LE CONTRÔLE AUTOMATIQUE (voir « p13 » plus bas). LE PROGRAMME FIXE qui range les problèmes : il remplace donnees.json écrit à la main.
    Entrée : S = { google, argent, nouveaux, messages, jour } = les morceaux rendus par le tableau (vue 'problemes', vq), chacun { quand, d }.
    Sortie : D = { lu_quand, lu_texte, lu_age_min, source, comptes_url, familles, argent, paiement } = ce que la page sait afficher (gabarit du 15/11).
    Aucune donnée ici : que des règles. Une phrase = un sujet, 15 mots au plus, jamais un mot du tableau. */
@@ -487,7 +507,10 @@ window.__PROBLEMES__ = function (D) {
     function avecQui(k, c) { var q = QUI[k]; return q && String(c).indexOf(q) < 0 ? c + ' · ' + q : c; }
     var AUTRE = {}; (AR.par_client || []).forEach(function (x) { if (x.cid && x.nom) AUTRE[x.cid] = x.nom; });
     function nom(cid, autre) { return NOM[cid] || autre || AUTRE[cid] || (E[cid] && E[cid].nom) || cid; }
-    var CID = {}; Object.keys(NOM).forEach(function (c) { CID[String(NOM[c]).toLowerCase()] = c; });
+    /* (p13) un nom → son compte : d'abord le compte ACTIF de ce nom (ou celui de sa fiche), un archivé seulement s'il n'y a rien d'autre.
+       Le 19/11 une ligne « site sans formulaire » tombait sur un vieux compte archivé du même nom : elle était perdue sans bruit. */
+    var CID = {}; Object.keys(NOM).forEach(function (c) { var k = String(NOM[c]).toLowerCase(); if (CID[k] === undefined || (PARTI[CID[k]] && !PARTI[c])) CID[k] = c; });
+    (NV.liste || []).forEach(function (x) { var k = String(x.nom || '').toLowerCase(); if (x.cid && k && NOM[x.cid] !== undefined && !PARTI[x.cid] && (CID[k] === undefined || PARTI[CID[k]])) CID[k] = x.cid; });
 
     /* ---- les problèmes Google : identité, paiement, annonces ---- */
     function google(types) {
@@ -506,7 +529,15 @@ window.__PROBLEMES__ = function (D) {
       items.sort(function (a, b) { return a.depuis < b.depuis ? -1 : a.depuis > b.depuis ? 1 : 0; });
       return { items: items, regles: regles };
     }
-    function pub(cid) { var e = E[cid]; if (!e) return ''; return e.imp_hier > 0 ? 'Sa pub tourne encore.' : 'Sa pub est arrêtée.'; }
+    /* (p13, 19/11/2026, Enzo : « il en oublie, il se trompe… la vraie cause… plus jamais ») — LES FAITS DÉCIDENT.
+       « Sa pub est arrêtée » se disait dès que les affichages d'HIER étaient à 0 : faux chaque lundi (les pubs sont coupées le dimanche) et les jours hors calendrier.
+       Maintenant « arrêtée » = un fait sûr : DIFF = le script dit que la diffusion est arrêtée (problème 'diffusion' ouvert, règle du lundi comprise) ;
+       enPause = plus aucune pub allumée (budget des pubs allumées à 0) ; ou rien affiché en 7 jours. Sans fait sûr et sans affichage hier, la page ne dit rien de la pub. */
+    var DIFF = {};
+    Object.keys((G.pg && G.pg.comptes) || {}).forEach(function (cid) { (G.pg.comptes[cid] || []).forEach(function (x) { if (x.type === 'diffusion' && x.etat !== 'regle') DIFF[cid] = x; }); });
+    function enPause(cid) { var e = E[cid]; return !!e && typeof e.budget === 'number' && !(e.budget > 0); }
+    function arretee(cid) { var e = E[cid]; return !!e && (!!DIFF[cid] || enPause(cid) || !(e.imp_7j > 0)); }
+    function pub(cid) { var e = E[cid]; if (!e) return ''; if (arretee(cid)) return 'Sa pub est arrêtée.'; return e.imp_hier > 0 ? 'Sa pub tourne encore.' : ''; }
     function joursDepuis(q) { var a = minutes(maintenantParis), b = minutes(q); return a === null || b === null ? 0 : (a - b) / 1440; }
     function heure(q) { var m = minutes(q); if (m === null) return ''; var t = new Date((m + (decalMin || 0)) * 60000); return ('0' + t.getUTCHours()).slice(-2) + ' h ' + ('0' + t.getUTCMinutes()).slice(-2); }   /* heure de Paris → heure de l'appareil */
     /* (p10) une donnée pas relue chez Google depuis plus de 2 heures est DITE vieille, à l'heure de l'appareil ; jamais montrée comme vraie */
@@ -548,15 +579,16 @@ window.__PROBLEMES__ = function (D) {
     /* (p10) la vraie raison, lue dans la preuve que le tableau garde : carte refusée · argent dû, annonces coupées · argent dû, Google laisse encore tourner */
     /* (p11) ce que Google DIT (« risque de suspension », « annonces coupées ») ne dit pas si la pub tourne : c'est le relevé du script (affichages d'hier, pub()) qui le dit.
        Le 18/11 : Cottin, Couvreur 33 Anthony, France toiture 83 étaient « Google prévient qu'il va couper. Sa pub est arrêtée. » — deux phrases qui se contredisent. */
-    function raisonPaiement(i) { var p = sansAccent(i.x && i.x.preuve), e = E[i.cid], tourne = !!e && e.imp_hier > 0;
+    function raisonPaiement(i) { var p = sansAccent(i.x && i.x.preuve), e = E[i.cid], tourne = !!e && e.imp_hier > 0 && !arretee(i.cid);
       if (i.type === 'suspendu') return 'Google a suspendu son compte. ';
       if (!/laisse tourner|risque de suspension|solde impaye|annonces coupees|effectuez un paiement/.test(p)) return 'Sa carte ne passe plus chez Google. ';
       if (!e) return /laisse tourner|risque de suspension/.test(p) ? 'Il doit de l’argent à Google. Google prévient qu’il va couper. ' : 'Il doit de l’argent à Google : ses annonces sont coupées. ';   /* pas de relevé pour ce compte : le mot de Google */
       return 'Il doit de l’argent à Google. ' + (tourne ? 'Google prévient qu’il va couper. ' : ''); }
     var fPaiement = gp.items.map(function (i) { bloque[i.cid] = bloque[i.cid] || 'paiement'; return { k: i.cid, c: i.nom, d: jm(i.depuis), m: (raisonPaiement(i) + pub(i.cid)).trim() + vieuxTexte(i.x) }; });
     /* (p12) etat[].ext_numero (tableau we) : c'est son NUMÉRO que Google refuse sur ses annonces (extension d'appel, numéro non validé) : dit en clair */
-    var nNumero = 0, fAnnonces = ga.items.map(function (i) { var num = !!(E[i.cid] && E[i.cid].ext_numero); if (num) nNumero++;
-      return { k: i.cid, c: i.nom, d: jm(i.depuis), m: num ? 'Google refuse son numéro de téléphone sur ses annonces : numéro non validé. Sa pub tourne quand même.' : 'Des annonces sont refusées. Sa pub tourne quand même.' }; });
+    /* (p13) « Sa pub tourne quand même » n'est dit que si elle tourne : le 19/11 la phrase était écrite pour 3 clients dont la pub était arrêtée. */
+    var nNumero = 0, nTourne = 0, fAnnonces = ga.items.map(function (i) { var num = !!(E[i.cid] && E[i.cid].ext_numero), t = !arretee(i.cid); if (num) nNumero++; if (t) nTourne++;
+      return { k: i.cid, c: i.nom, d: jm(i.depuis), m: (num ? 'Google refuse son numéro de téléphone sur ses annonces : numéro non validé.' : 'Des annonces sont refusées.') + (t ? ' Sa pub tourne quand même.' : '') }; });
 
     /* ---- pas encore lancés ---- */
     var lances = {}, dansLancer = {}, enReglage = {}, fLancer = [];
@@ -573,11 +605,19 @@ window.__PROBLEMES__ = function (D) {
     }
     var fSite = [], vuSite = {};
     function site(k, qui, dit) { var cle = String(qui).toLowerCase() + '|' + dit; if (vuSite[cle]) return; vuSite[cle] = 1; fSite.push({ k: k, c: qui, d: '', m: dit }); }
+    /* (p13) une VENTE sans formulaire, au nom d'un client DÉJÀ dans tes comptes (le nom de la personne, ou ce nom écrit dans le nom de son compte), n'est pas « un client pas encore lancé ».
+       Le 19/11 la page disait de 2 clients lancés depuis un mois qu'ils n'avaient « pas encore rempli leur formulaire ». */
+    function cleNom(t) { return sansAccent(t).replace(/[^a-z0-9]+/g, ' ').replace(/^ +| +$/g, ''); }
+    var PERSONNES = {}, COMPTES = [], connus = [];
+    (G.clients || []).forEach(function (c) { if (!client(c.cid)) return; if (c.qui) PERSONNES[cleNom(c.qui)] = c.cid; COMPTES.push([' ' + cleNom(c.nom) + ' ', c.cid]); });
+    (NV.liste || []).forEach(function (x) { if (x.cid && client(x.cid) && x.vendu) PERSONNES[cleNom(x.vendu)] = x.cid; });
+    function dejaClient(n) { var k = cleNom(n); if (k.length < 6 || k.indexOf(' ') < 0) return ''; if (PERSONNES[k]) return PERSONNES[k]; for (var i = 0; i < COMPTES.length; i++) if (COMPTES[i][0].indexOf(' ' + k + ' ') >= 0) return COMPTES[i][1]; return ''; }
     (NV.liste || []).forEach(function (x) {
       var k = x.cid || x.siret || x.nom; if (!k) return;
       if (x.etape === 'ok' || essai(x.cid)) return;
       if (x.cid && (PARTI[x.cid] || bloque[x.cid])) return;                       /* parti, ou déjà rangé chez Google */
       if (x.etape === 'dexem_ads' && /beckert/i.test(x.nom)) return;              /* Atelier Beckert : jamais de suivi d'appels (règle d'Enzo) */
+      if (x.etape === 'formulaire' && !x.cid && dejaClient(x.nom)) { connus.push(String(x.nom)); return; }   /* (p13) déjà client : pas « à lancer » */
       if (lances[k]) return; lances[k] = 1;
       var tourne = !!(x.cid && E[x.cid] && E[x.cid].imp_7j > 0);                  /* sa pub s'est affichée cette semaine : il est lancé */
       if (x.etape === 'dexem_ads' || (tourne && x.etape === 'bloque') || (tourne && x.etape === 'pubs' && /il manque/i.test(String(x.libelle)))) { enReglage[k] = 1; site(k, x.nom, etapeDit(x)); return; }
@@ -587,6 +627,9 @@ window.__PROBLEMES__ = function (D) {
 
     /* ---- les lignes du jour : zéro demande, pub qui ne s'affiche plus, site, contrôles ---- */
     var fZero = [], fVeille = [];
+    /* (p13) ce que disent les lignes du jour, gardé pour les faits : ZEROL = « pas de demande » (case du tableau), SILENCE = « n'affiche plus », REFUS = annonces refusées sans affichage ;
+       HORS = les cases que cette page ne range pas exprès (bloqué : c'est Google qui le dit ; pause : les faits ; marge et budget : la page des comptes). */
+    var ZEROL = {}, SILENCE = {}, REFUS = {}, HORS = { bloque: 1, pause: 1, marge: 1, budget: 1, ok: 1 };
     /* (p12) « ZÉRO DEMANDE » : DEPUIS QUEL JOUR, POUR COMBIEN (etat[].sans_depuis, sans_cout, sans_clics, sans_du : tableau we). La page disait « 64 € dépensés en 7 jours, zéro demande »
        pour un client sans aucune demande depuis 33 jours et 408 € (Universel Habitat 49, 18/11). Sans ces champs (tableau d'avant, calcul en panne) : la phrase d'avant, sur 7 jours.
        Le tableau ne garde que 2 mois de dépenses par jour : au-delà de 60 jours, la somme est dite « sur les 2 derniers mois ». */
@@ -602,11 +645,17 @@ window.__PROBLEMES__ = function (D) {
       var q = String(l.quoi || ''), cid = l.cid;
       if (l.famille === 'client') {
         if (!cid || !client(cid)) return;
-        var e = E[cid];
-        if (/aucun lead depuis 7 jours/i.test(q)) fZero.push(zeroDit(cid, nom(cid, l.client), e));
-        else if (/n.affiche plus/i.test(q)) { if (!bloque[cid] && !dansLancer[cid]) fVeille.push({ k: cid, c: nom(cid, l.client), d: '', m: 'Sa pub ne s’affiche plus. Je cherche pourquoi.' }); }
-        else if (/carte bancaire/i.test(q)) { if (!bloque[cid] && !dansLancer[cid]) { dansLancer[cid] = 1; fLancer.push({ k: cid, c: nom(cid, l.client), d: '', m: 'Sa pub n’a jamais démarré. Sa carte est à vérifier.', tri: '' }); } }
-        else if (/mise en place incomplète/i.test(q)) { if (!bloque[cid] && !dansLancer[cid] && !enReglage[cid]) site(cid, nom(cid, l.client), 'Sa mise en place n’est pas finie.'); }
+        /* (p13) la page lisait la PHRASE de la case et n'en reconnaissait que 4 sur 12 : « site hors ligne », « relevé en erreur », « aucune diffusion », « lancé depuis 14 jours sans demande »,
+           « dépense sans résultat »… tombaient sans bruit. Maintenant : la CASE elle-même (colonne). Arrêt et zéro demande sont jugés plus bas sur les FAITS ; une case inconnue est montrée. */
+        var col = String(l.colonne || '') || (/aucun lead depuis 7 jours/i.test(q) ? 'sanslead' : /n.affiche plus/i.test(q) ? 'silence' : /carte bancaire/i.test(q) ? 'carte' : /mise en place incomplète/i.test(q) ? 'mise_en_place' : /site hors ligne/i.test(q) ? 'site_ko' : /relevé ads en erreur/i.test(q) ? 'inconnu' : /aucune diffusion/i.test(q) ? 'zero' : /compte bloqué/i.test(q) ? 'bloque' : '?');
+        if (col === 'sanslead' || col === 'demarrage_rouge' || col === 'cher') ZEROL[cid] = 1;
+        else if (col === 'silence' || col === 'zero') SILENCE[cid] = 1;
+        else if (col === 'carte') { if (!bloque[cid] && !dansLancer[cid]) { dansLancer[cid] = 1; fLancer.push({ k: cid, c: nom(cid, l.client), d: '', m: 'Sa pub n’a jamais démarré. Sa carte est à vérifier.', tri: '' }); } }
+        else if (col === 'mise_en_place') { if (!bloque[cid] && !dansLancer[cid] && !enReglage[cid]) site(cid, nom(cid, l.client), 'Sa mise en place n’est pas finie.'); }
+        else if (col === 'site_ko') site(cid, nom(cid, l.client), 'Son site est hors ligne.');
+        else if (col === 'inconnu') site(cid, nom(cid, l.client), 'Le relevé de ses pubs est en erreur. Je regarde.');
+        else if (col === 'refus') REFUS[cid] = 1;
+        else if (!HORS[col]) site(cid, nom(cid, l.client), 'Le robot signale un souci chez lui. Je regarde.');
         return;
       }
       var qui = '', dit = '';
@@ -615,6 +664,39 @@ window.__PROBLEMES__ = function (D) {
       if (!qui || (cid && !client(cid))) return;
       site(cid || qui, qui, dit);
     });
+    /* ---- (p13) LES FAITS, client par client : pub arrêtée, zéro demande ----
+       Avant : seulement les clients que la page du jour rangeait dans la case « n'affiche plus » ou « aucun lead depuis 7 jours » (une seule case par client, clients du lot seulement).
+       Le 19/11 : 4 clients aux pubs toutes en pause n'étaient nulle part ; « zéro demande » oubliait 5 clients (jusqu'à 674 € partis sans une demande)
+       et en montrait 1 à tort (il avait reçu une demande la veille).
+       Règle d'Enzo (REGLES § 2, comptage) : une demande = un appel ou un formulaire reçu AU TABLEAU. La case du tableau, elle, comptait les conversions de Google. */
+    var auj10 = String(maintenantParis || '').slice(0, 10), BONJ = /^\d{4}-\d\d-\d\d$/, vuFait = {};
+    function joursDe(j) { j = String(j || '').slice(0, 10); return BONJ.test(j) && BONJ.test(auj10) ? Math.round((Date.parse(auj10 + 'T00:00:00Z') - Date.parse(j + 'T00:00:00Z')) / 864e5) : null; }
+    function valideLe(cid) { var r = ''; ((G.pg && G.pg.comptes && G.pg.comptes[cid]) || []).forEach(function (x) { var j = joursDe(x.regle_le); if (x.type === 'identite' && x.etat === 'regle' && x.regle_vu === true && j !== null && j >= 0 && j <= 3) r = x.regle_le; }); return r; }
+    (G.clients || []).forEach(function (c) {
+      var cid = c.cid; if (!client(cid) || vuFait[cid]) return; vuFait[cid] = 1;
+      var e = E[cid], n = nom(cid, c.nom); if (!e) return;                                   /* aucun relevé de ses pubs : c'est le contrôle qui le dit, en haut */
+      var jl = joursDe(c.lance), neuf = jl !== null && jl >= 0 && jl < 2;                     /* lancé hier ou aujourd'hui : trop tôt pour juger */
+      var stopFait = arretee(cid) && !neuf;
+      if (stopFait || SILENCE[cid]) {
+        if (!bloque[cid] && !dansLancer[cid]) { var v = valideLe(cid), dj = DIFF[cid] ? jm(DIFF[cid].depuis) : '';
+          fVeille.push({ k: cid, c: n, d: '', m: enPause(cid) ? 'Toutes ses pubs sont en pause.' : v ? 'Google a validé son identité le ' + jm(v) + '. Sa pub doit repartir.' : 'Sa pub ne s’affiche plus' + (dj ? ' depuis le ' + dj : '') + '. Je cherche pourquoi.' }); }
+        if (stopFait) return;                                                                 /* arrêtée (un fait) : sa ligne est ailleurs (Google, pas encore lancé, pub arrêtée) ; pas de « zéro demande » en plus */
+      }
+      var sd = String(e.sans_depuis || '').slice(0, 10), su = String(e.sans_du || '').slice(0, 10);
+      if (e.sans_du !== undefined && (BONJ.test(sd) || (!sd && BONJ.test(su)))) {             /* le tableau dit depuis quand il n'a reçu aucune vraie demande (we) : c'est lui qui décide */
+        var jz = sd ? joursDe(sd) : joursDe(su), cs = e.sans_cout || 0, c7 = e.cout_7j || 0, cl = e.sans_clics ? ', ' + pl(e.sans_clics, 'clic', 'clics') : '', g7 = Math.round(e.leads_7j || 0);
+        if (jz === null || jz < 7) return;                                                    /* une vraie demande il y a moins de 7 jours : PAS « zéro demande », quoi que dise la case du jour */
+        if (!(cs > 0)) { if (ZEROL[cid]) fZero.push(zeroDit(cid, n, e)); return; }            /* aucun euro compté depuis : la case du jour, comme avant */
+        if (jz >= 9 && cs < 0.9 * c7) { fZero.push({ k: cid, c: n, d: eur(c7), m: eur(c7) + ' dépensés en 7 jours, zéro demande.', tri: c7 }); return; }   /* chiffres qui ne collent pas : la phrase sur 7 jours */
+        fZero.push({ k: cid, c: n, d: eur(cs), tri: cs,
+          m: (sd ? 'Zéro demande depuis le ' + jm(sd) + ' : ' + jz + ' jours, ' + eur(cs) + ' dépensés' + cl + (jz > 60 ? ' sur les 2 derniers mois' : '') + '.'
+                 : 'Aucune demande dans ton tableau depuis au moins le ' + jm(su) + ' : ' + eur(cs) + ' dépensés' + cl + '.')
+             + (g7 >= 1 ? ' Google en compte ' + g7 + ' sur 7 jours : comptage à vérifier.' : '') });
+      } else if (ZEROL[cid]) fZero.push(zeroDit(cid, n, e));                                  /* tableau d'avant, ou calcul en panne : la case du jour, comme avant */
+    });
+    /* (p13) annonces refusées dites par la case du jour, que Google n'a pas (encore) dans ses problèmes : montrées, pas perdues */
+    Object.keys(REFUS).forEach(function (cid) { if (fAnnonces.some(function (i) { return i.k === cid; })) return; var t = !arretee(cid); if (t) nTourne++;
+      fAnnonces.push({ k: cid, c: nom(cid), d: '', m: 'Des annonces sont refusées ou en examen.' + (t ? ' Sa pub tourne quand même.' : '') }); });
     fLancer.sort(function (a, b) { return a.tri < b.tri ? -1 : a.tri > b.tri ? 1 : 0; }); fLancer.forEach(function (x) { delete x.tri; });
 
     /* ---- l'argent : relevés pas payés ---- */
@@ -635,7 +717,7 @@ window.__PROBLEMES__ = function (D) {
     var OUVERT = { nouvelle: 1, en_cours: 1, a_trancher: 1 }, SUJET = { site: 'son site', acces_google: 'payer Google lui-même', paiement: 'un paiement', numero: 'son numéro', zone: 'sa zone', budget: 'son budget', logo: 'son logo', photo: 'ses photos' };
     var parClient = {}, mOuverts = 0, mRegles = 0;
     (ME.liste || []).forEach(function (m) {
-      if (essai(m.cid) || m.statut === 'doublon') return;
+      if (essai(m.cid) || m.statut === 'doublon' || PARTI[m.cid]) return;   /* (p13) archivé = sorti de partout : le 19/11, 2 messages d'un client archivé étaient comptés */
       if (!OUVERT[m.statut]) { mRegles++; return; }
       mOuverts++; var k = m.cid || m.nom, p = parClient[k] = parClient[k] || { k: k, c: nom(m.cid, m.nom), n: 0, vieux: '', types: {} };
       p.n++; if (m.recu_le && (!p.vieux || m.recu_le < p.vieux)) p.vieux = m.recu_le; p.types[m.type] = (p.types[m.type] || 0) + 1;
@@ -657,7 +739,7 @@ window.__PROBLEMES__ = function (D) {
       { id: 'site', nom: 'Site ou réglage cassé', action: 'claude', couleur: 'orange', unite: 'clients', quoi: 'Un défaut chez nous. Le client perd des demandes sans le savoir.', geste: 'C’est pour moi. Écris « répare » et je le fais.', regles: null, regles_texte: '', items: fSite },
       { id: 'veille', nom: 'Pub arrêtée, cause à trouver', action: 'claude', couleur: 'orange', unite: 'clients', quoi: 'Leur pub ne s’affiche plus. Aucune demande ne rentre pour eux.', geste: 'Je cherche la cause. Je te dis quoi faire.', regles: null, regles_texte: '', items: fVeille },
       { id: 'celine', nom: 'Céline attend ta réponse', action: 'toi', couleur: 'orange', unite: 'notes', quoi: pl(notes, 'note de sa page est', 'notes de sa page sont') + ' sans réponse. La plus vieille a ' + pl(notesJours, 'jour', 'jours') + '.', geste: 'Tu réponds dans sa page, ou tu me dictes.', regles: null, regles_texte: '', attente_n: notes, items: [] },
-      { id: 'annonces', nom: 'Annonces refusées par Google', action: 'claude', couleur: 'gris', unite: 'comptes', quoi: pl(fAnnonces.length, 'compte a', 'comptes ont') + ' quelques annonces refusées. Leur pub tourne quand même.' + (nNumero ? ' Pour ' + nNumero + ', Google refuse le numéro de téléphone.' : ''), geste: 'C’est pour moi. Rien d’urgent.', regles: ga.regles || null, regles_texte: 'refus déjà corrigés', items: fAnnonces }
+      { id: 'annonces', nom: 'Annonces refusées par Google', action: 'claude', couleur: 'gris', unite: 'comptes', quoi: pl(fAnnonces.length, 'compte a', 'comptes ont') + ' quelques annonces refusées.' + (nTourne === fAnnonces.length ? ' Leur pub tourne quand même.' : ' La pub tourne quand même pour ' + nTourne + ' d’entre eux.') + (nNumero ? ' Pour ' + nNumero + ', Google refuse le numéro de téléphone.' : ''), geste: 'C’est pour moi. Rien d’urgent.', regles: ga.regles || null, regles_texte: 'refus déjà corrigés', items: fAnnonces }
     ].filter(function (f) { return (f.attente_n != null ? f.attente_n : f.items.length) > 0 || (f.regles || 0) > 0; });
 
     F.forEach(function (f) { f.items.forEach(function (x) { if (x.k) x.c = avecQui(x.k, x.c); }); });   /* (p12) le nom de la personne à côté du nom du compte */
@@ -719,9 +801,99 @@ window.__PROBLEMES__ = function (D) {
     /* ---- l'heure de la lecture = le morceau le plus vieux ---- */
     var Q = [S.google.quand, S.argent.quand, S.nouveaux.quand, S.messages.quand, S.jour.quand].filter(Boolean).sort(), vieux = Q[0] || '';
     var age = maintenantParis && minutes(vieux) !== null && minutes(maintenantParis) !== null ? Math.max(0, minutes(maintenantParis) - minutes(vieux)) : 0;
-    return { lu_quand: vieux, lu_texte: (maintenantParis && String(maintenantParis).slice(0, 10) === vieux.slice(0, 10) ? 'aujourd’hui' : 'le ' + jm(vieux)) + ' à ' + vieux.slice(11, 13) + ' h ' + vieux.slice(14, 16), lu_age_min: age,
+    var SORTIE = { lu_quand: vieux, lu_texte: (maintenantParis && String(maintenantParis).slice(0, 10) === vieux.slice(0, 10) ? 'aujourd’hui' : 'le ' + jm(vieux)) + ' à ' + vieux.slice(11, 13) + ' h ' + vieux.slice(14, 16), lu_age_min: age,
       source: 'Relu dans ton tableau à chaque ouverture. Rien n’est repris de la mémoire.', comptes_url: './', familles: F, argent: A, paiement: P };
+    SORTIE.connus = connus;                                                                   /* (p13) ventes au nom d'un client déjà lancé : pas montrées, dites au contrôle */
+    try { SORTIE.controle = controler(S, SORTIE, maintenantParis); } catch (eC) { SORTIE.controle = { ok: false, vus: 0, nb: 1, ecarts: ['Le contrôle automatique n’a pas pu tourner.'], notes: [] }; }
+    return SORTIE;
   }
+  /* (p13) LE CONTRÔLE AUTOMATIQUE — un 2e programme, court, écrit à part : il ne reprend RIEN du calcul. Il relit les faits bruts du tableau (S) et vérifie que la page finie (D)
+     ne se tait sur aucun client et ne dit rien de contraire aux faits. Il tourne à CHAQUE ouverture, sur l'appareil, sans personne. Un écart s'écrit en rouge en haut de la page.
+     Ordre d'Enzo du 19/11/2026 : « fiable… de façon autonome, en automatique ». Ce qu'il vérifie, pour chaque client non archivé :
+     1. sa pub est arrêtée (diffusion arrêtée, tout en pause, rien en 7 jours) → il est dans Google veut vérifier · Google n'arrive pas à faire payer · pas encore lancé · pub arrêtée ;
+     2. Google le bloque (identité, paiement, suspendu) → il est dans la bonne famille ; 3. aucune demande au tableau depuis 7 jours, pub allumée, argent parti → il est dans « zéro demande », et l'inverse ;
+     4. aucune phrase ne dit « tourne » pour une pub arrêtée, ni « arrêtée » sans fait ; 5. aucune ligne pour un client archivé ; 6. et 7. messages et relevés recomptés ;
+     8. aucune ligne du jour perdue, aucune case inconnue ; 9. le robot a relu Google à l'heure, le relevé des pubs a moins de 26 heures ; 10. chaque client signé est quelque part. */
+  function controler(S, D, maintenantParis) {
+    var G = (S.google && S.google.d) || {}, AR = (S.argent && S.argent.d) || {}, NV = (S.nouveaux && S.nouveaux.d) || {}, ME = (S.messages && S.messages.d) || {}, JO = (S.jour && S.jour.d) || {};
+    var ecarts = [], notes = [], vus = 0, etat = G.etat || {}, pgc = (G.pg && G.pg.comptes) || {}, F = {};
+    (D.familles || []).forEach(function (f) { F[f.id] = f; });
+    function dire(t) { if (ecarts.indexOf(t) < 0) ecarts.push(t); }
+    function item(cid, id) { var f = F[id], r = null; if (f) f.items.forEach(function (i) { if (!r && i.k === cid) r = i; }); return r; }
+    function dans(cid, ids) { for (var i = 0; i < ids.length; i++) if (item(cid, ids[i])) return true; return false; }
+    function plat(t) { return sansAccent(t).replace(/[^a-z0-9]+/g, ' ').replace(/^ +| +$/g, ''); }
+    var auj = String(maintenantParis || '').slice(0, 10), BON = /^\d{4}-\d\d-\d\d$/;
+    function jours(j) { j = String(j || '').slice(0, 10); return BON.test(j) && BON.test(auj) ? Math.round((Date.parse(auj + 'T00:00:00Z') - Date.parse(j + 'T00:00:00Z')) / 864e5) : null; }
+    var ACTIF = {}, ARCHIVE = {}, sansStatut = [];
+    (G.clients || []).forEach(function (c) { if (!c.cid || essai(c.cid)) return; if (/archiv|fermé|ferme|parti/i.test(String(c.statut || ''))) ARCHIVE[c.cid] = 1; else { ACTIF[c.cid] = c; if (!String(c.statut || '').replace(/\s+/g, '')) sansStatut.push(String(c.nom)); } });
+    Object.keys(ACTIF).forEach(function (cid) {
+      var c = ACTIF[cid], e = etat[cid], P = pgc[cid] || [], n = String(c.nom); vus++;
+      P.forEach(function (x) { if (x.etat === 'regle') return;                                                                              /* 2 */
+        if (x.type === 'identite' && !item(cid, 'identite')) dire(n + ' : Google lui demande ses papiers, la page ne le dit pas.');
+        if ((x.type === 'paiement' || x.type === 'suspendu') && !item(cid, 'paiement')) dire(n + ' : Google n’arrive pas à le faire payer, la page ne le dit pas.'); });
+      var jl = jours(c.lance), neuf = jl !== null && jl >= 0 && jl < 2;
+      if (!e) { if (jl !== null && jl >= 2 && !dans(cid, ['lancer', 'identite', 'paiement', 'site'])) dire(n + ' : le relevé de ses pubs manque.'); return; }   /* pas encore lancé, ou lancé hier : normal */
+      var stop = P.some(function (x) { return x.type === 'diffusion' && x.etat !== 'regle'; }) || (typeof e.budget === 'number' && !(e.budget > 0)) || !(e.imp_7j > 0);
+      if (stop && !neuf && !dans(cid, ['identite', 'paiement', 'lancer', 'veille'])) dire(n + ' : sa pub est arrêtée, la page ne le dit pas.');           /* 1 */
+      if (e.sans_du !== undefined) {                                                                                                         /* 3 */
+        var j = String(e.sans_depuis || '') ? jours(e.sans_depuis) : jours(e.sans_du), doit = !(stop && !neuf) && j !== null && j >= 7 && e.sans_cout > 0, y = !!item(cid, 'zero');
+        if (doit && !y) dire(n + ' : aucune demande depuis ' + j + ' jours, la page ne le dit pas.');
+        if (y && !(stop && !neuf) && j !== null && j < 7) dire(n + ' : la page dit « zéro demande », il en a reçu une il y a ' + j + (j > 1 ? ' jours.' : ' jour.'));
+      }
+      ['identite', 'paiement', 'annonces'].forEach(function (id) { var it = item(cid, id); if (!it) return; var m = String(it.m || '');     /* 4 */
+        if (/tourne encore|tourne quand même/.test(m) && stop) dire(n + ' : la page dit que sa pub tourne, elle est arrêtée.');
+        if (/Sa pub est arrêtée/.test(m) && !stop) dire(n + ' : la page dit sa pub arrêtée, aucun fait ne le dit.'); });
+    });
+    (D.familles || []).forEach(function (f) { if (f.id === 'argent') return; f.items.forEach(function (i) { if (i.k && ARCHIVE[i.k]) dire(String(i.c) + ' : il est archivé, la page en parle encore.'); }); });   /* 5 (l'argent dû reste dû) */
+    var nMsg = 0; (ME.liste || []).forEach(function (m) { if (essai(m.cid) || ARCHIVE[m.cid]) return; if (m.statut === 'nouvelle' || m.statut === 'en_cours' || m.statut === 'a_trancher') nMsg++; });        /* 6 */
+    var vuMsg = F.messages ? (F.messages.attente_n != null ? F.messages.attente_n : F.messages.items.length) : 0;
+    if (nMsg !== vuMsg) dire('Messages : ' + nMsg + ' attendent dans ton tableau, la page en compte ' + vuMsg + '.');
+    var nFac = 0; (AR.factures || []).forEach(function (f) { if (!essai(f.cid) && /^[àa] payer/.test(String(f.statut || '').toLowerCase())) nFac++; });                                                    /* 7 */
+    var vuFac = F.argent ? F.argent.items.length : 0;
+    if (nFac !== vuFac) dire('Relevés : ' + nFac + ' ne sont pas payés, la page en montre ' + vuFac + '.');
+    var CASES = { sanslead: 1, demarrage_rouge: 1, cher: 1, silence: 1, zero: 1, carte: 1, mise_en_place: 1, site_ko: 1, inconnu: 1, refus: 1, bloque: 1, marge: 1, budget: 1, pause: 1, ok: 1 };              /* 8 */
+    function parNom(nomL) { var k = plat(nomL), r = { actif: [], autre: 0 }; (G.clients || []).forEach(function (c) { if (plat(c.nom) !== k) return; if (ACTIF[c.cid]) r.actif.push(c.cid); else r.autre++; });
+      (NV.liste || []).forEach(function (x) { if (x.cid && plat(x.nom) === k && ACTIF[x.cid] && r.actif.indexOf(x.cid) < 0) r.actif.push(x.cid); }); return r; }
+    var autres = 0;
+    (JO.lignes || []).forEach(function (l) {
+      var cid = String(l.cid || ''), col = String(l.colonne || ''), qui = String(l.client || '').replace(/^Contrôle [^—]*—\s*/, '');
+      if (l.famille === 'client') { if (!ACTIF[cid]) return;
+        if (col && !CASES[col] && !item(cid, 'site')) dire(qui + ' : le tableau envoie une case que la page ne connaît pas.');
+        if ((col === 'site_ko' || col === 'inconnu') && !item(cid, 'site')) dire(qui + ' : son site ou son relevé est en panne, la page ne le dit pas.');
+        if (col === 'carte' && !dans(cid, ['lancer', 'identite', 'paiement'])) dire(qui + ' : sa carte manque, la page ne le dit pas.');
+        return; }
+      if (l.famille === 'controle' || l.famille === 'crible') {
+        if (cid) { if (ACTIF[cid] && !item(cid, 'site')) dire(qui + ' : un contrôle est rouge chez lui, la page ne le dit pas.'); return; }
+        if (l.famille === 'controle') { autres++; return; }                                                                                  /* un contrôle du système, sans client */
+        var pn = parNom(qui), vuSite = pn.actif.some(function (k) { return !!item(k, 'site'); }) || !!(F.site && F.site.items.some(function (i) { return plat(i.k) === plat(qui) || plat(i.c) === plat(qui); }));
+        if (!vuSite && (pn.actif.length || !pn.autre)) dire(qui + ' : un défaut sur son site, la page ne le dit pas.');
+        return; }
+      autres++;                                                                                                                              /* une ligne qui ne parle pas d'un client (système…) : notée */
+    });
+    if (autres) notes.push('Lignes du tableau qui ne parlent pas d’un client : ' + autres + '.');
+    (JO.pas_lu || []).forEach(function (x) { dire('Ton tableau n’a pas pu lire une partie de ses données (' + String(x).slice(0, 20) + ').'); });
+    var qG = minutes(S.google && S.google.quand);                                                                                             /* 9 */
+    if (G.pg && G.pg.lecteur && qG !== null) { var rl = minutes(G.pg.lecteur.le), vh = G.pg.lecteur.vieux_h || 2;
+      if (rl === null || (qG - rl) / 60 > vh) dire('Le robot n’a pas relu Google depuis plus de ' + vh + ' heures.');
+      if (G.pg.lecteur.partiels > 0) notes.push('Comptes lus en partie chez Google : ' + G.pg.lecteur.partiels + '.'); }
+    var vieuxRel = 0; if (qG !== null) Object.keys(ACTIF).forEach(function (cid) { var e = etat[cid], m = e ? minutes(e.maj) : null; if (m !== null && (qG - m) / 60 > 26) vieuxRel++; });
+    if (vieuxRel > 0) dire('Le relevé des pubs a plus d’un jour pour ' + vieuxRel + (vieuxRel > 1 ? ' clients.' : ' client.'));
+    (NV.liste || []).forEach(function (x) {                                                                                                   /* 10 */
+      if (!x || x.etape === 'ok' || essai(x.cid)) return; var cid = String(x.cid || '');
+      if (cid) { if (!ACTIF[cid]) return; var e = etat[cid]; if (dans(cid, ['lancer', 'site', 'identite', 'paiement', 'veille']) || (e && e.imp_7j > 0) || (x.etape === 'dexem_ads' && /beckert/i.test(String(x.nom)))) return;
+        dire(String(x.nom) + ' : il a signé et sa pub ne tourne pas, la page ne le dit pas.'); return; }
+      var k = String(x.siret || x.nom || ''); if (!k) return; if (item(k, 'lancer') || item(k, 'site')) return;
+      var kn = plat(x.nom), connu = kn.length >= 6 && Object.keys(ACTIF).some(function (c) { return (' ' + plat(ACTIF[c].nom) + ' ' + plat(ACTIF[c].qui || '') + ' ').indexOf(' ' + kn + ' ') >= 0; })
+        || (NV.liste || []).some(function (y) { return y.cid && ACTIF[y.cid] && y.vendu && plat(y.vendu) === kn; });
+      if (!connu) dire(String(x.nom) + ' : il a signé, la page ne le dit pas.');
+    });
+    if (sansStatut.length) notes.push('Sans statut dans ton tableau (client ou archivé ?) : ' + sansStatut.slice(0, 8).join(', ') + '.');
+    var horsListe = []; Object.keys(pgc).forEach(function (cid) { if (ACTIF[cid] || ARCHIVE[cid] || essai(cid)) return; if ((pgc[cid] || []).some(function (x) { return x.etat !== 'regle' && x.type !== 'annonces'; })) horsListe.push(String(((pgc[cid] || [])[0] || {}).nom || cid)); });
+    if (horsListe.length) notes.push('Comptes Google bloqués, absents de ta liste de clients : ' + horsListe.slice(0, 8).join(', ') + '.');
+    if ((D.connus || []).length) notes.push('Ventes au nom d’un client déjà lancé (pas à lancer) : ' + D.connus.slice(0, 8).join(', ') + '.');
+    return { ok: ecarts.length === 0, vus: vus, nb: ecarts.length, ecarts: ecarts.slice(0, 12), notes: notes };
+  }
+
   /* l'heure de la lecture, dite à l'heure de l'APPAREIL (Enzo n'est pas à l'heure de Paris : le tableau, si) */
   function luTexte(D, maintenantMs) {
     var now = maintenantMs || Date.now(), lu = new Date((D.recu_ms || now) - (D.lu_age_min || 0) * 60000), auj = new Date(now);
@@ -730,7 +902,8 @@ window.__PROBLEMES__ = function (D) {
   }
   racine.__LU_TEXTE__ = luTexte;
   racine.__CALCULER__ = calculer;
-  if (typeof module !== 'undefined' && module.exports) module.exports = { calculer: calculer, luTexte: luTexte };
+  racine.__CONTROLER__ = controler;
+  if (typeof module !== 'undefined' && module.exports) module.exports = { calculer: calculer, luTexte: luTexte, controler: controler };
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
 <script>
@@ -738,13 +911,13 @@ window.__PROBLEMES__ = function (D) {
   'use strict';
   var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', CLE = 'ba_comptes_code', CACHE = 'ba_problemes_p2', SAUT = 'ba_problemes_saut', PARTS = ['google', 'argent', 'nouveaux', 'messages', 'jour'], VIEUX_MIN = 5, LIMITE_MS = 30000, LIMITE_TOUT_MS = 20000,
       RETARD = 'Une partie de ton tableau a traîné : pour elle, ce sont les chiffres d’avant.';
-  var R = window.__PROBLEMES_ETAT__ = { version: 'p12-1811', etat: 'depart', envois: 0, lectures: 0, copie: '', retard: [] };
+  var R = window.__PROBLEMES_ETAT__ = { version: 'p13-1911', etat: 'depart', envois: 0, lectures: 0, copie: '', retard: [] };
   var att = document.getElementById('attente'), msg = document.getElementById('attente-msg'), lien = document.getElementById('attente-lien'), encore = document.getElementById('attente-encore');
   function dire(etat, t, avecLien, avecEncore) { R.etat = etat; att.style.display = 'flex'; msg.textContent = t; lien.hidden = !avecLien; lien.style.display = avecLien ? 'inline-block' : 'none'; encore.hidden = !avecEncore; encore.style.display = avecEncore ? 'inline-block' : 'none'; }
   function lire(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
   function ecrire(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { } }
   function paris() { try { return new Date().toLocaleString('sv-SE', { timeZone: 'Europe/Paris' }).slice(0, 16); } catch (e) { return ''; } }
-  function fond(D) { return JSON.stringify([D.familles, D.argent, D.paiement]); }
+  function fond(D) { return JSON.stringify([D.familles, D.argent, D.paiement, D.controle ? [D.controle.ok, D.controle.ecarts] : null]); }   /* (p13) + le contrôle */
   try { ecrire('ba_problemes_photo', null); } catch (e) { }
   encore.addEventListener('click', function () { location.reload(); });
   var encadre = false; try { encadre = window.top !== window.self; } catch (e) { encadre = true; }
@@ -755,7 +928,7 @@ window.__PROBLEMES__ = function (D) {
   if (!(cache && cache.familles && cache.argent && cache.paiement)) cache = null;
   var montre = false, enCours = false, derniere = 0, affiche = null, bouton = document.getElementById('maj-bouton'), ligne = document.getElementById('maj-etat');
   function etat(t, rouge) { ligne.textContent = t; ligne.className = rouge ? 'rouge' : ''; }
-  function montrer(D) { try { window.__PROBLEMES__(D); affiche = D; montre = true; att.style.display = 'none'; R.etat = 'affiche'; } catch (e) { dire('casse', 'La page n’a pas pu s’afficher. Dis-le à Claude.', false, true); } }
+  function montrer(D) { try { window.__PROBLEMES__(D); affiche = D; montre = true; att.style.display = 'none'; R.etat = 'affiche'; R.controle = D.controle || null; } catch (e) { dire('casse', 'La page n’a pas pu s’afficher. Dis-le à Claude.', false, true); } }
   /* une demande au tableau, avec une limite de temps : passé « limite », on n'attend plus (erreur « trop_long ») */
   function poster(corps, limite) {
     R.envois++; corps.action = 'optimiser_donnees'; corps.vue = 'problemes'; corps.code = code;
