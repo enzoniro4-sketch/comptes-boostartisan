@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
-<meta name="ba-version" content="p15-2011">
+<meta name="ba-version" content="p16-2011">
 <link rel="icon" type="image/png" href="icone-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Problèmes et argent</title>
@@ -551,9 +551,17 @@ window.__PROBLEMES__ = function (D) {
        enPause = plus aucune pub allumée (budget des pubs allumées à 0) ; ou rien affiché en 7 jours. Sans fait sûr et sans affichage hier, la page ne dit rien de la pub. */
     var DIFF = {};
     Object.keys((G.pg && G.pg.comptes) || {}).forEach(function (cid) { (G.pg.comptes[cid] || []).forEach(function (x) { if (x.type === 'diffusion' && x.etat !== 'regle') DIFF[cid] = x; }); });
+    /* (p16, 20/11/2026 — vu en comparant avec la page WhatsApp d'Enzo : pour un client, « compte mis en veille depuis le 20/11 » dans la liste de validation de Google,
+       117 affichages la veille : la page disait « Sa pub tourne encore ») — UN FAIT D'ARRÊT DE PLUS : Google dit lui-même qu'il a mis le compte en veille (identité).
+       Les affichages d'hier ne prouvent pas que la pub tourne aujourd'hui. Lu dans la preuve que le tableau garde (« compte mis en veille », « le compte est en veille ») ;
+       le jour où le tableau envoie le champ bloque (vrai / faux), c'est lui qui décide. */
+    var VEILLE = {};
+    Object.keys((G.pg && G.pg.comptes) || {}).forEach(function (cid) { (G.pg.comptes[cid] || []).forEach(function (x) {
+      if (x.type !== 'identite' || x.etat === 'regle' || x.bloque === false) return;
+      if (x.bloque === true || /compte (mis |est )?en veille/.test(sansAccent(x.preuve))) VEILLE[cid] = x; }); });
     function enPause(cid) { var e = E[cid]; return !!e && typeof e.budget === 'number' && !(e.budget > 0); }
-    function arretee(cid) { var e = E[cid]; return !!e && (!!DIFF[cid] || enPause(cid) || !(e.imp_7j > 0)); }
-    function pub(cid) { var e = E[cid]; if (!e) return ''; if (arretee(cid)) return 'Sa pub est arrêtée.'; return e.imp_hier > 0 ? 'Sa pub tourne encore.' : ''; }
+    function arretee(cid) { var e = E[cid]; return !!VEILLE[cid] || (!!e && (!!DIFF[cid] || enPause(cid) || !(e.imp_7j > 0))); }
+    function pub(cid) { if (arretee(cid)) return 'Sa pub est arrêtée.'; var e = E[cid]; return e && e.imp_hier > 0 ? 'Sa pub tourne encore.' : ''; }
     function joursDepuis(q) { var a = minutes(maintenantParis), b = minutes(q); return a === null || b === null ? 0 : (a - b) / 1440; }
     function heure(q) { var m = minutes(q); if (m === null) return ''; var t = new Date((m + (decalMin || 0)) * 60000); return ('0' + t.getUTCHours()).slice(-2) + ' h ' + ('0' + t.getUTCMinutes()).slice(-2); }   /* heure de Paris → heure de l'appareil */
     /* (p10) une donnée pas relue chez Google depuis plus de 2 heures est DITE vieille, à l'heure de l'appareil ; jamais montrée comme vraie */
@@ -826,7 +834,7 @@ window.__PROBLEMES__ = function (D) {
   /* (p13) LE CONTRÔLE AUTOMATIQUE — un 2e programme, court, écrit à part : il ne reprend RIEN du calcul. Il relit les faits bruts du tableau (S) et vérifie que la page finie (D)
      ne se tait sur aucun client et ne dit rien de contraire aux faits. Il tourne à CHAQUE ouverture, sur l'appareil, sans personne. Un écart s'écrit en rouge en haut de la page.
      Ordre d'Enzo du 19/11/2026 : « fiable… de façon autonome, en automatique ». Ce qu'il vérifie, pour chaque client non archivé :
-     1. sa pub est arrêtée (diffusion arrêtée, tout en pause, rien en 7 jours) → il est dans Google veut vérifier · Google n'arrive pas à faire payer · pas encore lancé · pub arrêtée ;
+     1. sa pub est arrêtée (diffusion arrêtée, tout en pause, rien en 7 jours, (p16) compte mis en veille par Google) → il est dans Google veut vérifier · Google n'arrive pas à faire payer · pas encore lancé · pub arrêtée ;
      2. Google le bloque (identité, paiement, suspendu) → il est dans la bonne famille ; 3. aucune demande au tableau depuis 7 jours, pub allumée, argent parti → il est dans « zéro demande », et l'inverse ;
      4. aucune phrase ne dit « tourne » pour une pub arrêtée, ni « arrêtée » sans fait ; 5. aucune ligne pour un client archivé ; 6. et 7. messages et relevés recomptés ;
      8. aucune ligne du jour perdue, aucune case inconnue ; 9. le robot a relu Google à l'heure, le relevé des pubs a moins de 26 heures ; 10. chaque client signé est quelque part. */
@@ -848,8 +856,10 @@ window.__PROBLEMES__ = function (D) {
         if (x.type === 'identite' && !item(cid, 'identite')) dire(n + ' : Google lui demande ses papiers, la page ne le dit pas.');
         if ((x.type === 'paiement' || x.type === 'suspendu') && !item(cid, 'paiement')) dire(n + ' : Google n’arrive pas à le faire payer, la page ne le dit pas.'); });
       var jl = jours(c.lance), neuf = jl !== null && jl >= 0 && jl < 2;
+      var veilleG = P.some(function (x) { return x.type === 'identite' && x.etat !== 'regle' && x.bloque !== false && (x.bloque === true || /compte (mis |est )?en veille/.test(String(x.preuve || '').toLowerCase())); });   /* (p16) Google dit lui-même que le compte est en veille */
+      if (veilleG && !e) { var iv = item(cid, 'identite'); if (iv && /tourne encore|tourne quand même/.test(String(iv.m || ''))) dire(n + ' : la page dit que sa pub tourne, elle est arrêtée.'); }
       if (!e) { if (jl !== null && jl >= 2 && !dans(cid, ['lancer', 'identite', 'paiement', 'site'])) dire(n + ' : le relevé de ses pubs manque.'); return; }   /* pas encore lancé, ou lancé hier : normal */
-      var stop = P.some(function (x) { return x.type === 'diffusion' && x.etat !== 'regle'; }) || (typeof e.budget === 'number' && !(e.budget > 0)) || !(e.imp_7j > 0);
+      var stop = veilleG || P.some(function (x) { return x.type === 'diffusion' && x.etat !== 'regle'; }) || (typeof e.budget === 'number' && !(e.budget > 0)) || !(e.imp_7j > 0);
       if (stop && !neuf && !dans(cid, ['identite', 'paiement', 'lancer', 'veille'])) dire(n + ' : sa pub est arrêtée, la page ne le dit pas.');           /* 1 */
       if (e.sans_du !== undefined) {                                                                                                         /* 3 */
         var j = String(e.sans_depuis || '') ? jours(e.sans_depuis) : jours(e.sans_du), doit = !(stop && !neuf) && j !== null && j >= 7 && e.sans_cout > 0, y = !!item(cid, 'zero');
@@ -927,7 +937,7 @@ window.__PROBLEMES__ = function (D) {
   'use strict';
   var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', CLE = 'ba_comptes_code', CACHE = 'ba_problemes_p2', SAUT = 'ba_problemes_saut', PARTS = ['google', 'argent', 'nouveaux', 'messages', 'jour'], VIEUX_MIN = 5, LIMITE_MS = 30000, LIMITE_TOUT_MS = 20000,
       RETARD = 'Une partie de ton tableau a traîné : pour elle, ce sont les chiffres d’avant.';
-  var R = window.__PROBLEMES_ETAT__ = { version: 'p15-2011', etat: 'depart', envois: 0, lectures: 0, copie: '', retard: [] };
+  var R = window.__PROBLEMES_ETAT__ = { version: 'p16-2011', etat: 'depart', envois: 0, lectures: 0, copie: '', retard: [] };
   var att = document.getElementById('attente'), msg = document.getElementById('attente-msg'), lien = document.getElementById('attente-lien'), encore = document.getElementById('attente-encore');
   function dire(etat, t, avecLien, avecEncore) { R.etat = etat; att.style.display = 'flex'; msg.textContent = t; lien.hidden = !avecLien; lien.style.display = avecLien ? 'inline-block' : 'none'; encore.hidden = !avecEncore; encore.style.display = avecEncore ? 'inline-block' : 'none'; }
   function lire(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
