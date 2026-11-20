@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
-<meta name="ba-version" content="p14-1911">
+<meta name="ba-version" content="p15-2011">
 <link rel="icon" type="image/png" href="icone-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Problèmes et argent</title>
@@ -92,6 +92,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .plus { margin-top: 6px; padding: 11px 14px; width: 100%; text-align: center; border: 1px solid var(--trait); border-radius: 8px; font-weight: 600; color: var(--menu); }
 .ouvrir { display: inline-block; margin-top: 8px; padding: 10px 14px; border: 1px solid var(--menu); border-radius: 8px; font-weight: 600; font-size: 15px; color: var(--menu); background: var(--fond); text-decoration: none; }
 .ouvrir:active { background: var(--creux); }
+.ouvrir.attente { color: var(--gris); border-color: var(--trait); cursor: default; }
 .autres { margin: 14px 0 0; padding: 13px 14px; width: 100%; text-align: center; border: 1px solid var(--trait); border-radius: 8px; font-weight: 600; color: var(--menu); }
 
 .bloc { margin: 26px 0 0; }
@@ -232,9 +233,10 @@ window.__PROBLEMES__ = function (D) {
      Adresse connue : ses campagnes. Pas encore connue : sa liste de comptes Google, et le bouton le dit (« Ouvrir Google Ads ») : jamais un lien qui mène ailleurs que ce qu'il annonce. ---- */
   var GOOGLE_U = '__u=5357573647', GOOGLE_MOI = '8086333388';   /* comme la page des comptes : son utilisateur Google, son compte administrateur */
   function lienPub(a) {
-    var o = String((window.__OCID__ || {})[a.getAttribute('data-cid')] || ''), direct = /^[0-9]{6,14}$/.test(o);
-    a.href = direct ? 'https://ads.google.com/aw/campaigns?ocid=' + o + '&' + GOOGLE_U : 'https://ads.google.com/aw/accounts?ocid=' + GOOGLE_MOI + '&' + GOOGLE_U;
-    a.textContent = direct ? 'Ouvrir sa pub \u2197' : 'Ouvrir Google Ads \u2197'; a.setAttribute('data-direct', direct ? '1' : '0');
+    var o = String((window.__OCID__ || {})[a.getAttribute('data-cid')] || ''), direct = /^[0-9]{6,14}$/.test(o), cherche = !direct && window.__OCID_EN_COURS__ === true;
+    if (cherche) { a.removeAttribute('href'); a.setAttribute('aria-disabled', 'true'); }   /* (p15) pendant qu'on cherche son adresse : aucun lien, plutôt qu'un lien vers la liste des comptes */
+    else { a.removeAttribute('aria-disabled'); a.href = direct ? 'https://ads.google.com/aw/campaigns?ocid=' + o + '&' + GOOGLE_U : 'https://ads.google.com/aw/accounts?ocid=' + GOOGLE_MOI + '&' + GOOGLE_U; }
+    a.textContent = direct ? 'Ouvrir sa pub \u2197' : cherche ? 'Je cherche sa pub\u2026' : 'Ouvrir Google Ads \u2197'; a.setAttribute('data-direct', direct ? '1' : '0'); a.className = cherche ? 'ouvrir attente' : 'ouvrir';
   }
   function boutonPub(cid) { var a = el('a', 'ouvrir'); a.setAttribute('data-cid', cid); a.target = '_blank'; a.rel = 'noopener'; lienPub(a); return a; }
   window.__LIENS_PUB__ = function () { Array.prototype.forEach.call(document.querySelectorAll('a.ouvrir[data-cid]'), lienPub); };
@@ -925,19 +927,23 @@ window.__PROBLEMES__ = function (D) {
   'use strict';
   var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', CLE = 'ba_comptes_code', CACHE = 'ba_problemes_p2', SAUT = 'ba_problemes_saut', PARTS = ['google', 'argent', 'nouveaux', 'messages', 'jour'], VIEUX_MIN = 5, LIMITE_MS = 30000, LIMITE_TOUT_MS = 20000,
       RETARD = 'Une partie de ton tableau a traîné : pour elle, ce sont les chiffres d’avant.';
-  var R = window.__PROBLEMES_ETAT__ = { version: 'p14-1911', etat: 'depart', envois: 0, lectures: 0, copie: '', retard: [] };
+  var R = window.__PROBLEMES_ETAT__ = { version: 'p15-2011', etat: 'depart', envois: 0, lectures: 0, copie: '', retard: [] };
   var att = document.getElementById('attente'), msg = document.getElementById('attente-msg'), lien = document.getElementById('attente-lien'), encore = document.getElementById('attente-encore');
   function dire(etat, t, avecLien, avecEncore) { R.etat = etat; att.style.display = 'flex'; msg.textContent = t; lien.hidden = !avecLien; lien.style.display = avecLien ? 'inline-block' : 'none'; encore.hidden = !avecEncore; encore.style.display = avecEncore ? 'inline-block' : 'none'; }
   function lire(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
   function ecrire(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { } }
   function paris() { try { return new Date().toLocaleString('sv-SE', { timeZone: 'Europe/Paris' }).slice(0, 16); } catch (e) { return ''; } }
   /* (p14) les adresses Google des comptes (ocid), pour le bouton « Ouvrir sa pub » : 1. la petite copie de cette page ; 2. la copie que la page des comptes garde sur cet appareil
-     (même site : aucune demande au tableau) ; 3. seulement s'il manque encore celle d'un client en problème de paiement, à l'ouverture de la famille, et au plus une fois par heure :
-     la liste complète des comptes demandée au tableau, en fond (lourde : 15 à 20 s). Un échec se retente 10 minutes plus tard. */
-  var OCLE = 'ba_problemes_ocid', OC_ATTENTE = 3600000, OC = { map: {}, lourd: 0 }, ocEnCours = false;
-  try { var oc0 = JSON.parse(lire(OCLE) || 'null'); if (oc0 && oc0.map && typeof oc0.map === 'object') OC = { map: oc0.map, lourd: +oc0.lourd || 0 }; } catch (e) { }
-  window.__OCID__ = OC.map;
-  function ocGarder() { ecrire(OCLE, JSON.stringify(OC)); try { if (window.__LIENS_PUB__) window.__LIENS_PUB__(); } catch (e) { } }
+     (même site : aucune demande au tableau) ; 3. seulement s'il manque encore celle d'un client en problème de paiement : la liste complète des comptes demandée au tableau, en fond (lourde : 15 à 20 s).
+     (p15) Cette demande part DÈS l'affichage (plus seulement à l'ouverture de la famille). Pendant qu'elle court, le bouton dit « Je cherche sa pub… » et n'a pas de lien.
+     Après une lecture qui laisse encore un client en problème de paiement sans adresse : on redemande 5 minutes après, puis 15, puis une fois par heure (OC.vides = lectures de suite restées incomplètes).
+     « Mettre à jour » redemande tout de suite. Un échec se retente 5 minutes après. OC.apres = l'heure avant laquelle on ne redemande pas (jamais à plus d'une heure : horloge de l'appareil déréglée). */
+  var OCLE = 'ba_problemes_ocid', OC_PAUSES = [300000, 300000, 900000, 3600000], OC = { map: {}, lourd: 0, vides: 0, apres: 0 }, ocEnCours = false, ocPret = false;
+  try { var oc0 = JSON.parse(lire(OCLE) || 'null'); if (oc0 && oc0.map && typeof oc0.map === 'object') OC = { map: oc0.map, lourd: +oc0.lourd || 0, vides: Math.max(0, Math.min(3, Math.round(+oc0.vides || 0))),
+    apres: Math.min(oc0.apres != null ? +oc0.apres || 0 : (+oc0.lourd || 0) + OC_PAUSES[0], Date.now() + OC_PAUSES[3]) }; } catch (e) { }   /* garde d'avant (p14 : ni vides ni apres) : 5 minutes après sa dernière lecture */
+  window.__OCID__ = OC.map; window.__OCID_EN_COURS__ = false; R.liens_apres = OC.apres;
+  function ocPeindre() { try { if (window.__LIENS_PUB__) window.__LIENS_PUB__(); } catch (e) { } }
+  function ocGarder() { R.liens_apres = OC.apres; ecrire(OCLE, JSON.stringify(OC)); ocPeindre(); }
   function ocPrendre(o) {
     var n = 0; if (o && typeof o === 'object' && o.donnees && typeof o.donnees === 'object') o = o.donnees;   /* la copie de la page des comptes est rangée ainsi : { recu, donnees } (vu sur l'appareil d'Enzo le 19/11) */
     if (!o || typeof o !== 'object') return 0;
@@ -947,19 +953,19 @@ window.__PROBLEMES__ = function (D) {
   }
   function ocCopieComptes() {
     var p; try { p = window.caches && caches.has ? caches.has('ba-comptes-donnees').then(function (oui) { return oui ? caches.open('ba-comptes-donnees').then(function (c) { return c.match('/donnees'); }) : null; }).then(function (r) { return r ? r.json() : null; }) : Promise.resolve(null); } catch (e) { p = Promise.resolve(null); }
-    return p.catch(function () { return null; }).then(function (o) { if (!o) { try { o = JSON.parse(lire('ba_comptes_donnees') || 'null'); } catch (e) { o = null; } } if (ocPrendre(o)) ocGarder(); R.liens = R.liens || 'copie'; });
+    return p.catch(function () { return null; }).then(function (o) { if (!o) { try { o = JSON.parse(lire('ba_comptes_donnees') || 'null'); } catch (e) { o = null; } } if (ocPrendre(o)) ocGarder(); R.liens = R.liens || 'copie'; ocPret = true; try { window.__OCID_DEMANDER__(); } catch (e2) { } });   /* (p15) la copie de l'appareil est lue : s'il manque encore une adresse, on la demande tout de suite */
   }
   function ocManque() { var m = false; if (!affiche) return false; (affiche.familles || []).forEach(function (f) { if (f.id === 'paiement') f.items.forEach(function (i) { if (i.k && !OC.map[i.k]) m = true; }); }); return m; }
   window.__OCID_DEMANDER__ = function () {
-    if (ocEnCours || !ocManque() || Date.now() - OC.lourd < OC_ATTENTE) return;
-    ocEnCours = true; R.liens = 'demande';
+    if (ocEnCours || !ocPret || !ocManque() || Date.now() < OC.apres) return;
+    ocEnCours = true; window.__OCID_EN_COURS__ = true; R.liens = 'demande'; ocPeindre();
     var ctl = null, opt = { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'optimiser_donnees', code: code }), redirect: 'follow', cache: 'no-store', credentials: 'omit' };
     try { ctl = new AbortController(); opt.signal = ctl.signal; } catch (e) { ctl = null; }
-    var fin = setTimeout(function () { try { if (ctl) ctl.abort(); } catch (e) { } }, 90000);
+    var fin = setTimeout(function () { try { if (ctl) ctl.abort(); } catch (e) { } }, 60000);
     fetch(TABLEAU, opt).then(function (r) { if (!r.ok) throw new Error('refus'); return r.text(); })
-      .then(function (t) { var o = JSON.parse(t); if (!o || o.ok !== true) throw new Error('refus'); OC.lourd = Date.now(); ocPrendre(o); ocGarder(); R.liens = 'lus'; })
-      .catch(function () { OC.lourd = Date.now() - OC_ATTENTE + 600000; ocGarder(); R.liens = 'echec'; })
-      .then(function () { clearTimeout(fin); ocEnCours = false; });
+      .then(function (t) { var o = JSON.parse(t); if (!o || o.ok !== true) throw new Error('refus'); OC.lourd = Date.now(); ocPrendre(o); OC.vides = ocManque() ? Math.min(OC.vides + 1, 3) : 0; OC.apres = Date.now() + OC_PAUSES[OC.vides]; R.liens = 'lus'; })
+      .catch(function () { OC.apres = Date.now() + OC_PAUSES[0]; R.liens = 'echec'; })
+      .then(function () { clearTimeout(fin); ocEnCours = false; window.__OCID_EN_COURS__ = false; ocGarder(); });
   };
   function fond(D) { return JSON.stringify([D.familles, D.argent, D.paiement, D.controle ? [D.controle.ok, D.controle.ecarts] : null]); }   /* (p13) + le contrôle */
   try { ecrire('ba_problemes_photo', null); } catch (e) { }
@@ -972,7 +978,7 @@ window.__PROBLEMES__ = function (D) {
   if (!(cache && cache.familles && cache.argent && cache.paiement)) cache = null;
   var montre = false, enCours = false, derniere = 0, affiche = null, bouton = document.getElementById('maj-bouton'), ligne = document.getElementById('maj-etat');
   function etat(t, rouge) { ligne.textContent = t; ligne.className = rouge ? 'rouge' : ''; }
-  function montrer(D) { try { window.__PROBLEMES__(D); affiche = D; montre = true; att.style.display = 'none'; R.etat = 'affiche'; R.controle = D.controle || null; } catch (e) { dire('casse', 'La page n’a pas pu s’afficher. Dis-le à Claude.', false, true); } }
+  function montrer(D) { try { window.__PROBLEMES__(D); affiche = D; montre = true; att.style.display = 'none'; R.etat = 'affiche'; R.controle = D.controle || null; } catch (e) { dire('casse', 'La page n’a pas pu s’afficher. Dis-le à Claude.', false, true); } try { if (montre) window.__OCID_DEMANDER__(); } catch (e3) { } }   /* (p15) l'adresse qui manque est cherchée dès l'affichage */
   /* une demande au tableau, avec une limite de temps : passé « limite », on n'attend plus (erreur « trop_long ») */
   function poster(corps, limite) {
     R.envois++; corps.action = 'optimiser_donnees'; corps.vue = 'problemes'; corps.code = code;
@@ -1041,7 +1047,7 @@ window.__PROBLEMES__ = function (D) {
       else fini(poser(D));
     }).catch(function (e) { var er = String((e && e.message) || e); if (/morceau inconnu/.test(er)) { R.copie = 'ancien'; relire(false); } else rate(e); });
   }
-  bouton.addEventListener('click', function () { relire(true); });
+  bouton.addEventListener('click', function () { relire(true); OC.apres = 0; ocGarder(); try { window.__OCID_DEMANDER__(); } catch (e) { } });   /* (p15) « Mettre à jour » redemande aussi tout de suite l'adresse qui manque (gardé : vrai même si la page se recharge) */
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && montre && !enCours && Date.now() - derniere > 10 * 60000) relire(true); });
   var saut = 0, sautPartiel = false; try { var sb = String(sessionStorage.getItem(SAUT) || ''); saut = parseInt(sb, 10) || 0; sautPartiel = /\|p$/.test(sb); sessionStorage.removeItem(SAUT); } catch (e) { }
   ocCopieComptes();   /* (p14) les adresses Google déjà sur l'appareil : lues avant tout, même quand la page vient de se recharger */
