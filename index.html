@@ -5,7 +5,7 @@
 <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#f5f5f7"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Comptes">
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" href="icone-192.png"><link rel="apple-touch-icon" href="icone-180.png">
-<meta name="ba-version" content="v5.30-r3">
+<meta name="ba-version" content="v5.31-r3">
 <style>/* --- version rapide : ce qui s'ajoute à la page (rien d'autre ne change) --- */
 #ba-etat{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;max-width:calc(100vw - 24px);background:#1d1d1f;color:#fff;padding:9px 16px;border-radius:999px;font-size:13px;line-height:1.35;z-index:60;box-shadow:0 4px 18px rgba(0,0,0,.22);text-align:center}
 #ba-etat.ko{background:#8e1b1b}
@@ -275,12 +275,12 @@ var QRBA = (function(){
   }
   return { matrice: matrice, svg: svg };
 })();
-/* Les comptes — VERSION RAPIDE v5.30-r3 (page fixe sur notre domaine, hors du tableau). Fabriquée par plan/comptes-rapide-1011/construire_comptes_rapide.py :
+/* Les comptes — VERSION RAPIDE v5.31-r3 (page fixe sur notre domaine, hors du tableau). Fabriquée par plan/comptes-rapide-1011/construire_comptes_rapide.py :
    la page des comptes n'est PAS réécrite ; ce bloc remplace seulement son fil avec le tableau (google.script.run → envoi direct au tableau, avec le code d'Enzo gardé sur l'appareil)
    et montre tout de suite les derniers chiffres lus, en gris, pendant que le tableau est relu. Tant que les chiffres sont en gris, aucun ordre ne part. */
 (function(){
   var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', LIER = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec?x=rapide', FORM = 'https://script.google.com/macros/s/AKfycbwDgwfesj-aTaYtcUutatJAJhfrb3xmD4hkWKDnZTeQdh7ZHUVOKqjYkiuDy9Qbt8_N/exec?f=1', CLE_CODE = 'ba_comptes_code', NOM_CACHE = 'ba-comptes-donnees', CLE_SECOURS = 'ba_comptes_donnees';
-  var R = window.__RAPIDE__ = { version: 'v5.30-r3', code: '', perime: false, frais: false, echec: '', recu: 0, duree: 0, envois: 0, encadre: false };
+  var R = window.__RAPIDE__ = { version: 'v5.31-r3', code: '', perime: false, frais: false, echec: '', recu: 0, duree: 0, envois: 0, encadre: false };
   /* 0. Jamais à l'intérieur de la page de quelqu'un d'autre : dans un cadre posé par une autre adresse, la page ne lit pas le code, ne demande rien au tableau, n'envoie aucun ordre.
         (Un cadre posé par notre propre adresse reste permis : c'est notre essai en largeur de téléphone.) */
   var ENCADRE = false; try { ENCADRE = window.top !== window.self && window.top.location.origin !== window.location.origin; } catch (e) { ENCADRE = true; }
@@ -531,7 +531,7 @@ var QRBA = (function(){
 })();
 </script>
 <script>
-/* Les comptes v5.30 (18/11/2026 12 h 27 UTC) — fabriquée par plan/construire_comptes.py depuis MAQUETTE-COMPTES.md (9 pièces) + CATALOGUE-ALERTES.md.
+/* Les comptes v5.31 (20/11/2026 21 h 57 UTC) — fabriquée par plan/construire_comptes.py depuis MAQUETTE-COMPTES.md (9 pièces) + CATALOGUE-ALERTES.md.
    Page EN DIRECT : tout est relu dans le tableau à chaque ouverture (optimiserDonnees) ; un clic = un ordre écrit dans le tableau (optimiserOrdre),
    appliqué par le script Google Ads (xx h 19 : arrêter, rallumer, budget) ou le robot (xx h 43 : nouvelle pub, allumage, site). Annuler tant que ce n'est pas appliqué.
    Comptage (Enzo 29/10) : une demande = un appel OU un formulaire reçu au tableau. Chiffres d'un compte = toute la période dès que le relevé Google les fournit (D.periode = 'total'), sinon 30 jours, et la page le dit. */
@@ -904,11 +904,11 @@ function dVolet(x, v){
   var id = 'm-'+x.cid.replace(/\D/g,''), nOn = x.n.onLibre;
   if (v.type === 'fiche') return ficheVolet(x, v);
   if (v.type === 'prix') return prixVolet(x, v);   /* v5.30 */
-  if (v.type === 'nouvelle') {   /* v5.29 (17/11, Enzo : « 10 € par jour par campagne sur les 3 campagnes ») : 3 pubs a 10 € par jour chacune, pas de case ; le budget se change ensuite sur chaque pub */
+  if (v.type === 'nouvelle') {   /* v5.31 (20/11, Enzo 19 h 05 : le trio Large, Expression, Exact ; Google regle seul le prix du clic) ; v5.29 (17/11, Enzo : « 10 € par jour par campagne sur les 3 campagnes ») : 3 pubs a 10 € par jour chacune, pas de case ; le budget se change ensuite sur chaque pub */
     return '<div class="volet"><b>Nouvelle campagne : 3 pubs à 10 € par jour chacune</b>'
-    +'<p>• Métier + ville : 10 € par jour<br>• Métier seul : 10 € par jour<br>• Tous les services : 10 € par jour</p>'
+    +'<p>• Large : 10 € par jour<br>• Expression : 10 € par jour<br>• Exact : 10 € par jour</p>'
     +'<p>30 € par jour en tout, soit 912 € par mois au plus chez Google (304 € par pub). Ensuite tu changes le budget de chaque pub avec son bouton « Budget ».</p>'
-    +'<p>Le robot fabrique les 3 pubs (une heure), puis l\'enchère (coût par demande visé 150 €, clic maxi 4 €, 3 € élagueurs) et l\'image de l\'accueil sont posées. Elles ne s\'allument que si Dexem est relié. Les anciennes pubs ne bougent pas : c\'est toi qui les arrêtes. Si une ancienne pub tourne encore à plus de 60 € par jour, les 3 nouvelles restent en veille tant que tu ne l\'as pas arrêtée ou baissée.</p>'
+    +'<p>Le robot fabrique les 3 pubs (une heure), avec tous tes groupes dans chacune. Google règle seul le prix du clic pour avoir le plus de demandes : il n\'y a plus de coût par demande visé ni de clic maxi. L\'image de l\'accueil est posée. Elles ne s\'allument que si Dexem est relié. Les anciennes pubs ne bougent pas : c\'est toi qui les arrêtes. Si une ancienne pub tourne encore à plus de 60 € par jour, les 3 nouvelles restent en veille tant que tu ne l\'as pas arrêtée ou baissée.</p>'
     +'<div class="boutons"><button type="button" class="b prim" data-valider="nouvelle">Lancer les 3 pubs · 10 €/j chacune</button><button type="button" class="b" data-fermer="compte">Annuler</button></div></div>'; }
   if (v.type === 'budget') { var vb = v.val != null ? v.val : (x.n.budgetOn || x.budgetCompte || 30); return '<div class="volet"><b>Budget du compte</b><div class="montant">Total par jour, partagé entre '+pubsMot(nOn)+' allumée'+(nOn>1?'s':'')+' : <input class="champ" id="'+id+'" type="text" inputmode="decimal" value="'+esc(nb(vb))+'" oninput="recalc(this)"> €</div><p>Google applique à xx h 19.</p>'
     +'<div class="boutons"><button type="button" class="b prim" data-valider="budget" data-champ="'+id+'">Changer le budget · <span class="rc">'+esc(nb(vb))+'</span> €/j</button><button type="button" class="b" data-fermer="compte">Annuler</button></div></div>'; }
