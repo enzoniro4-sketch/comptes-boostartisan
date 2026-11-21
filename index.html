@@ -5,7 +5,7 @@
 <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#f5f5f7"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Comptes">
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" href="icone-192.png"><link rel="apple-touch-icon" href="icone-180.png">
-<meta name="ba-version" content="v5.31-r3">
+<meta name="ba-version" content="v5.32-r4">
 <style>/* --- version rapide : ce qui s'ajoute à la page (rien d'autre ne change) --- */
 #ba-etat{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;max-width:calc(100vw - 24px);background:#1d1d1f;color:#fff;padding:9px 16px;border-radius:999px;font-size:13px;line-height:1.35;z-index:60;box-shadow:0 4px 18px rgba(0,0,0,.22);text-align:center}
 #ba-etat.ko{background:#8e1b1b}
@@ -126,6 +126,21 @@ main h2{font-size:13px;font-weight:600;color:var(--gris);margin:22px 0 8px}main 
 .boutons{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .volet{margin-top:10px;padding:12px 14px;border-radius:12px;background:var(--fond);border:1px solid var(--trait)}.volet b{display:block;margin-bottom:6px}.volet .boutons{margin-top:8px}
 .volet p{margin:4px 0 0;font-size:14px;color:var(--gris2)}
+.avant{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--blanc);border:1px solid var(--trait)}
+.volet .avant>b{margin-bottom:0}
+.av-l{display:flex;gap:10px;align-items:flex-start;padding:8px 0 0}
+.av-f{flex:0 0 18px;width:18px;height:18px;border-radius:50%;margin-top:2px;background:var(--chip)}
+.av-f.v{background:var(--vert)}.av-f.o{background:var(--orange)}.av-f.r{background:var(--rouge)}
+.av-t{font-weight:600;font-size:15px;color:var(--txt)}
+.av-d{font-size:14px;color:var(--gris2)}
+.av-b{display:flex;gap:10px;align-items:center;width:100%;text-align:left;border:1px solid var(--trait);border-radius:10px;background:var(--blanc);padding:8px 12px;margin-top:8px;font:inherit;color:var(--txt);cursor:pointer;min-height:48px}
+.av-b small{display:block;color:var(--gris2);font-size:13px}
+.av-b em{font-style:normal;color:var(--bleut);font-weight:600}
+.av-r{flex:0 0 18px;width:18px;height:18px;border-radius:50%;border:2px solid var(--gris)}
+.av-b[aria-checked="true"]{border-color:var(--bleu);background:var(--bleuf)}
+.av-b[aria-checked="true"] .av-r{border-color:var(--bleu);background:radial-gradient(var(--bleu) 0 45%,transparent 50%)}
+.av-n{font-size:13px;color:var(--gris2);margin-top:6px}
+.av-q{font-size:12px;color:var(--gris);margin-top:8px}
 .volet.fiche .grille{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 12px;margin:8px 0}.volet.fiche label{display:block;font-size:13px;color:var(--gris)}.volet.fiche label input{display:block;width:100%;margin-top:3px;height:36px;border:1px solid var(--trait);border-radius:8px;padding:0 10px;font:inherit;font-size:15px;color:var(--txt);background:var(--blanc)}.volet.fiche .cands{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px}.volet.fiche .cands .b{min-height:32px;font-size:13px;text-align:left}.volet.fiche .aide{font-size:13px;color:var(--gris);margin:6px 0 0}
 @media (max-width:760px){.volet.fiche .grille{grid-template-columns:1fr 1fr}}
 .volet.prix .px-src{font-size:13px;color:var(--gris);margin:0 0 8px}.volet.prix.vieux .px-src strong{color:var(--rouge)}
@@ -275,12 +290,12 @@ var QRBA = (function(){
   }
   return { matrice: matrice, svg: svg };
 })();
-/* Les comptes — VERSION RAPIDE v5.31-r3 (page fixe sur notre domaine, hors du tableau). Fabriquée par plan/comptes-rapide-1011/construire_comptes_rapide.py :
+/* Les comptes — VERSION RAPIDE v5.32-r4 (page fixe sur notre domaine, hors du tableau). Fabriquée par plan/comptes-rapide-1011/construire_comptes_rapide.py :
    la page des comptes n'est PAS réécrite ; ce bloc remplace seulement son fil avec le tableau (google.script.run → envoi direct au tableau, avec le code d'Enzo gardé sur l'appareil)
    et montre tout de suite les derniers chiffres lus, en gris, pendant que le tableau est relu. Tant que les chiffres sont en gris, aucun ordre ne part. */
 (function(){
   var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', LIER = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec?x=rapide', FORM = 'https://script.google.com/macros/s/AKfycbwDgwfesj-aTaYtcUutatJAJhfrb3xmD4hkWKDnZTeQdh7ZHUVOKqjYkiuDy9Qbt8_N/exec?f=1', CLE_CODE = 'ba_comptes_code', NOM_CACHE = 'ba-comptes-donnees', CLE_SECOURS = 'ba_comptes_donnees';
-  var R = window.__RAPIDE__ = { version: 'v5.31-r3', code: '', perime: false, frais: false, echec: '', recu: 0, duree: 0, envois: 0, encadre: false };
+  var R = window.__RAPIDE__ = { version: 'v5.32-r4', code: '', perime: false, frais: false, echec: '', recu: 0, duree: 0, envois: 0, encadre: false };
   /* 0. Jamais à l'intérieur de la page de quelqu'un d'autre : dans un cadre posé par une autre adresse, la page ne lit pas le code, ne demande rien au tableau, n'envoie aucun ordre.
         (Un cadre posé par notre propre adresse reste permis : c'est notre essai en largeur de téléphone.) */
   var ENCADRE = false; try { ENCADRE = window.top !== window.self && window.top.location.origin !== window.location.origin; } catch (e) { ENCADRE = true; }
@@ -411,10 +426,15 @@ var QRBA = (function(){
       return j;
     });
   }
+  /* r4 (21/11, page v5.32) : une lecture à part (vue « avant » : avant de lancer une nouvelle campagne) ; jamais gardée sur l'appareil, jamais mêlée aux chiffres des comptes */
+  function lireVue(vue, ok, ko){
+    if (!R.code) { try { ko(new Error('cet appareil n\'est pas relié au tableau')); } catch (e) {} return; }
+    poster({ action: 'optimiser_donnees', code: R.code, vue: vue }).then(function(d){ try { ok(d); } catch (e) {} }).catch(function(e){ try { ko(e); } catch (e2) {} });
+  }
   function coureur(ok, ko){
     ok = ok || function(){}; ko = ko || function(){};
     return { withSuccessHandler: function(f){ return coureur(f, ko); }, withFailureHandler: function(f){ return coureur(ok, f); }, withUserObject: function(){ return coureur(ok, ko); },
-             optimiserDonnees: function(){ lireDonnees(ok, ko); }, optimiserOrdre: function(_code, o){ envoyerOrdre(o, ok, ko); } };
+             optimiserDonnees: function(_code, vue){ if (vue) lireVue(String(vue), ok, ko); else lireDonnees(ok, ko); }, optimiserOrdre: function(_code, o){ envoyerOrdre(o, ok, ko); } };
   }
   window.google = window.google || {};
   window.google.script = { url: { getLocation: function(cb){ setTimeout(function(){ cb({ parameter: { code: R.code }, parameters: {}, hash: '' }); }, 0); } }, host: { close: function(){} } };
@@ -531,7 +551,7 @@ var QRBA = (function(){
 })();
 </script>
 <script>
-/* Les comptes v5.31 (20/11/2026 21 h 57 UTC) — fabriquée par plan/construire_comptes.py depuis MAQUETTE-COMPTES.md (9 pièces) + CATALOGUE-ALERTES.md.
+/* Les comptes v5.32 (21/11/2026 20 h 22 UTC) — fabriquée par plan/construire_comptes.py depuis MAQUETTE-COMPTES.md (9 pièces) + CATALOGUE-ALERTES.md.
    Page EN DIRECT : tout est relu dans le tableau à chaque ouverture (optimiserDonnees) ; un clic = un ordre écrit dans le tableau (optimiserOrdre),
    appliqué par le script Google Ads (xx h 19 : arrêter, rallumer, budget) ou le robot (xx h 43 : nouvelle pub, allumage, site). Annuler tant que ce n'est pas appliqué.
    Comptage (Enzo 29/10) : une demande = un appel OU un formulaire reçu au tableau. Chiffres d'un compte = toute la période dès que le relevé Google les fournit (D.periode = 'total'), sinon 30 jours, et la page le dit. */
@@ -650,6 +670,7 @@ function calculer(D){
     if (fx && l && site === '') gris('34', { heure: 'xx h 43' }, Bt('annuler_fiche_express', { siret: fx.siret }, 'Annuler'), '✔ Fiche créée à '+fx.h+' (ton heure) · '+(fx.pub === 'non' ? 'site' : 'site + nouvelle campagne')+' · ');
     else if (!fx && site === '' && robotFera && !SOUVENIR[cid+'|refaire']) gris('34', { heure: 'xx h 43' }, null, '');   /* après rechargement : le site vidé = dans la file du robot, même sans souvenir */
     else if (ns.etat === 'oui' || ns.etat === 'en_cours') gris('35', { heure: ns.stamp ? (parseInt(ns.stamp.slice(11,13),10)+1)+' h' : 'xx h 43' }, ns.etat === 'oui' ? Bt('annuler_nouvelle', {}, 'Annuler') : null, (SOUVENIR[cid+'|nouvelle'] ? '✔ Noté à '+SOUVENIR[cid+'|nouvelle'].h+' (ton heure) · ' : ''));
+    else if (ns.etat === 'erreur' && robotRecent(ns.stamp)) G.push({ n: 'err', t: '⛔ Le robot n\'a pas fabriqué la nouvelle pub : '+String(l.nouvelle_structure).replace(/^erreur\S*\s+\d{4}-\d\d-\d\d \d\d:\d\d\s*:?\s*/i, '').slice(0, 140)+' · Annule pour tout remettre comme avant, ou relance « Nouvelle campagne ».', b: Bt('annuler_nouvelle', {}, 'Annuler') });   /* v5.32 : une erreur récente du robot se voit, avec Annuler (qui remet aussi la zone) */
     if (!fx && (site === 'en_cours' || (site === '' && SOUVENIR[cid+'|refaire']))) gris('34', { heure: 'xx h 43' }, site === '' ? Bt('annuler_refaire', { site_avant: (SOUVENIR[cid+'|refaire']||{}).site_avant||'ok' }, 'Annuler') : null, (SOUVENIR[cid+'|refaire'] ? '✔ Noté à '+SOUVENIR[cid+'|refaire'].h+' (ton heure) · ' : ''));
     if (actMot === 'oui' || actMot === 'oui!') gris('37bis', { heure: actS.stamp ? hp(actS.stamp) : h }, Bt('annuler_activer', { avant: (SOUVENIR[cid+'|activer']||{}).avant||'non' }, 'Annuler'), (SOUVENIR[cid+'|activer'] ? '✔ ' : ''));
     if (actMot === 'auto' && !dexemOui && !x.archive) gris('37', {}, Bt('bloquer_allumage', {}, 'Bloquer l\'allumage'));
@@ -900,16 +921,94 @@ function prixPubs(x, P, C){
       + (perdu !== null && impr ? '<span>Google : pas sortie ' + Math.round(perdu) + ' fois sur 100 (prix trop bas ou qualité de la pub)</span>' : '') + '</div>'; });
   return h;
 }
+/* ---------- v5.32 (21/11, Enzo 07 h 51 : « que ça m'affiche si elle est bien ou pas… un bouton pour que ça lui mette automatiquement ») : AVANT DE LANCER ----------
+   AV.d[compte] vient d'une lecture À PART du tableau (wh, vue « avant ») : lu, connu, form30, appel30 (comptés par Google sur 30 jours), appels_branches, formulaires_branches
+   (true, false, ou null = pas encore lu), zone { ville, km, hab, km_1m, hab_1m }. Les clics des 30 jours viennent de la lecture des comptes (D.jours).
+   Feu des demandes : rouge = Google n'a pas de quoi compter ses appels ou ses formulaires, ou 50 clics et aucune demande ; orange = 50 clics et 0 appel (ou 0 formulaire) ;
+   vert = des appels ET des formulaires comptés ; gris = pas encore lu, pas de pub, ou trop peu de clics pour juger. Feu de la zone : rouge sous 500 000 habitants, orange
+   sous 1 million, vert au-dessus (chiffres du 21/11, 87 comptes). La zone ne change JAMAIS toute seule : « Garder » est choisi d'office, « Agrandir » se choisit d'un clic ;
+   l'ordre porte la zone affichée au moment du clic. */
+var AV = { etat: '', d: null, lu: 0, essai: 0, quand: '', vol: 0, tm: 0, echec: false, diff: {} };
+function lireAvant(force){
+  function fini(){ Object.keys(OUV.volet).forEach(majAvant); }
+  if (!(window.google && google.script && google.script.run)) { if (window.__AVANT__) { AV.d = window.__AVANT__; AV.etat = 'ok'; AV.lu = Date.now(); AV.quand = (D && D.quand) || ''; } else if (!AV.d) AV.etat = 'absent'; return; }   /* copie d'essai : chiffres fournis par le test ou l'aperçu */
+  if (!force && (AV.etat === 'attente' || (AV.essai && Date.now() - AV.essai < 20 * 60 * 1000))) return;   /* une lecture par 20 minutes au plus, réussie ou non (jamais de boucle) */
+  var avait = !!AV.d, moi = ++AV.vol; AV.essai = Date.now(); if (!avait) AV.etat = 'attente';
+  try {
+    google.script.run.withSuccessHandler(function(j){ if (moi !== AV.vol) return; if (j && j.ok && j.avant) { AV.d = j.avant; AV.etat = 'ok'; AV.lu = Date.now(); AV.quand = j.quand || ''; AV.echec = false; } else { if (!avait) AV.etat = 'absent'; AV.echec = true; } fini(); if (AV.echec && aRelire()) AV.essai = 0; })
+      .withFailureHandler(function(){ if (moi !== AV.vol) return; if (!avait) AV.etat = 'absent'; AV.echec = true; fini(); if (aRelire()) AV.essai = 0; }).optimiserDonnees(CODE, 'avant');   /* une zone à relire et la lecture a échoué : on réessaie au prochain affichage (jamais tout seul, jamais en boucle) */
+  } catch (e) { if (!avait) AV.etat = 'absent'; }
+}
+function boutonNouvelle(av){ return { cls: 'b'+(av.stop ? '' : ' prim'), txt: (av.stop ? 'Lancer quand même' : 'Lancer les 3 pubs')+' · 10 €/j chacune'+(av.km ? ' · zone '+av.km+' km' : '') }; }
+/* le bloc d'un volet ouvert est mis à jour SUR PLACE (chiffres arrivés, garder / agrandir) : la carte n'est pas redessinée sous le doigt */
+function majAvant(cid){
+  var c = document.getElementById('c-'+cid), w = OUV.volet[cid]; if (!c || !w || w.type !== 'nouvelle') return;
+  var btn = c.querySelector('[data-valider="nouvelle"]'); if (!btn) return;
+  var av = avantBloc({ cid: cid }, w), bloc = c.querySelector('.avant'), bn = boutonNouvelle(av);
+  if (bloc) { if (av.h) bloc.outerHTML = av.h; else bloc.parentNode.removeChild(bloc); } else if (av.h) { var bx = btn.closest('.boutons'); if (bx) bx.insertAdjacentHTML('beforebegin', av.h); }
+  btn.className = bn.cls; btn.textContent = bn.txt;
+}
+function aRelire(){ return !!(AV.d && Object.keys(AV.d).some(function(k){ return AV.d[k] && AV.d[k].zone_a_relire; })); }
+function robotRecent(stamp){ var m = /^(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d)/.exec(String(stamp||'')); if (!m) return false; var d = Date.now() - Date.UTC(+m[1], +m[2]-1, +m[3], +m[4], +m[5]); return d > -3 * 3600000 && d < 48 * 3600000; }   /* l'heure écrite par le robot est en UTC */
+/* pourquoi un ordre « nouvelle » est annulé aussitôt, dit vrai : le tableau n'est pas à jour, ou un envoi d'avant était arrivé avec autre chose (réponse perdue puis geste changé) */
+function raisonRefus(o, j){
+  var autre = !!(j && ((j.type !== undefined && j.type !== 'nouvelle') || (j.compte_id !== undefined && String(j.compte_id) !== String((o && o.compte_id) || ''))));
+  if (!autre && o && o.variante === 'services' && !(j && String(j.variante||'') === 'services')) return 'le tableau ne connaît pas encore la nouvelle campagne (mise à jour à publier)';
+  if (!autre && o && o.rayon && !(j && j.rayon_km !== undefined)) return 'le tableau n\'a pas pris la zone demandée (mise à jour à publier)';
+  return 'un envoi d\'avant était arrivé avec autre chose : je l\'ai annulé, renvoie le panier';
+}
+function relireAvant(cid){ if (AV.d && AV.d[cid]) AV.d[cid].zone_a_relire = true; clearTimeout(AV.tm); AV.tm = setTimeout(function(){ lireAvant(true); }, 800); }   /* un ordre vient de changer sa zone : on la relit, on ne montre jamais l'ancienne */
+function clics30(cid){ var n = 0, J = (D && D.jours) || {}; Object.keys(J).forEach(function(k){ if (k.indexOf(cid+'|') === 0) n += Number(J[k].clics30) || 0; }); return Math.round(n); }
+function habMot(n){ n = Number(n)||0; if (n >= 1000000) { var m = Math.floor(n/100000)/10; return String(m).replace('.', ',')+(m < 2 ? ' million' : ' millions')+" d'habitants"; } return nb(Math.round(n/1000)*1000)+' habitants'; }
+function avantBloc(x, v){
+  lireAvant();   /* lue à la première ouverture d'un volet « Nouvelle campagne », puis toutes les 20 minutes au plus : l'ouverture de la page ne demande rien de plus qu'avant */
+  if (!AV.d) return AV.etat === 'attente' ? { h: '<div class="avant"><b>Avant de lancer</b><div class="av-q">Je regarde ses demandes et sa zone…</div></div>', km: 0, stop: false } : { h: '', km: 0, stop: false };
+  var a = AV.d[x.cid] || null; if (!a) return { h: '', km: 0, stop: false };
+  var lotD = (D && D.lot && D.lot[x.cid]) || null, cleD = (lotD && a.rayon_lot !== undefined && a.rayon_lot !== null) ? String(lotD.rayon_km||'').trim()+'|'+String(a.rayon_lot) : '';
+  if (cleD && String(lotD.rayon_km||'').trim() !== String(a.rayon_lot) && !a.zone_a_relire && AV.diff[x.cid] !== cleD) { AV.diff[x.cid] = cleD; relireAvant(x.cid); }   /* la fiche lue avec les comptes ne dit plus la même zone : on relit, une fois par écart (jamais en boucle) */
+  var L = [], stop = false, f = Number(a.form30)||0, ap = Number(a.appel30)||0, c30 = clics30(x.cid), cpt = pl(f, 'formulaire')+' et '+pl(ap, 'appel')+' comptés par Google en 30 jours';
+  function ligne(c, t, d){ return '<div class="av-l"><span class="av-f '+c+'" aria-hidden="true"></span><div><div class="av-t">'+esc(t)+'</div>'+(d ? '<div class="av-d">'+esc(d)+'</div>' : '')+'</div></div>'; }
+  var pasLu = !a.lu || !a.connu || a.appels_branches !== true || a.formulaires_branches !== true;
+  if (a.appels_branches === false && a.formulaires_branches === false) { stop = true; L.push(ligne('r', 'Google ne compte ni ses appels ni ses formulaires', "Répare d'abord : sans demandes comptées, Google ne peut pas apprendre.")); }
+  else if (a.appels_branches === false) { stop = true; L.push(ligne('r', 'Google ne compte pas ses appels', "Répare d'abord : sans appels comptés, Google ne peut pas apprendre.")); }
+  else if (a.formulaires_branches === false) { stop = true; L.push(ligne('r', 'Google ne compte pas ses formulaires', "Répare d'abord : sans formulaires comptés, Google ne peut pas apprendre.")); }
+  else if (pasLu) L.push(ligne('g', 'Ses demandes : pas encore lues chez Google', 'Le prochain relevé le dira.'));
+  else if (f > 0 && ap > 0) L.push(ligne('v', 'Ses demandes sont comptées', cpt));
+  else if (D && D.erreur_jours) L.push(ligne('g', 'Ses clics ne sont pas lus : je ne peux pas juger', cpt));
+  else if (c30 === 0 && !f && !ap) L.push(ligne('g', 'Pas de pub ces 30 jours : rien à compter', ''));
+  else if (c30 < 50) L.push(ligne('g', 'Trop peu de clics pour juger', pl(c30, 'clic')+' en 30 jours · '+pl(f, 'formulaire')+', '+pl(ap, 'appel')));
+  else if (!f && !ap) { stop = true; L.push(ligne('r', 'Aucune demande comptée en 30 jours', pl(c30, 'clic')+' et aucune demande : à vérifier avant de lancer.')); }
+  else L.push(ligne('o', ap === 0 ? 'Aucun appel compté en 30 jours' : 'Aucun formulaire compté en 30 jours', cpt+' : à vérifier avant de lancer.'));
+  var z = a.zone, km = 0, ch = '';
+  if (a.zone_a_relire) L.push(ligne('g', AV.echec ? 'Sa zone a changé : pas encore relue' : 'Sa zone vient de changer : je la relis…', AV.echec ? 'Rouvre ce volet dans un instant.' : ''));
+  else if (!z) L.push(ligne('g', "Sa zone n'est pas connue du tableau", "La nouvelle pub reprend la zone de sa fiche ou de sa pub d'aujourd'hui."));
+  else {
+    var zk = Number(z.km)||0, z1 = Number(z.km_1m)||0, zh = Number(z.hab)||0, ou = zk+' km autour de '+(z.ville || 'son centre')+' : '+habMot(zh);
+    if (zh >= 1000000) L.push(ligne('v', 'Sa zone a la bonne taille', ou));
+    else {
+      L.push(ligne(zh < 500000 ? 'r' : 'o', zh < 500000 ? 'Sa zone est très petite' : 'Sa zone est petite', ou));
+      if (z1) { km = (v && Number(v.zone) === z1) ? z1 : 0;
+        ch = '<div class="av-c" role="radiogroup" aria-label="Zone de la nouvelle campagne">'
+           + '<button type="button" class="av-b" role="radio" aria-checked="'+(km ? 'false' : 'true')+'" data-zone="0"><span class="av-r" aria-hidden="true"></span><span>Garder '+zk+' km<small>'+esc(habMot(zh))+'</small></span></button>'
+           + '<button type="button" class="av-b" role="radio" aria-checked="'+(km ? 'true' : 'false')+'" data-zone="'+z1+'"><span class="av-r" aria-hidden="true"></span><span>Agrandir à '+z1+' km <em>· je propose</em><small>'+esc(habMot(z.hab_1m))+" · le client doit être d'accord pour aller jusque-là</small></span></button></div>"
+           + (km ? '<div class="av-n">Sa zone change aussi pour ses factures et pour tes closers.</div>' : ''); }
+      else L.push(ligne('g', 'Même à 150 km, sa zone ne passe pas 1 million', ''));
+    }
+  }
+  return { h: '<div class="avant"><b>Avant de lancer</b>'+L.join('')+ch+(AV.quand ? '<div class="av-q">Tableau lu à '+esc(hp(AV.quand))+' (heure de Paris)</div>' : '')+'</div>', km: km, stop: stop, de: (a.zone_a_relire || a.rayon_lot === undefined || a.rayon_lot === null) ? undefined : String(a.rayon_lot) };   /* de = la zone écrite dans sa fiche quand ces chiffres ont été lus */
+}
 function dVolet(x, v){
   var id = 'm-'+x.cid.replace(/\D/g,''), nOn = x.n.onLibre;
   if (v.type === 'fiche') return ficheVolet(x, v);
   if (v.type === 'prix') return prixVolet(x, v);   /* v5.30 */
   if (v.type === 'nouvelle') {   /* v5.31 (20/11, Enzo 19 h 05 : le trio Large, Expression, Exact ; Google regle seul le prix du clic) ; v5.29 (17/11, Enzo : « 10 € par jour par campagne sur les 3 campagnes ») : 3 pubs a 10 € par jour chacune, pas de case ; le budget se change ensuite sur chaque pub */
+    var av = avantBloc(x, v);   /* v5.32 */
     return '<div class="volet"><b>Nouvelle campagne : 3 pubs à 10 € par jour chacune</b>'
     +'<p>• Large : 10 € par jour<br>• Expression : 10 € par jour<br>• Exact : 10 € par jour</p>'
     +'<p>30 € par jour en tout, soit 912 € par mois au plus chez Google (304 € par pub). Ensuite tu changes le budget de chaque pub avec son bouton « Budget ».</p>'
     +'<p>Le robot fabrique les 3 pubs (une heure), avec tous tes groupes dans chacune. Google règle seul le prix du clic pour avoir le plus de demandes : il n\'y a plus de coût par demande visé ni de clic maxi. L\'image de l\'accueil est posée. Elles ne s\'allument que si Dexem est relié. Les anciennes pubs ne bougent pas : c\'est toi qui les arrêtes. Si une ancienne pub tourne encore à plus de 60 € par jour, les 3 nouvelles restent en veille tant que tu ne l\'as pas arrêtée ou baissée.</p>'
-    +'<div class="boutons"><button type="button" class="b prim" data-valider="nouvelle">Lancer les 3 pubs · 10 €/j chacune</button><button type="button" class="b" data-fermer="compte">Annuler</button></div></div>'; }
+    + av.h
+    +'<div class="boutons"><button type="button" class="'+boutonNouvelle(av).cls+'" data-valider="nouvelle">'+esc(boutonNouvelle(av).txt)+'</button><button type="button" class="b" data-fermer="compte">Annuler</button></div></div>'; }
   if (v.type === 'budget') { var vb = v.val != null ? v.val : (x.n.budgetOn || x.budgetCompte || 30); return '<div class="volet"><b>Budget du compte</b><div class="montant">Total par jour, partagé entre '+pubsMot(nOn)+' allumée'+(nOn>1?'s':'')+' : <input class="champ" id="'+id+'" type="text" inputmode="decimal" value="'+esc(nb(vb))+'" oninput="recalc(this)"> €</div><p>Google applique à xx h 19.</p>'
     +'<div class="boutons"><button type="button" class="b prim" data-valider="budget" data-champ="'+id+'">Changer le budget · <span class="rc">'+esc(nb(vb))+'</span> €/j</button><button type="button" class="b" data-fermer="compte">Annuler</button></div></div>'; }
   if (v.type === 'arreter') return '<div class="volet"><b>Arrêter les '+pubsMot(nOn)+' allumée'+(nOn>1?'s':'')+' de '+esc(x.nom)+' ?</b><p>Google les coupe à xx h 19. Tu pourras les rallumer plus tard, pub par pub.</p><div class="boutons"><button type="button" class="b danger plein" data-valider="arreter">Oui, tout arrêter</button><button type="button" class="b" data-fermer="compte">Non</button></div></div>';
@@ -1102,7 +1201,7 @@ function panierCle(o){ return o.type + '|' + o.compte_id + '|' + String(o.campag
 function auPanier(type){ return PANIER_TYPES.test(String(type || '')); }
 function libellePanier(o, texte){ var c = o.campagne ? ' « ' + o.campagne + ' »' : '';
   if (o.type === 'eteindre') return 'Arrêter' + c; if (o.type === 'rallumer') return 'Rallumer' + c + (o.valeur ? ' · ' + nb(o.valeur) + ' €/j' : ''); if (o.type === 'budget') return 'Budget' + c + ' ' + nb(o.valeur) + ' €/j';
-  if (o.type === 'note') return 'Note : « ' + String(o.texte || '').slice(0, 60) + (String(o.texte || '').length > 60 ? '…' : '') + ' »'; if (o.type === 'nouvelle') return 'Nouvelle campagne · 3 pubs à 10 € par jour chacune';
+  if (o.type === 'note') return 'Note : « ' + String(o.texte || '').slice(0, 60) + (String(o.texte || '').length > 60 ? '…' : '') + ' »'; if (o.type === 'nouvelle') return 'Nouvelle campagne · 3 pubs à 10 € par jour chacune' + (o.rayon ? ' · zone ' + Number(o.rayon) + ' km' : '');
   if (o.type === 'refaire') return 'Lancer site + pub'; if (o.type === 'refaire_site') return 'Refaire le site'; if (o.type === 'fiche_express') return (o.pub === 'non' ? 'Créer la fiche + le site (' : 'Lancer site + pub (fiche ') + String(o.metier || '') + ', ' + String(o.cp || '') + ' / ' + String(o.rayon || '') + ' km)';
   if (o.type === 'activer') return 'Allumer'; if (o.type === 'archiver') return 'Archiver'; if (o.type === 'desarchiver') return 'Remettre actif'; if (o.type === 'bloquer_allumage') return 'Bloquer l\'allumage';
   if (VAGUE_TYPES[o.type]) return VAGUE_TYPES[o.type]; return texte || o.texte || o.type; }
@@ -1138,9 +1237,9 @@ async function envoyerPanier(){
   var j; try { j = await envoyer({ type: 'panier', panier_id: pid, items: items.map(function(it){ return it.o; }) }); } catch (e) { j = { ok: false, erreur: String(e.message || e).replace(/^Error:\s*/, '') }; }
   if (!(j && j.ok)) { PANIER_ENVOI = false; rendrePanier(); montrer(document.getElementById('panier-res'), 'ko', '✖ Pas fini (' + ((j && j.erreur) || 'tableau muet') + ') · le panier est gardé : renvoie-le, ce qui est déjà écrit n\'est jamais réécrit'); return; }
   var resultats = j.resultats || [], restants = [], manquants = [], aVerifier = [];
-  for (var qi = 0; qi < items.length; qi++) { var itq = items[qi], rq = resultats[qi]; if (rq && rq.ok && varianteRefusee(itq.o, rq)) { try { await envoyer(Object.assign({}, itq.o, { type: 'annuler_nouvelle', texte: 'Annuler (tableau pas à jour)' })); } catch (eQ) {} rq.ok = false; rq.erreur = 'annulé aussitôt : le tableau ne connaît pas encore la nouvelle campagne (mise à jour à publier)'; } }   /* v5.27 */
+  for (var qi = 0; qi < items.length; qi++) { var itq = items[qi], rq = resultats[qi]; if (rq && rq.ok && varianteRefusee(itq.o, rq)) { try { await envoyer(Object.assign({}, itq.o, { type: 'annuler_nouvelle', texte: 'Annuler (tableau pas à jour)' })); } catch (eQ) {} var rsQ = raisonRefus(itq.o, rq); rq.ok = false; rq.erreur = 'annulé aussitôt : ' + rsQ; } }   /* v5.27 */
   items.forEach(function(it, i){ var r = resultats[i]; if (r && r.ok) { try { souvenir(it.o, r); appliquerLocal(it.o, r); } catch (e2) {} ajouterClic(heure() + ' : ' + it.texte + ' — ' + it.nom + ' (panier)'); aVerifier.push({ i: i, type: it.o.type, ordre_id: r.ordre_id || '', note_id: r.note_id || '', siret: it.o.siret || '', compte_id: it.compte_id }); if (it.vague) { var vg = VAGUES[it.vague]; if (!vg || vg.panier || !vg.annul) vg = VAGUES[it.vague] = { h: heure(), n: 0, total: 0, echecs: [], annul: [], suite: suite(it.o, r) }; vg.n++; vg.total++; var an = annulDe(it.o, r); if (an) vg.annul.push(an); } }   /* v5.11 : une vague venue du panier ({ panier: true }) n'avait pas de liste annul → « reading 'push' », l'envoi s'arrêtait net */
-    else { restants.push(it); manquants.push({ texte: it.nom + ' · ' + it.texte, erreur: (r && r.erreur) || 'pas de réponse' }); if (it.vague && VAGUES[it.vague] && !VAGUES[it.vague].panier) { VAGUES[it.vague].total++; VAGUES[it.vague].echecs.push(it.nom); } } });
+    else { var zc = it.o.type === 'nouvelle' && r && /sa zone a chang/.test(String(r.erreur||'')); if (zc) relireAvant(it.compte_id); else restants.push(it); manquants.push({ texte: it.nom + ' · ' + it.texte, erreur: ((r && r.erreur) || 'pas de réponse') + (zc ? ' · je relis sa zone : rouvre « Nouvelle campagne » et refais le geste' : '') });   /* v5.32 : ce geste ne passera jamais tel quel (sa zone est périmée) : il sort du panier */ if (it.vague && VAGUES[it.vague] && !VAGUES[it.vague].panier) { VAGUES[it.vague].total++; VAGUES[it.vague].echecs.push(it.nom); } } });
   var verifies = 0; try { var v = await envoyer({ type: 'panier_verifier', items: aVerifier }); if (v && v.ok) { verifies = v.verifies; (v.manquants || []).forEach(function(m){ var it = items[m.i]; if (it && restants.indexOf(it) < 0) { restants.push(it); manquants.push({ texte: it.nom + ' · ' + it.texte, erreur: 'pas retrouvé à la relecture (' + m.vu + ')' }); } }); } } catch (e3) { verifies = -1; }
   PANIER = restants; PANIER_PID = ''; PANIER_ENVOI = false; PANIER_RES = { h: heure(), n: items.length, ecrits: j.ecrits || 0, verifies: verifies < 0 ? j.ecrits || 0 : verifies, manquants: manquants, prochain: j.prochain || '' }; panierSauver();
   if (j.deja) PANIER_RES.deja = true;
@@ -1278,6 +1377,7 @@ document.addEventListener('click', function(e){
   var c = t.closest('.carte'); if (!c) return; var cid = c.id.slice(2);
   var pl_ = t.getAttribute('data-plier'); if (pl_) { OUV[pl_][cid] = (pl_ === 'pubs' && c.classList.contains('opt') && !(cid in OUV.pubs)) ? false : !OUV[pl_][cid]; redessiner(cid); return; }
   if (t.getAttribute('data-ouvrir') === 'pubs') { OUV.pubs[cid] = true; redessiner(cid); return; }
+  var zn = t.getAttribute('data-zone'); if (zn !== null) { var vZ = OUV.volet[cid]; if (vZ && vZ.type === 'nouvelle') { vZ.zone = parseInt(zn, 10) || 0; majAvant(cid); } return; }   /* v5.32 : garder ou agrandir la zone de la nouvelle campagne */
   var px = t.getAttribute('data-px'); if (px) { var vP = OUV.volet[cid]; if (vP && vP.type === 'prix') { vP[px] = !vP[px]; redessiner(cid); } return; }   /* v5.30 : voir / replier les mots du volet « Prix du clic » */
   var vol = t.getAttribute('data-volet'); if (vol) { var kid = t.getAttribute('data-kid'); var cle = kid ? cid+'|'+kid : cid; if (OUV.volet[cle] && OUV.volet[cle].type === vol) delete OUV.volet[cle]; else OUV.volet[cle] = { type: vol, val: null, pub: t.getAttribute('data-pub') || '' }; if (kid) OUV.pubs[cid] = true; if (t.closest('.pb')) OUV.pb[cid] = true; redessiner(cid); if (vol === 'fiche' && OUV.volet[cle]) chargerFiche(cid); if (vol === 'prix' && OUV.volet[cle]) chargerPrix(cid);
     /* v5.11 : le volet ouvert est amené sous les yeux */ var vEl = document.querySelector('#c-'+cid+' .volet'); if (vEl && OUV.volet[cle]) { try { vEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (eS) {} } if (!kid) { var inp = document.getElementById('m-'+cid.replace(/\D/g,'')); if (inp) { inp.focus(); try { inp.select(); } catch (er) {} } } return; }
@@ -1294,7 +1394,7 @@ function budgetMoisBase(x){ var f = (D.fiches||{})[x.siret] || {}, l = (D.lot||{
   if (lj > 0) return { mois: Math.round(lj * 30.4), source: 'Budget du tableau : ' + nb(lj) + ' € par jour, soit ' + nb(Math.round(lj * 30.4)) + ' € par mois' };
   return { mois: 900, source: 'Pas de budget connu pour ce client : 900 € par mois proposé (ton minimum)' }; }
 function recalcMois(inp){ var m = Number(String(inp.value).replace(',', '.').replace(/[^\d.]/g,'')) || 0, j = jourDeMois(m), v = inp.closest('.volet'); if (!v) return; v.querySelectorAll('.rc,.rc2').forEach(function(e){ e.textContent = nb(j); }); }
-function varianteRefusee(o, j){ return !!(o && o.type === 'nouvelle' && o.variante === 'services' && !(j && String(j.variante||'') === 'services')); }
+function varianteRefusee(o, j){ return !!(o && o.type === 'nouvelle' && ((o.variante === 'services' && !(j && String(j.variante||'') === 'services')) || (o.rayon && !(j && String(j.rayon_km||'') === String(o.rayon))) || (!o.rayon && o.rayon_de !== undefined && j && j.rayon_km !== undefined && String(j.rayon_km) !== String(o.rayon_de)) || (j && j.type !== undefined && j.type !== 'nouvelle') || (j && j.compte_id !== undefined && String(j.compte_id) !== String(o.compte_id||'')))); }   /* v5.32 : la zone demandée (ou gardée) doit être celle que le tableau confirme, et la réponse doit être celle de CE geste (panier renvoyé après avoir changé), sinon l'ordre est annulé aussitôt */
 function envoyer(o){ return new Promise(function(ok, ko){
   if (!(window.google && google.script && google.script.run)) return ko(new Error('cette copie n\'est pas reliée au tableau'));
   google.script.run.withSuccessHandler(ok).withFailureHandler(function(e){ ko(new Error(String(e))); }).optimiserOrdre(CODE, o);
@@ -1311,7 +1411,7 @@ async function valider(btn, cid, type){
     if (!/^\d{5}$/.test(chF.cp)) return montrer(res, 'ko', 'Code postal du centre : 5 chiffres : rien n\'a été écrit.'); var rayF = parseInt(chF.rayon, 10); if (!(rayF >= 5 && rayF <= 200)) return montrer(res, 'ko', 'Rayon entre 5 et 200 km : rien n\'a été écrit.');
     var sansPubF = vf.pub === 'non', budF = sansPubF ? 30 : montant(chF.budget); if (budF === null) return montrer(res, 'ko', 'Budget entre 1 et 500 € par pub : rien n\'a été écrit.');
     return lancer(btn, Object.assign({ type: 'fiche_express', pub: sansPubF ? 'non' : 'oui', siret: sirF, nom: chF.nom, metier: chF.metier, tel: chF.tel, domaine: chF.domaine, cp: chF.cp, ville: chF.ville, rayon: rayF, budget: budF, dexem_uuid: vf.dexem_uuid || '', texte: (sansPubF ? 'Créer la fiche + le site · ' : 'Lancer site + pub · ')+chF.metier+' · '+chF.cp+' / '+rayF+' km'+(sansPubF ? '' : ' · '+nb(budF)+' €/pub') }, base, { siret: sirF }), res, cid); }
-  if (type === 'nouvelle') { var m = 912, bjN = 30; if (OUV.volet[cid]) OUV.volet[cid].val = m; return lancer(btn, Object.assign({ type: 'nouvelle', variante: 'services', budget: bjN, budget_mois: m, texte: 'Nouvelle campagne · 3 pubs à 10 €/j chacune' }, base), res, cid); }   /* v5.29 : 3 pubs a 10 € par jour chacune (30 € par jour, 912 € par mois), toujours ; v5.27 : structure 0911 */
+  if (type === 'nouvelle') { var m = 912, bjN = 30, avN = avantBloc({ cid: cid }, OUV.volet[cid] || null), zN = Number(avN.km) || 0; if (OUV.volet[cid]) OUV.volet[cid].val = m; return lancer(btn, Object.assign({ type: 'nouvelle', variante: 'services', budget: bjN, budget_mois: m, texte: 'Nouvelle campagne · 3 pubs à 10 €/j chacune' + (zN ? ' · zone ' + zN + ' km' : '') }, zN ? { rayon: zN } : {}, avN.de !== undefined ? { rayon_de: avN.de } : {}, base), res, cid); }   /* v5.32 : la zone AFFICHÉE au moment du clic part avec l'ordre (jamais un clic gardé d'un écran d'avant) ; rayon_de = la zone de la fiche que l'écran montrait : si elle a changé, le tableau refuse */   /* v5.29 : 3 pubs a 10 € par jour chacune (30 € par jour, 912 € par mois), toujours ; v5.27 : structure 0911 */
   if (type === 'note') { var t = String(v.value||'').trim(); if (!t) return montrer(res, 'ko', 'La note est vide : rien n\'a été écrit.'); return lancer(btn, Object.assign({ type: 'note', texte: t.slice(0, 500) }, base), res, cid); }
   if (type === 'archiver') return lancer(btn, Object.assign({ type: 'archiver', texte: 'Archiver' }, base), res, cid);
   if (type === 'arreter') return macro(btn, Object.assign({ type: 'arreter_tout', texte: 'Arrêter toutes les pubs' }, base), res, x);
@@ -1331,7 +1431,7 @@ async function ordre(btn){
   return lancer(btn, o, res, cid);
 }
 function suite(o, j){
-  if (o.type === 'nouvelle') return 'le robot fabrique les 3 nouvelles pubs (10 € par jour chacune, 30 € en tout), prêtes vers '+(new Date().getHours()+1)+' h, enchère et image posées ensuite · elles ne s\'allument que si Dexem est relié';
+  if (o.type === 'nouvelle') return 'le robot fabrique les 3 nouvelles pubs (10 € par jour chacune, 30 € en tout'+(o.rayon ? ', zone de '+Number(o.rayon)+' km' : '')+'), prêtes vers '+(new Date().getHours()+1)+' h, enchère et image posées ensuite · elles ne s\'allument que si Dexem est relié';
   if (o.type === 'eteindre') return 'Google coupe à xx h 19';
   if (o.type === 'rallumer') return 'Google rallume à xx h 19'+(j && /dexem/i.test(j.note||'') ? ' · '+j.note : '');
   if (o.type === 'budget') return 'Google applique à xx h 19';
@@ -1343,6 +1443,7 @@ function suite(o, j){
   if (o.type === 'fiche_express') return (j && j.note) || (o.pub === 'non' ? 'fiche créée : le robot fait le site ; la pub se lance depuis À optimiser' : 'fiche créée : le robot refait le site puis crée LARGE + EXACT');
   if (o.type === 'annuler_fiche_express') return 'fiche abandonnée : rien ne sera fait';
   if (o.type === 'note') return 'gardée dans le tableau';
+  if (o.type === 'annuler_nouvelle' && j && j.note) return 'annulé · '+j.note;   /* v5.32 : la zone remise (ou gardée) est dite */
   if (/^annuler/.test(o.type)) return 'rien ne sera fait';
   if (o.type === 'verifier_branchement' || o.type === 'relancer_robot' || o.type === 'reessayer_ordre' || o.type === 'relancer_client' || o.type === 'repondre') return 'Claude s\'en occupe à sa prochaine lecture';
   return (j && j.note) || '';
@@ -1353,7 +1454,7 @@ async function lancer(btn, o, res, cid, cleVolet, garderRes){
   try {
     var j = await envoyer(o);
     if (!(j && j.ok)) { montrer(res, 'ko', '✖ Pas fait : '+((j && j.erreur) || 'refusé par le tableau')+' · rien n\'a été écrit'); btn.disabled = false; return false; }
-    if (varianteRefusee(o, j)) { try { await envoyer(Object.assign({}, o, { type: 'annuler_nouvelle', texte: 'Annuler (tableau pas à jour)' })); } catch (eA) {} montrer(res, 'ko', '✖ Annulé aussitôt : le tableau ne connaît pas encore la nouvelle campagne (mise à jour à publier) · rien ne part'); btn.disabled = false; return false; }   /* v5.27 : jamais l ancienne paire a la place */
+    if (varianteRefusee(o, j)) { try { await envoyer(Object.assign({}, o, { type: 'annuler_nouvelle', texte: 'Annuler (tableau pas à jour)' })); } catch (eA) {} montrer(res, 'ko', '✖ Annulé aussitôt : ' + raisonRefus(o, j) + ' · rien ne part'); btn.disabled = false; return false; }   /* v5.27 : jamais l ancienne paire a la place */
     var texte = '✔ Noté à '+heure()+' (ton heure) · '+suite(o, j); montrer(res, 'ok', texte);
     souvenir(o, j); appliquerLocal(o, j); ajouterClic(heure()+' : '+(o.texte || o.type)+' — '+o.nom); if (cleVolet) delete OUV.volet[cleVolet]; else delete OUV.volet[cid];
     var cle = res ? res.getAttribute('data-res') : 'compte';
@@ -1392,8 +1493,8 @@ function appliquerLocal(o, j){
   else if (l && o.type === 'activer') l.activer = j.activer || ('oui '+stampLocal());
   else if (l && o.type === 'annuler_activer') l.activer = j.activer || o.avant || 'non';
   else if (l && o.type === 'bloquer_allumage') l.activer = 'non';
-  else if (l && o.type === 'nouvelle') l.nouvelle_structure = j.nouvelle_structure || ('oui '+stampLocal()+' budget '+(o.budget||30));
-  else if (l && o.type === 'annuler_nouvelle') l.nouvelle_structure = '';
+  else if (l && o.type === 'nouvelle') { l.nouvelle_structure = j.nouvelle_structure || ('oui '+stampLocal()+' budget '+(o.budget||30)); if (j && j.rayon_km !== undefined && String(j.rayon_km) !== String(l.rayon_km||'')) { l.rayon_km = String(j.rayon_km); relireAvant(o.compte_id); } }   /* v5.32 : la zone écrite par le tableau */
+  else if (l && o.type === 'annuler_nouvelle') { l.nouvelle_structure = ''; if (j && j.rayon_km !== undefined) { l.rayon_km = String(j.rayon_km); relireAvant(o.compte_id); } }   /* v5.32 : la zone remise par le tableau */
   else if (l && o.type === 'refaire') { l.site_statut = ''; l.nouvelle_structure = j.nouvelle_structure || ('oui '+stampLocal()+' budget '+(o.budget||30)); }
   else if (l && o.type === 'refaire_site') { l.site_statut = ''; if (o.metier) l.metier = o.metier; }
   else if (o.type === 'fiche_express') { D.lot = D.lot || {}; D.lot[o.compte_id] = Object.assign({}, l || {}, (j && j.lot) || {}, { siret: o.siret, compte_id: o.compte_id, nom: o.nom, metier: o.metier, domaine: o.domaine, site_statut: '', nouvelle_structure: (j && j.lot && j.lot.nouvelle_structure !== undefined) ? j.lot.nouvelle_structure : (o.pub === 'non' ? '' : 'oui '+stampLocal()+' budget '+(o.budget||30)), activer: (j && j.lot && j.lot.activer !== undefined) ? j.lot.activer : (o.pub === 'non' ? '' : 'auto'), accepte: 'oui', abandonne: '', budget_jour: String(o.budget||30), cp_site: o.cp, rayon_km: String(o.rayon) }); }
