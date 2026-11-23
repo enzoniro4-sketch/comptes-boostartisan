@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
-<meta name="ba-version" content="p18-2311">
+<meta name="ba-version" content="p18w-2311">
 <link rel="icon" type="image/png" href="icone-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Problèmes et argent</title>
@@ -154,6 +154,9 @@ body.ancien .wa, body.ancien .wa-non, body.ancien .controle, body.ancien .contro
 [hidden] { display: none !important; }
 @media (min-width: 560px) { .tuiles { grid-template-columns: repeat(3, 1fr); } .tuile { flex-direction: column; align-items: flex-start; gap: 4px; } }
 @media (prefers-reduced-motion: reduce) { .fleche { transition: none; } }
+.menu { flex-wrap: wrap; row-gap: 6px; }
+.menu-wa { background: #17734a; color: #fff !important; border-radius: 8px; padding: 6px 12px; font-weight: 700; text-decoration: none; }
+.wa, .wa-non { display: none !important; }
 </style>
 </head>
 <body>
@@ -165,6 +168,7 @@ body.ancien .wa, body.ancien .wa-non, body.ancien .controle, body.ancien .contro
       <button type="button" id="menu-problemes" data-vue="problemes" class="ici">Problèmes</button>
       <button type="button" id="menu-argent" data-vue="argent">Argent</button>
       <button type="button" id="menu-forfaits" data-vue="forfaits">Forfaits</button>
+      <a id="menu-whatsapp" class="menu-wa" href="https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec?x=rdv" target="_blank" rel="noopener">WhatsApp ↗</a>
       <a id="menu-comptes" href="#" rel="noopener">Comptes ↗</a>
     </nav>
   </header>
@@ -2583,7 +2587,7 @@ return { juger: juger, comparer: comparer };
   var TABLEAU = 'https://script.google.com/macros/s/AKfycbzDQYLSrRFEjoDronAiSy7mOEo3GDRHRl5AKkUcAbD7p-CUZFw1MiHEH7AIA31Eqa1p/exec', CLE = 'ba_comptes_code', CACHE = 'ba_problemes_p17', SAUT = 'ba_problemes_saut', PARTS = ['google', 'argent', 'nouveaux', 'messages', 'jour'], VIEUX_MIN = 5, LIMITE_MS = 30000, LIMITE_TOUT_MS = 20000,
       RETARD = 'Une partie de ton tableau a traîné : pour elle, ce sont les chiffres d’avant.',
       RETARD_TOUT = 'Ton tableau n’a pas pu être relu : tous ces chiffres sont ceux d’avant (heure écrite en haut).';   /* (doute de la relecture 3) les 5 relectures en panne : « une partie » était faux */
-  var R = window.__PROBLEMES_ETAT__ = { version: 'p18-2311', etat: 'depart', envois: 0, lectures: 0, copie: '', retard: [] };
+  var R = window.__PROBLEMES_ETAT__ = { version: 'p18w-2311', etat: 'depart', envois: 0, lectures: 0, copie: '', retard: [] };
   var att = document.getElementById('attente'), msg = document.getElementById('attente-msg'), lien = document.getElementById('attente-lien'), encore = document.getElementById('attente-encore');
   /* (p17) UN ÉCRAN GARDÉ D'AVANT EST DIT VIEUX. À l'ouverture la page montre tout de suite ce qu'elle avait lu la fois d'avant (parfois la veille), puis relit : pendant ces secondes, des lignes
      périmées se lisaient comme vraies. Maintenant : un bandeau le dit, la page est grisée, et le bandeau reste (rouge) si le tableau ne répond pas. */
